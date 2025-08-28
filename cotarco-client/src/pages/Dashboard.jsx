@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import StockFileDownloader from '../components/StockFileDownloader';
 
 const Dashboard = () => {
   const [user] = useState({
@@ -106,6 +107,11 @@ const Dashboard = () => {
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* Stock File Download */}
+          <div className="mb-8">
+            <StockFileDownloader />
           </div>
 
           {/* Recent Activity */}

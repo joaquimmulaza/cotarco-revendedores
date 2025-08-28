@@ -228,6 +228,79 @@ export const adminService = {
   viewAlvara(userId) {
     const url = this.getAlvaraUrl(userId);
     window.open(url, '_blank');
+  },
+
+  // === GESTÃO DE FICHEIROS DE STOCK ===
+  
+  // Obter ficheiro de stock atual (admin)
+  async getCurrentStockFile() {
+    try {
+      const response = await api.get('/admin/stock-file/current');
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: 'Erro ao obter ficheiro de stock atual' };
+    }
+  },
+
+  // Upload ou substituir ficheiro de stock (admin)
+  async uploadStockFile(formData) {
+    try {
+      const response = await api.post('/admin/stock-file/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: 'Erro ao carregar ficheiro de stock' };
+    }
+  },
+
+  // Ativar/desativar ficheiro de stock (admin)
+  async toggleStockFileStatus(fileId) {
+    try {
+      const response = await api.patch(`/admin/stock-file/${fileId}/toggle-status`);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: 'Erro ao alterar status do ficheiro' };
+    }
+  },
+
+  // Apagar ficheiro de stock (admin)
+  async deleteStockFile(fileId) {
+    try {
+      const response = await api.delete(`/admin/stock-file/${fileId}`);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: 'Erro ao apagar ficheiro de stock' };
+    }
+  }
+};
+
+// Serviços para revendedores
+export const revendedorService = {
+  // Obter informações do ficheiro de stock disponível
+  async getStockFileInfo() {
+    try {
+      const response = await api.get('/revendedor/stock-file/info');
+      return response.data;
+    } catch (error) {
+      // Se for 404, retornar null para indicar que não há ficheiro disponível
+      if (error.response?.status === 404) {
+        return { file: null };
+      }
+      throw error.response?.data || { message: 'Erro ao obter informações do ficheiro de stock' };
+    }
+  },
+
+  // Obter URL para download do ficheiro de stock
+  getStockFileDownloadUrl() {
+    const token = localStorage.getItem(appConfig.AUTH.TOKEN_KEY);
+    return `${appConfig.API_BASE_URL}/revendedor/stock-file/download?token=${token}`;
+  },
+
+  // Fazer download do ficheiro de stock (abrir em nova aba/download)
+  downloadStockFile() {
+    const url = this.getStockFileDownloadUrl();
+    window.open(url, '_blank');
   }
 };
 
