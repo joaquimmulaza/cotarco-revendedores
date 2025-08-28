@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Tab } from '@headlessui/react';
 import { useAuth } from '../contexts/AuthContext';
 import { adminService } from '../services/api';
+import StockFileManager from '../components/StockFileManager';
 
 const AdminDashboard = () => {
   const { user, logout } = useAuth();
@@ -237,6 +238,11 @@ const AdminDashboard = () => {
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* Stock File Management */}
+          <div className="mb-8">
+            <StockFileManager />
           </div>
 
           {/* Revendedores Management */}

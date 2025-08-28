@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Admin\AdminController;
+use App\Http\Controllers\StockFileController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -43,4 +44,16 @@ Route::prefix('admin')->group(function () {
     
     // Rota para download do alvará
     Route::get('/revendedores/{user}/alvara', [AdminController::class, 'downloadAlvara']);
+    
+    // Rotas para gestão de ficheiros de stock
+    Route::post('/stock-file/upload', [StockFileController::class, 'uploadOrUpdate']);
+    Route::get('/stock-file/current', [StockFileController::class, 'getCurrentForAdmin']);
+    Route::patch('/stock-file/{file}/toggle-status', [StockFileController::class, 'toggleStatus']);
+    Route::delete('/stock-file/{file}', [StockFileController::class, 'destroy']);
+});
+
+// Rotas para revendedores
+Route::prefix('revendedor')->group(function () {
+    Route::get('/stock-file/info', [StockFileController::class, 'getForRevendedor']);
+    Route::get('/stock-file/download', [StockFileController::class, 'downloadForRevendedor']);
 });
