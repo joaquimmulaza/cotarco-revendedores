@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { authService } from '../services/api';
 import { config } from '../config/config';
+import logoCotarco from '../assets/logo-cotarco.png';
 
 const Register = () => {
   const navigate = useNavigate();
@@ -76,6 +77,15 @@ const Register = () => {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
+        {/* Logo da Cotarco */}
+        <div className="text-center mb-6">
+          <img 
+            src={logoCotarco} 
+            alt="Cotarco - Tecnologias e Comércio Geral" 
+            className="h-16 w-auto mx-auto mb-4"
+          />
+        </div>
+        
         <h2 className="mt-6 text-center text-3xl font-bold text-gray-900">
           Registo de Revendedor
         </h2>
