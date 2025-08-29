@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { authService } from '../services/api';
 import { config } from '../config/config';
 import { useAuth } from '../contexts/AuthContext';
+import logoCotarco from '../assets/logo-cotarco.png';
 
 const AdminLogin = () => {
   const navigate = useNavigate();
@@ -59,18 +60,21 @@ const AdminLogin = () => {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
+        {/* Logo da Cotarco */}
+        <div className="text-center mb-6">
+          <img 
+            src={logoCotarco} 
+            alt="Cotarco - Tecnologias e Comércio Geral" 
+            className="h-16 w-auto mx-auto mb-4"
+          />
+        </div>
+        
         <div className="text-center">
-          <div className="mx-auto h-12 w-12 text-primary">
-            <svg className="h-12 w-12" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M18 8a6 6 0 01-7.743 5.743L10 14l-1 1-1 1H6v2H2v-4l4.257-4.257A6 6 0 1118 8zm-6-4a1 1 0 100 2 2 2 0 012 2 1 1 0 102 0 4 4 0 00-4-4z" clipRule="evenodd" />
-            </svg>
-          </div>
+          
           <h2 className="mt-6 text-center text-3xl font-bold text-gray-900">
             Painel de Administração
           </h2>
-          <p className="mt-2 text-center text-sm text-secondary">
-            Acesso restrito para administradores
-          </p>
+          
         </div>
       </div>
 
