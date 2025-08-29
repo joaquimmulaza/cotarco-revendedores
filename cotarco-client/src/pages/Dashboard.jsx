@@ -29,7 +29,7 @@ const Dashboard = () => {
               </span>
               <button 
                 onClick={logout}
-                className="bg-primary text-white px-4 py-2 rounded-md hover:bg-red-700"
+                className="bg-red-700 text-white px-4 py-2 rounded-md hover:bg-red-600"
               >
                 Sair
               </button>
@@ -59,7 +59,7 @@ const Dashboard = () => {
                         Vendas este mês
                       </dt>
                       <dd className="text-lg font-medium text-gray-900">
-                        €2.450
+                        0
                       </dd>
                     </dl>
                   </div>
@@ -83,7 +83,7 @@ const Dashboard = () => {
                         Comissões pendentes
                       </dt>
                       <dd className="text-lg font-medium text-gray-900">
-                        €345
+                        0
                       </dd>
                     </dl>
                   </div>
@@ -107,7 +107,7 @@ const Dashboard = () => {
                         Encomendas ativas
                       </dt>
                       <dd className="text-lg font-medium text-gray-900">
-                        12
+                        0
                       </dd>
                     </dl>
                   </div>
@@ -136,7 +136,7 @@ const Dashboard = () => {
                       Nova encomenda #1234
                     </p>
                     <p className="text-sm text-gray-500">
-                      Cliente: Maria Santos - €150
+                      Cliente: Maria Santos - 150
                     </p>
                   </div>
                   <span className="text-xs text-gray-400">
@@ -149,7 +149,7 @@ const Dashboard = () => {
                       Comissão processada
                     </p>
                     <p className="text-sm text-gray-500">
-                      €45 creditado na conta
+                      45 creditado na conta
                     </p>
                   </div>
                   <span className="text-xs text-gray-400">
@@ -162,7 +162,7 @@ const Dashboard = () => {
                       Encomenda entregue #1230
                     </p>
                     <p className="text-sm text-gray-500">
-                      Cliente: António Silva - €200
+                      Cliente: António Silva - 200
                     </p>
                   </div>
                   <span className="text-xs text-gray-400">

@@ -25,8 +25,14 @@ const StockFileDownloader = () => {
   };
 
   useEffect(() => {
+    // Só fazer a chamada se a autenticação estiver completa e o utilizador autenticado
     if (!authLoading && isAuthenticated) {
       fetchStockFileInfo();
+    } else if (!authLoading && !isAuthenticated) {
+      // Se não está autenticado, limpar estado
+      setStockFileInfo(null);
+      setLoading(false);
+      setError('');
     }
   }, [authLoading, isAuthenticated]);
 
@@ -183,7 +189,7 @@ const StockFileDownloader = () => {
           <div className="lg:ml-6">
             <button
               onClick={handleDownload}
-              className="w-full lg:w-auto bg-red-700 text-white px-6 py-3 rounded-md hover:bg-red-600 transition-colors cursor-pointer flex items-center justify-center font-medium text-lg shadow-md hover:shadow-lg"
+              className="w-full lg:w-auto bg-green-600 text-white px-6 py-3 rounded-md hover:bg-green-700 transition-colors cursor-pointer flex items-center justify-center font-medium text-lg shadow-md hover:shadow-lg"
             >
               <svg className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
