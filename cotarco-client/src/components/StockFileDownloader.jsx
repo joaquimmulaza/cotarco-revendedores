@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { revendedorService } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 
 const StockFileDownloader = () => {
+  const { loading: authLoading, isAuthenticated } = useAuth();
   const [stockFileInfo, setStockFileInfo] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -23,8 +25,10 @@ const StockFileDownloader = () => {
   };
 
   useEffect(() => {
-    fetchStockFileInfo();
-  }, []);
+    if (!authLoading && isAuthenticated) {
+      fetchStockFileInfo();
+    }
+  }, [authLoading, isAuthenticated]);
 
   // Formatar tamanho do ficheiro
   const formatFileSize = (bytes) => {
@@ -52,8 +56,13 @@ const StockFileDownloader = () => {
   };
 
   // Fazer download do ficheiro
-  const handleDownload = () => {
-    revendedorService.downloadStockFile();
+  const handleDownload = async () => {
+    try {
+      await revendedorService.downloadStockFile();
+    } catch (error) {
+      console.error('Erro no download:', error);
+      alert('Erro ao fazer download do ficheiro: ' + (error.message || 'Erro desconhecido'));
+    }
   };
 
   if (loading) {
@@ -174,7 +183,7 @@ const StockFileDownloader = () => {
           <div className="lg:ml-6">
             <button
               onClick={handleDownload}
-              className="w-full lg:w-auto bg-red-700 text-white px-6 py-3 rounded-md hover:bg-red-700 transition-colors flex items-center justify-center font-medium text-lg shadow-md hover:shadow-lg"
+              className="w-full lg:w-auto bg-red-700 text-white px-6 py-3 rounded-md hover:bg-red-600 transition-colors cursor-pointer flex items-center justify-center font-medium text-lg shadow-md hover:shadow-lg"
             >
               <svg className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />

@@ -15,15 +15,17 @@ class AdminMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        // Verificar se o usuário está autenticado
-        if (!$request->user()) {
+        // Verificar se o usuário está autenticado via Sanctum
+        if (!$request->user('sanctum')) {
             return response()->json([
                 'message' => 'Não autenticado.',
             ], 401);
         }
 
+        $user = $request->user('sanctum');
+
         // Verificar se o usuário tem role de admin
-        if ($request->user()->role !== 'admin') {
+        if ($user->role !== 'admin') {
             return response()->json([
                 'message' => 'Acesso negado. Apenas administradores podem acessar esta funcionalidade.',
             ], 403);

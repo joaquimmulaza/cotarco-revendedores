@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { adminService } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 
 const StockFileManager = () => {
+  const { loading: authLoading, isAdminAuthenticated } = useAuth();
   const [stockFile, setStockFile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
@@ -30,8 +32,10 @@ const StockFileManager = () => {
   };
 
   useEffect(() => {
-    fetchCurrentStockFile();
-  }, []);
+    if (!authLoading && isAdminAuthenticated) {
+      fetchCurrentStockFile();
+    }
+  }, [authLoading, isAdminAuthenticated]);
 
   // Limpar mensagens após um tempo
   useEffect(() => {

@@ -5,7 +5,7 @@ import { adminService } from '../services/api';
 import StockFileManager from '../components/StockFileManager';
 
 const AdminDashboard = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, loading: authLoading, isAdminAuthenticated } = useAuth();
   
   // Estados para gestão de dados
   const [loading, setLoading] = useState(true);
@@ -63,15 +63,19 @@ const AdminDashboard = () => {
     }
   }, [currentStatus, currentPage]);
 
-  // Carregar estatísticas (apenas uma vez no carregamento)
+  // Carregar estatísticas (apenas uma vez no carregamento, após autenticação)
   useEffect(() => {
-    fetchStats();
-  }, []);
+    if (!authLoading && isAdminAuthenticated) {
+      fetchStats();
+    }
+  }, [authLoading, isAdminAuthenticated]);
 
-  // Carregar revendedores (sempre que status ou página mudar)
+  // Carregar revendedores (sempre que status ou página mudar, após autenticação)
   useEffect(() => {
-    fetchRevendedores();
-  }, [fetchRevendedores]);
+    if (!authLoading && isAdminAuthenticated) {
+      fetchRevendedores();
+    }
+  }, [fetchRevendedores, authLoading, isAdminAuthenticated]);
 
   const handleUpdateStatus = async (id, newStatus) => {
     try {

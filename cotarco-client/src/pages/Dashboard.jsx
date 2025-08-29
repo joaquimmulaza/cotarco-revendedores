@@ -1,8 +1,12 @@
 import { useState } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 import StockFileDownloader from '../components/StockFileDownloader';
 
 const Dashboard = () => {
-  const [user] = useState({
+  const { user, logout } = useAuth();
+  
+  // Dados estáticos para demonstração - em produção viriam da API
+  const [demoUser] = useState({
     name: 'João Silva',
     email: 'joao@exemplo.com',
     company: 'Silva & Associados'
@@ -21,9 +25,12 @@ const Dashboard = () => {
             </div>
             <div className="flex items-center space-x-4">
               <span className="text-sm text-secondary">
-                Bem-vindo, {user.name}
+                Bem-vindo, {user?.name || demoUser.name}
               </span>
-              <button className="bg-primary text-white px-4 py-2 rounded-md hover:bg-red-700">
+              <button 
+                onClick={logout}
+                className="bg-primary text-white px-4 py-2 rounded-md hover:bg-red-700"
+              >
                 Sair
               </button>
             </div>

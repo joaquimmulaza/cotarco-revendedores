@@ -11,7 +11,8 @@ const api = axios.create({
     'Content-Type': 'application/json',
     'Accept': 'application/json',
   },
-  withCredentials: true, // Importante para cookies de sessão
+  // Não usar cookies de sessão; usamos Bearer Token do Sanctum
+  withCredentials: false,
 });
 
 // Interceptor para adicionar token de autenticação
@@ -42,19 +43,35 @@ api.interceptors.response.use(
         return Promise.reject(error);
       }
       
-      // Token expirado ou inválido - redirecionar para login apropriado
-      localStorage.removeItem(appConfig.AUTH.TOKEN_KEY);
-      localStorage.removeItem(appConfig.AUTH.USER_KEY);
-      
-      // Detectar contexto atual para redirecionar corretamente
-      let redirectPath = appConfig.ROUTES.LOGIN; // padrão
-      
-      // Se estiver em contexto de admin, redirecionar para login de admin
-      if (currentPath.includes('/admin')) {
-        redirectPath = appConfig.ROUTES.ADMIN_LOGIN;
+      // Verificar se há um token válido no localStorage antes de fazer logout
+      const token = localStorage.getItem(appConfig.AUTH.TOKEN_KEY);
+      if (!token) {
+        // Não há token, então não faz sentido tentar redirecionar
+        return Promise.reject(error);
       }
       
-      window.location.href = redirectPath;
+      // Verificar se a resposta contém uma mensagem específica de token inválido
+      const errorMessage = error.response?.data?.message || '';
+      const isTokenError = errorMessage.toLowerCase().includes('token') || 
+                          errorMessage.toLowerCase().includes('unauthenticated') ||
+                          errorMessage.toLowerCase().includes('não autenticado');
+      
+      // Só fazer logout automático se for realmente um erro de token
+      if (isTokenError) {
+        // Token expirado ou inválido - redirecionar para login apropriado
+        localStorage.removeItem(appConfig.AUTH.TOKEN_KEY);
+        localStorage.removeItem(appConfig.AUTH.USER_KEY);
+        
+        // Detectar contexto atual para redirecionar corretamente
+        let redirectPath = appConfig.ROUTES.LOGIN; // padrão
+        
+        // Se estiver em contexto de admin, redirecionar para login de admin
+        if (currentPath.includes('/admin')) {
+          redirectPath = appConfig.ROUTES.ADMIN_LOGIN;
+        }
+        
+        window.location.href = redirectPath;
+      }
     }
     return Promise.reject(error);
   }
@@ -297,10 +314,58 @@ export const revendedorService = {
     return `${appConfig.API_BASE_URL}/revendedor/stock-file/download?token=${token}`;
   },
 
-  // Fazer download do ficheiro de stock (abrir em nova aba/download)
-  downloadStockFile() {
-    const url = this.getStockFileDownloadUrl();
-    window.open(url, '_blank');
+  // Fazer download do ficheiro de stock
+  async downloadStockFile() {
+    try {
+      const token = localStorage.getItem(appConfig.AUTH.TOKEN_KEY);
+      if (!token) {
+        throw new Error('Token de autenticação não encontrado');
+      }
+
+      // Fazer requisição para download usando fetch
+      const response = await fetch(`${appConfig.API_BASE_URL}/revendedor/stock-file/download`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json, application/octet-stream',
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Erro no download' }));
+        throw new Error(errorData.message || 'Erro ao fazer download do ficheiro');
+      }
+
+      // Obter o nome do ficheiro do header Content-Disposition
+      const contentDisposition = response.headers.get('Content-Disposition');
+      let filename = 'mapa-stock.xlsx';
+      
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename="([^"]+)"/);
+        if (filenameMatch) {
+          filename = filenameMatch[1];
+        }
+      }
+
+      // Converter resposta para blob
+      const blob = await response.blob();
+      
+      // Criar URL temporário e fazer download
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      
+      // Limpar
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+    } catch (error) {
+      console.error('Erro no download:', error);
+      throw error;
+    }
   }
 };
 

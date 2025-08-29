@@ -59,13 +59,17 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
+    // Determinar a página de login apropriada baseada no utilizador atual
+    const redirectPath = user?.role === 'admin' ? '/admin/login' : '/login';
+    
     localStorage.removeItem(config.AUTH.TOKEN_KEY);
     localStorage.removeItem(config.AUTH.USER_KEY);
     setUser(null);
     setIsAuthenticated(false);
     setIsAdminAuthenticated(false);
+    
     // Redirecionar para a página de login apropriada
-    window.location.href = '/admin/login';
+    window.location.href = redirectPath;
   };
 
   const value = {
