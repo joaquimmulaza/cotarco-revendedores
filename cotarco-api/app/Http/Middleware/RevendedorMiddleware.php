@@ -15,22 +15,24 @@ class RevendedorMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        // Verificar se o usuário está autenticado
-        if (!$request->user()) {
+        // Verificar se o usuário está autenticado via Sanctum
+        if (!$request->user('sanctum')) {
             return response()->json([
                 'message' => 'Não autenticado.',
             ], 401);
         }
 
+        $user = $request->user('sanctum');
+
         // Verificar se o usuário tem role de revendedor e está ativo
-        if ($request->user()->role !== 'revendedor') {
+        if ($user->role !== 'revendedor') {
             return response()->json([
                 'message' => 'Acesso negado. Apenas revendedores podem acessar esta funcionalidade.',
             ], 403);
         }
 
         // Verificar se o revendedor está ativo
-        if ($request->user()->status !== 'active') {
+        if ($user->status !== 'active') {
             return response()->json([
                 'message' => 'Acesso negado. Sua conta de revendedor não está ativa.',
             ], 403);

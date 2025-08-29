@@ -45,3 +45,4 @@ class GenerateAdminToken extends Command
 }
 
 
+
