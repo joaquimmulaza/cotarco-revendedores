@@ -1,3 +1,50 @@
 @import "tailwindcss";
 
 /* estilos globais adicionais aqui, se necessário */
+
+
+.my-text-red{
+    color: #f22f1d;
+}
+
+.my-bg-red{
+    background-color: #f22f1d;
+}
+
+.my-bg-red:hover{
+    background-color: #c32517;
+}
+
+.my-text-gray{
+    color: #666;
+}
+
+.my-text-gray-sub{
+    color: #666666c4;
+}
+
+.my-bg-red-op{
+    background-color: #f22f1d0c;
+}
+
+.my-stroke-red{
+    border: 1px solid #f22f1d !important;
+}
+
+.to-indigo-100 {
+    --tw-gradient-from: #f9f9f9; /* Um branco suave para o início do gradiente */
+    --tw-gradient-to: #f4e8e7; /* Um tom bem sutil da cor base para o final do gradiente */
+    --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position));
+  }
+
+  .gradient-background {
+    background-image: linear-gradient(to right, var(--tw-gradient-from), var(--tw-gradient-to));
+  }
+  
+  .border-red-subtle {
+    border-color: rgba(242, 47, 29, 0.2); /* Cor da borda com opacidade reduzida */
+  }
+
+  .hover-color:hover{
+    background-color: #f22f1d0c;
+  }

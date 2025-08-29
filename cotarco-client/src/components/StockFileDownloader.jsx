@@ -143,7 +143,7 @@ const StockFileDownloader = () => {
     <div className="bg-white overflow-hidden shadow rounded-lg">
       <div className="px-6 py-4 border-b border-gray-200">
         <h3 className="text-lg font-medium text-gray-900 flex items-center">
-          <svg className="h-5 w-5 mr-2 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="h-5 w-5 mr-2 my-text-red" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
           Mapa de Stock Disponível
@@ -189,7 +189,7 @@ const StockFileDownloader = () => {
           <div className="lg:ml-6">
             <button
               onClick={handleDownload}
-              className="w-full lg:w-auto bg-green-600 text-white px-6 py-3 rounded-md hover:bg-green-700 transition-colors cursor-pointer flex items-center justify-center font-medium text-lg shadow-md hover:shadow-lg"
+              className="w-full lg:w-auto my-bg-red text-white px-6 py-3 rounded-md hover: transition-colors cursor-pointer flex items-center justify-center font-medium text-lg"
             >
               <svg className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -199,14 +199,14 @@ const StockFileDownloader = () => {
           </div>
         </div>
         
-        <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+        <div className="mt-6 p-4 my-bg-red-op rounded-lg">
           <div className="flex">
-            <svg className="h-5 w-5 text-blue-400 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+            <svg className="h-5 w-5 my-text-gray-sub mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
             </svg>
             <div className="text-sm">
-              <p className="text-blue-800 font-medium">Informação</p>
-              <p className="text-blue-700 mt-1">
+              <p className="my-text-gray font-medium">Informação</p>
+              <p className="my-text-gray-sub mt-1">
                 Este ficheiro contém informações atualizadas sobre o stock disponível. 
                 Certifique-se de que tem o Microsoft Excel ou uma aplicação compatível instalada para visualizar o ficheiro.
               </p>
