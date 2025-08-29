@@ -12,11 +12,9 @@ import ApiTestPage from './pages/ApiTestPage';
 
 // Import components
 import ProtectedRoute from './components/ProtectedRoute';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { AuthProvider } from './contexts/AuthContext';
 
 function AppContent() {
-  const { isAuthenticated, isAdminAuthenticated } = useAuth();
-
   return (
     <Router>
       <div className="App">
@@ -33,7 +31,7 @@ function AppContent() {
           <Route 
             path="/dashboard" 
             element={
-              <ProtectedRoute isAuthenticated={isAuthenticated} redirectTo="/">
+              <ProtectedRoute>
                 <Dashboard />
               </ProtectedRoute>
             } 
@@ -44,7 +42,7 @@ function AppContent() {
           <Route 
             path="/admin/dashboard" 
             element={
-              <ProtectedRoute isAuthenticated={isAdminAuthenticated} redirectTo="/admin/login">
+              <ProtectedRoute adminOnly={true}>
                 <AdminDashboard />
               </ProtectedRoute>
             } 

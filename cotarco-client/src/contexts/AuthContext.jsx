@@ -1,89 +1,94 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { config } from '../config/config';
+import { authService } from '../services/api'; // Certifique-se que o authService é importado
 
-const AuthContext = createContext();
+const AuthContext = createContext(null);
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth deve ser usado dentro de um AuthProvider');
-  }
-  return context;
-};
+export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [loading, setLoading] = useState(true); // Estado de carregamento da sessão
 
-  // Verificar se o utilizador está autenticado ao carregar a app
-  useEffect(() => {
+  // Função para validar a sessão ao carregar a aplicação
+  const validateSession = useCallback(async () => {
     const token = localStorage.getItem(config.AUTH.TOKEN_KEY);
-    const userData = localStorage.getItem(config.AUTH.USER_KEY);
-    
-    if (token && userData) {
+
+    if (token) {
       try {
-        const parsedUser = JSON.parse(userData);
-        setUser(parsedUser);
+        // Tenta buscar os dados do utilizador com o token guardado
+        const response = await authService.getAuthenticatedUser();
+        const userData = response.data;
         
-        if (parsedUser.role === 'admin') {
-          setIsAdminAuthenticated(true);
-          setIsAuthenticated(false);
-        } else {
-          setIsAuthenticated(true);
-          setIsAdminAuthenticated(false);
-        }
+        // Se a chamada for bem-sucedida, o token é válido. Inicia a sessão.
+        setUser(userData);
+        setIsAuthenticated(true);
+        setIsAdmin(userData.role === 'admin');
+        console.log('Sessão validada com sucesso:', userData.name);
       } catch (error) {
-        console.error('Erro ao parsear dados do utilizador:', error);
-        // Limpar dados corrompidos
+        // Se falhar (ex: 401), o token é inválido ou expirado
+        console.error("Falha na validação da sessão. A limpar token inválido.", error.message);
         localStorage.removeItem(config.AUTH.TOKEN_KEY);
         localStorage.removeItem(config.AUTH.USER_KEY);
+        setUser(null);
+        setIsAuthenticated(false);
+        setIsAdmin(false);
       }
+    } else {
+      // Não há token, garantir que o estado está limpo
+      setUser(null);
+      setIsAuthenticated(false);
+      setIsAdmin(false);
     }
+    // Finaliza o carregamento, permitindo a renderização da aplicação
     setLoading(false);
   }, []);
+
+  useEffect(() => {
+    validateSession();
+  }, [validateSession]);
 
   const login = (userData, token) => {
     localStorage.setItem(config.AUTH.TOKEN_KEY, token);
     localStorage.setItem(config.AUTH.USER_KEY, JSON.stringify(userData));
     setUser(userData);
-    
-    if (userData.role === 'admin') {
-      setIsAdminAuthenticated(true);
-      setIsAuthenticated(false);
-    } else {
-      setIsAuthenticated(true);
-      setIsAdminAuthenticated(false);
-    }
+    setIsAuthenticated(true);
+    setIsAdmin(userData.role === 'admin');
   };
 
   const logout = () => {
-    // Determinar a página de login apropriada baseada no utilizador atual
-    const redirectPath = user?.role === 'admin' ? '/admin/login' : '/login';
-    
     localStorage.removeItem(config.AUTH.TOKEN_KEY);
     localStorage.removeItem(config.AUTH.USER_KEY);
     setUser(null);
     setIsAuthenticated(false);
-    setIsAdminAuthenticated(false);
+    setIsAdmin(false);
     
-    // Redirecionar para a página de login apropriada
-    window.location.href = redirectPath;
+    // O redirecionamento pode ser tratado nos próprios componentes ou aqui
+    // window.location.href = config.ROUTES.LOGIN;
   };
 
   const value = {
     isAuthenticated,
-    isAdminAuthenticated,
+    isAdmin,
     user,
-    loading,
+    loading, // Expor o estado de loading
     login,
-    logout
+    logout,
   };
 
+  // Renderiza os filhos apenas quando a validação da sessão estiver concluída
   return (
     <AuthContext.Provider value={value}>
-      {children}
+      {loading ? (
+        <div className="flex justify-center items-center min-h-screen">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600"></div>
+          <span className="ml-3 text-gray-600">A validar sessão...</span>
+        </div>
+      ) : (
+        children
+      )}
     </AuthContext.Provider>
   );
 };

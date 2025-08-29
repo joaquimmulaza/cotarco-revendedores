@@ -158,10 +158,20 @@ export const authService = {
     return !!localStorage.getItem(appConfig.AUTH.TOKEN_KEY);
   },
 
-  // Obter usuário atual
+  // Obter usuário atual do localStorage
   getCurrentUser() {
     const user = localStorage.getItem(appConfig.AUTH.USER_KEY);
     return user ? JSON.parse(user) : null;
+  },
+
+  // Buscar dados do utilizador autenticado do servidor
+  async getAuthenticatedUser() {
+    try {
+      const response = await api.get('/user');
+      return response;
+    } catch (error) {
+      throw error.response?.data || { message: 'Erro ao obter dados do utilizador' };
+    }
   }
 };
 
