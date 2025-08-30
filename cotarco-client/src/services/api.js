@@ -203,6 +203,16 @@ export const adminService = {
     }
   },
 
+  // Atualizar parceiro (role e business_model)
+  async updatePartner(userId, partnerData) {
+    try {
+      const response = await api.put(`/admin/partners/${userId}`, partnerData);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: 'Erro ao atualizar parceiro' };
+    }
+  },
+
   // Obter estatísticas do dashboard
   async getDashboardStats() {
     try {

@@ -30,6 +30,7 @@ class RegistrationTest extends TestCase
             'password_confirmation' => 'password123',
             'company_name' => 'Empresa de Teste Lda',
             'phone_number' => '912345678',
+            'role' => 'revendedor',
             'alvara' => UploadedFile::fake()->create('alvara.pdf', 1024, 'application/pdf'), // Cria um ficheiro falso
         ];
 
@@ -48,19 +49,65 @@ class RegistrationTest extends TestCase
             'status' => 'pending_email_validation', // O status inicial correto
         ]);
 
-        // Verifica se o perfil do revendedor foi criado
+        // Verifica se o perfil do parceiro foi criado
         $user = User::where('email', 'joao.teste@exemplo.com')->first();
-        $this->assertDatabaseHas('revendedor_profiles', [
+        $this->assertDatabaseHas('partner_profiles', [
             'user_id' => $user->id,
             'company_name' => 'Empresa de Teste Lda',
         ]);
 
         // Verifica se o ficheiro do alvará foi guardado no disco falso
-        Storage::disk('local')->assertExists($user->revendedorProfile->alvara_path);
+        Storage::disk('local')->assertExists($user->partnerProfile->alvara_path);
         
         // Nota: O email AdminNewRevendedorNotification só é enviado após verificação do email
         // Durante o registo, apenas o email de verificação é enviado
         // Mail::assertSent(AdminNewRevendedorNotification::class);
+    }
+
+    /**
+     * Teste de registo bem-sucedido de um novo distribuidor
+     */
+    public function test_it_should_register_a_new_distributor_successfully(): void
+    {
+        // 1. Preparação (Arrange)
+        Storage::fake('local'); // Usa um disco de armazenamento falso
+        Mail::fake(); // Impede o envio real de emails
+
+        $distribuidorData = [
+            'name' => 'Maria Distribuidora Teste',
+            'email' => 'maria.distribuidora@exemplo.com',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+            'company_name' => 'Distribuidora de Teste Lda',
+            'phone_number' => '912345679',
+            'role' => 'distribuidor',
+            'alvara' => UploadedFile::fake()->create('alvara_distribuidor.pdf', 1024, 'application/pdf'),
+        ];
+
+        // 2. Ação (Act)
+        $response = $this->postJson('/api/register', $distribuidorData);
+
+        // 3. Verificações (Assert)
+        // Verifica se a resposta da API foi bem-sucedida
+        $response->assertStatus(201)
+                 ->assertJson(['message' => 'Registro realizado com sucesso! Verifique seu email para ativar a conta.']);
+
+        // Verifica se o utilizador foi criado na base de dados
+        $this->assertDatabaseHas('users', [
+            'email' => 'maria.distribuidora@exemplo.com',
+            'role' => 'distribuidor',
+            'status' => 'pending_email_validation',
+        ]);
+
+        // Verifica se o perfil do parceiro foi criado
+        $user = User::where('email', 'maria.distribuidora@exemplo.com')->first();
+        $this->assertDatabaseHas('partner_profiles', [
+            'user_id' => $user->id,
+            'company_name' => 'Distribuidora de Teste Lda',
+        ]);
+
+        // Verifica se o ficheiro do alvará foi guardado no disco falso
+        Storage::disk('local')->assertExists($user->partnerProfile->alvara_path);
     }
 
     /**
@@ -82,6 +129,7 @@ class RegistrationTest extends TestCase
             'password_confirmation' => 'password123',
             'company_name' => 'Empresa Duplicada Lda',
             'phone_number' => '912345679',
+            'role' => 'revendedor',
             'alvara' => \Illuminate\Http\UploadedFile::fake()->create('alvara2.pdf', 1024),
         ];
 
@@ -94,5 +142,61 @@ class RegistrationTest extends TestCase
 
         // Verifica se a resposta JSON contém um erro específico para o campo 'email'.
         $response->assertJsonValidationErrors(['email']);
+    }
+
+    /**
+     * Teste de falha no registo quando o role não é fornecido
+     */
+    public function test_it_should_fail_registration_if_role_is_missing()
+    {
+        // 1. Preparação (Arrange)
+        Storage::fake('local');
+        Mail::fake();
+
+        $revendedorData = [
+            'name' => 'João Sem Role',
+            'email' => 'joao.sem.role@exemplo.com',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+            'company_name' => 'Empresa Sem Role Lda',
+            'phone_number' => '912345680',
+            // 'role' => 'revendedor', // Role em falta
+            'alvara' => UploadedFile::fake()->create('alvara_sem_role.pdf', 1024, 'application/pdf'),
+        ];
+
+        // 2. Ação (Act)
+        $response = $this->postJson('/api/register', $revendedorData);
+
+        // 3. Verificações (Assert)
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors(['role']);
+    }
+
+    /**
+     * Teste de falha no registo quando o role é inválido
+     */
+    public function test_it_should_fail_registration_if_role_is_invalid()
+    {
+        // 1. Preparação (Arrange)
+        Storage::fake('local');
+        Mail::fake();
+
+        $revendedorData = [
+            'name' => 'João Role Inválido',
+            'email' => 'joao.role.invalido@exemplo.com',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+            'company_name' => 'Empresa Role Inválido Lda',
+            'phone_number' => '912345681',
+            'role' => 'admin', // Role inválido (não é revendedor nem distribuidor)
+            'alvara' => UploadedFile::fake()->create('alvara_role_invalido.pdf', 1024, 'application/pdf'),
+        ];
+
+        // 2. Ação (Act)
+        $response = $this->postJson('/api/register', $revendedorData);
+
+        // 3. Verificações (Assert)
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors(['role']);
     }
 }

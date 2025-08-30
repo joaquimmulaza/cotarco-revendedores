@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class RevendedorProfile extends Model
+class PartnerProfile extends Model
 {
     use HasFactory;
 
@@ -19,10 +19,11 @@ class RevendedorProfile extends Model
         'company_name',
         'phone_number',
         'alvara_path',
+        'business_model',
     ];
 
     /**
-     * Get the user that owns the revendedor profile.
+     * Get the user that owns the partner profile.
      */
     public function user()
     {

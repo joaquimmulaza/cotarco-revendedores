@@ -1,28 +1,37 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
 import { authService } from '../services/api';
 import { config } from '../config/config';
 import logoCotarco from '../assets/logo-cotarco.png';
 
 const Register = () => {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-    phone: '',
-    company: '',
-    alvara: null
-  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [fieldErrors, setFieldErrors] = useState({});
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    if (formData.password !== formData.confirmPassword) {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    watch,
+    setValue
+  } = useForm({
+    defaultValues: {
+      name: '',
+      email: '',
+      password: '',
+      confirmPassword: '',
+      phone: '',
+      company: '',
+      role: '',
+      alvara: null
+    }
+  });
+
+  const onSubmit = async (data) => {
+    if (data.password !== data.confirmPassword) {
       setError('As palavras-passe não coincidem');
       return;
     }
@@ -32,18 +41,19 @@ const Register = () => {
     setFieldErrors({});
 
     try {
-      const data = new FormData();
-      data.append('name', formData.name);
-      data.append('email', formData.email);
-      data.append('password', formData.password);
-      data.append('password_confirmation', formData.confirmPassword);
-      data.append('phone_number', formData.phone);
-      data.append('company_name', formData.company);
-      if (formData.alvara) {
-        data.append('alvara', formData.alvara);
+      const formData = new FormData();
+      formData.append('name', data.name);
+      formData.append('email', data.email);
+      formData.append('password', data.password);
+      formData.append('password_confirmation', data.confirmPassword);
+      formData.append('phone_number', data.phone);
+      formData.append('company_name', data.company);
+      formData.append('role', data.role);
+      if (data.alvara && data.alvara[0]) {
+        formData.append('alvara', data.alvara[0]);
       }
 
-      const response = await authService.registerRevendedor(data);
+      const response = await authService.registerRevendedor(formData);
 
       console.log('Registro bem-sucedido:', response);
       navigate(config.ROUTES.EMAIL_VERIFICATION_PENDING);
@@ -66,14 +76,6 @@ const Register = () => {
     }
   };
 
-  const handleChange = (e) => {
-    const { name, files, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: files ? files[0] : value,
-    }));
-  };
-
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
@@ -87,7 +89,7 @@ const Register = () => {
         </div>
         
         <h2 className="mt-6 text-center text-3xl font-bold text-gray-900">
-          Registo de Revendedor
+          Registo de Parceiro
         </h2>
       
       </div>
@@ -100,7 +102,7 @@ const Register = () => {
             </div>
           )}
           
-          <form className="space-y-6" onSubmit={handleSubmit}>
+          <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700">
                 Nome completo
@@ -108,13 +110,13 @@ const Register = () => {
               <div className="mt-1">
                 <input
                   id="name"
-                  name="name"
                   type="text"
-                  required
-                  value={formData.name}
-                  onChange={handleChange}
+                  {...register('name', { required: 'Nome completo é obrigatório' })}
                   className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary"
                 />
+                {errors.name && (
+                  <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>
+                )}
                 {fieldErrors.name && (
                   <p className="mt-1 text-sm text-red-600">{fieldErrors.name[0]}</p>
                 )}
@@ -128,13 +130,19 @@ const Register = () => {
               <div className="mt-1">
                 <input
                   id="email"
-                  name="email"
                   type="email"
-                  required
-                  value={formData.email}
-                  onChange={handleChange}
+                  {...register('email', { 
+                    required: 'Email é obrigatório',
+                    pattern: {
+                      value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                      message: 'Email inválido'
+                    }
+                  })}
                   className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary"
                 />
+                {errors.email && (
+                  <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
+                )}
                 {fieldErrors.email && (
                   <p className="mt-1 text-sm text-red-600">{fieldErrors.email[0]}</p>
                 )}
@@ -148,13 +156,13 @@ const Register = () => {
               <div className="mt-1">
                 <input
                   id="phone"
-                  name="phone"
                   type="tel"
-                  required
-                  value={formData.phone}
-                  onChange={handleChange}
+                  {...register('phone', { required: 'Telefone é obrigatório' })}
                   className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary"
                 />
+                {errors.phone && (
+                  <p className="mt-1 text-sm text-red-600">{errors.phone.message}</p>
+                )}
                 {fieldErrors.phone_number && (
                   <p className="mt-1 text-sm text-red-600">{fieldErrors.phone_number[0]}</p>
                 )}
@@ -163,20 +171,43 @@ const Register = () => {
 
             <div>
               <label htmlFor="company" className="block text-sm font-medium text-gray-700">
-                Empresa
+                Nome da Empresa
               </label>
               <div className="mt-1">
                 <input
                   id="company"
-                  name="company"
                   type="text"
-                  required
-                  value={formData.company}
-                  onChange={handleChange}
+                  {...register('company', { required: 'Nome da empresa é obrigatório' })}
                   className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary"
                 />
+                {errors.company && (
+                  <p className="mt-1 text-sm text-red-600">{errors.company.message}</p>
+                )}
                 {fieldErrors.company_name && (
                   <p className="mt-1 text-sm text-red-600">{fieldErrors.company_name[0]}</p>
+                )}
+              </div>
+            </div>
+
+            <div>
+              <label htmlFor="role" className="block text-sm font-medium text-gray-700">
+                Tipo de Conta
+              </label>
+              <div className="mt-1">
+                <select
+                  id="role"
+                  {...register('role', { required: 'Tipo de conta é obrigatório' })}
+                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary"
+                >
+                  <option value="">Selecione uma opção...</option>
+                  <option value="revendedor">Revendedor</option>
+                  <option value="distribuidor">Distribuidor</option>
+                </select>
+                {errors.role && (
+                  <p className="mt-1 text-sm text-red-600">{errors.role.message}</p>
+                )}
+                {fieldErrors.role && (
+                  <p className="mt-1 text-sm text-red-600">{fieldErrors.role[0]}</p>
                 )}
               </div>
             </div>
@@ -188,13 +219,14 @@ const Register = () => {
               <div className="mt-1">
                 <input
                   id="alvara"
-                  name="alvara"
                   type="file"
                   accept=".pdf,.jpg,.jpeg,.png"
-                  required
-                  onChange={handleChange}
+                  {...register('alvara', { required: 'Alvará é obrigatório' })}
                   className="block w-full text-sm text-gray-900 border border-gray-300 rounded-md cursor-pointer focus:outline-none"
                 />
+                {errors.alvara && (
+                  <p className="mt-1 text-sm text-red-600">{errors.alvara.message}</p>
+                )}
                 {fieldErrors.alvara && (
                   <p className="mt-1 text-sm text-red-600">{fieldErrors.alvara[0]}</p>
                 )}
@@ -208,13 +240,19 @@ const Register = () => {
               <div className="mt-1">
                 <input
                   id="password"
-                  name="password"
                   type="password"
-                  required
-                  value={formData.password}
-                  onChange={handleChange}
+                  {...register('password', { 
+                    required: 'Palavra-passe é obrigatória',
+                    minLength: {
+                      value: 8,
+                      message: 'Palavra-passe deve ter pelo menos 8 caracteres'
+                    }
+                  })}
                   className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary"
                 />
+                {errors.password && (
+                  <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
+                )}
                 {fieldErrors.password && (
                   <p className="mt-1 text-sm text-red-600">{fieldErrors.password[0]}</p>
                 )}
@@ -228,13 +266,16 @@ const Register = () => {
               <div className="mt-1">
                 <input
                   id="confirmPassword"
-                  name="confirmPassword"
                   type="password"
-                  required
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
+                  {...register('confirmPassword', { 
+                    required: 'Confirmação da palavra-passe é obrigatória',
+                    validate: (value) => value === watch('password') || 'As palavras-passe não coincidem'
+                  })}
                   className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary"
                 />
+                {errors.confirmPassword && (
+                  <p className="mt-1 text-sm text-red-600">{errors.confirmPassword.message}</p>
+                )}
               </div>
             </div>
 
