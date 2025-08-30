@@ -26,7 +26,7 @@ const Header = ({ user, onLogout, isAdmin = false, showStockMap = false, onStock
     <header className="header-container bg-white shadow-sm border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center py-4">
-          {/* Logo e Botão Mapa de Stock */}
+          {/* Logo e Botão Mapa de Stock (apenas para revendedores) */}
           <div className="flex items-center space-x-4">
             <div 
               onClick={handleLogoClick}
@@ -39,17 +39,19 @@ const Header = ({ user, onLogout, isAdmin = false, showStockMap = false, onStock
               />
             </div>
             
-            {/* Botão Mapa de Stock */}
-            <button
-              onClick={handleStockMapClick}
-              className={`cursor-pointer px-6 py-2 text-sm font-medium rounded-lg transition-all duration-200 focus:outline-none ${
-                showStockMap
-                  ? 'px-6 py-2  bg-gray-200 text-gray-900 hover: my-text-hover  '
-                  : 'px-6 py-2  bg-gray-100 text-gray-700 hover: my-text-hover'
-              }`}
-            >
-              Mapa de Stock
-            </button>
+            {/* Botão Mapa de Stock - apenas para revendedores */}
+            {!isAdmin && (
+              <button
+                onClick={handleStockMapClick}
+                className={`cursor-pointer px-6 py-2 text-sm font-medium rounded-lg transition-all duration-200 focus:outline-none ${
+                  showStockMap
+                    ? 'px-6 py-2  bg-gray-200 text-gray-900 hover: my-text-hover  '
+                    : 'px-6 py-2  bg-gray-100 text-gray-700 hover: my-text-hover'
+                }`}
+              >
+                Mapa de Stock
+              </button>
+            )}
           </div>
 
           {/* Informações do usuário e botão de logout */}
