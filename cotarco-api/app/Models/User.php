@@ -50,10 +50,10 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Get the revendedor profile associated with the user.
+     * Get the partner profile associated with the user.
      */
-    public function revendedorProfile()
+    public function partnerProfile()
     {
-        return $this->hasOne(RevendedorProfile::class);
+        return $this->hasOne(PartnerProfile::class);
     }
 }

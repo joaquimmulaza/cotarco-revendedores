@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Admin\AdminController;
+use App\Http\Controllers\Admin\PartnerController;
 use App\Http\Controllers\StockFileController;
 
 Route::get('/user', function (Request $request) {
@@ -43,13 +44,23 @@ Route::prefix('admin')->group(function () {
     Route::post('/revendedores/{user}/reject', [AdminController::class, 'rejectRevendedor']);
     
     // Rota para download do alvará
-    Route::get('/revendedores/{user}/alvara', [AdminController::class, 'downloadAlvara']);
+    Route::get('/revendedores/{user}/alvará', [AdminController::class, 'downloadAlvara']);
     
     // Rotas para gestão de ficheiros de stock
     Route::post('/stock-file/upload', [StockFileController::class, 'uploadOrUpdate']);
     Route::get('/stock-file/current', [StockFileController::class, 'getCurrentForAdmin']);
     Route::patch('/stock-file/{file}/toggle-status', [StockFileController::class, 'toggleStatus']);
     Route::delete('/stock-file/{file}', [StockFileController::class, 'destroy']);
+    
+    // Rotas para gestão de parceiros
+    Route::prefix('partners')->group(function () {
+        Route::get('/', [PartnerController::class, 'index']);
+        Route::get('/{user}', [PartnerController::class, 'show']);
+        Route::put('/{user}', [PartnerController::class, 'update']);
+        Route::put('/{user}/status', [PartnerController::class, 'updateStatus']);
+        Route::patch('/{user}/profile', [PartnerController::class, 'updateProfile']);
+        Route::get('/statistics', [PartnerController::class, 'statistics']);
+    });
 });
 
 // Rotas para revendedores

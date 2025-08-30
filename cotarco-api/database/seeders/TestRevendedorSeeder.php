@@ -5,7 +5,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\User;
-use App\Models\RevendedorProfile;
+use App\Models\PartnerProfile;
 use Illuminate\Support\Facades\Hash;
 
 class TestRevendedorSeeder extends Seeder
@@ -26,11 +26,12 @@ class TestRevendedorSeeder extends Seeder
                 'email_verified_at' => now(),
             ]);
 
-            RevendedorProfile::create([
+            PartnerProfile::create([
                 'user_id' => $user->id,
                 'company_name' => 'Empresa Teste Ltda',
                 'phone_number' => '+351912345678',
                 'alvara_path' => 'alvaras/teste_alvara.pdf',
+                'business_model' => 'B2B',
             ]);
 
             $this->command->info('Revendedor de teste criado com sucesso!');

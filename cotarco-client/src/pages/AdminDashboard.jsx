@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Tab } from '@headlessui/react';
+import { Dialog } from '@headlessui/react';
 import { useAuth } from '../contexts/AuthContext';
 import { adminService } from '../services/api';
 import StockFileManager from '../components/StockFileManager';
@@ -21,13 +22,22 @@ const AdminDashboard = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pagination, setPagination] = useState(null);
   
+  // Estados para o modal de edição
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingPartner, setEditingPartner] = useState(null);
+  const [editFormData, setEditFormData] = useState({
+    role: '',
+    business_model: ''
+  });
+  const [editLoading, setEditLoading] = useState(false);
+  
   // Mapear índices de tabs para status
   const tabStatusMap = ['pending_approval', 'active', 'rejected'];
   const currentStatus = tabStatusMap[selectedTabIndex];
   
   // Estados para estatísticas
   const [stats, setStats] = useState({
-    revendedores: {
+    parceiros: {
       pending_approval: 0,
       active: 0,
       rejected: 0,
@@ -43,9 +53,27 @@ const AdminDashboard = () => {
     try {
       setStatsLoading(true);
       const response = await adminService.getDashboardStats();
-      setStats(response.data || {});
+      // Garantir que a estrutura de dados seja válida
+      if (response.data) {
+        setStats({
+          parceiros: {
+            pending_approval: response.data.parceiros?.pending_approval || 0,
+            active: response.data.parceiros?.active || 0,
+            rejected: response.data.parceiros?.rejected || 0,
+            inactive: response.data.parceiros?.inactive || 0,
+            total: response.data.parceiros?.total || 0
+          },
+          sales: {
+            total_this_month: response.data.sales?.total_this_month || 0
+          },
+          orders: {
+            active_count: response.data.orders?.active_count || 0
+          }
+        });
+      }
     } catch (error) {
       console.error('Erro ao carregar estatísticas:', error);
+      // Em caso de erro, manter o estado inicial
     } finally {
       setStatsLoading(false);
     }
@@ -105,6 +133,43 @@ const AdminDashboard = () => {
     adminService.viewAlvara(userId);
   };
 
+  // Funções para o modal de edição
+  const openEditModal = (partner) => {
+    setEditingPartner(partner);
+    setEditFormData({
+      role: partner.role || '',
+      business_model: partner.profile?.business_model || ''
+    });
+    setIsEditModalOpen(true);
+  };
+
+  const closeEditModal = () => {
+    setIsEditModalOpen(false);
+    setEditingPartner(null);
+    setEditFormData({ role: '', business_model: '' });
+    setEditLoading(false);
+  };
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    if (!editingPartner) return;
+
+    try {
+      setEditLoading(true);
+      
+      // Chamar a API para atualizar o parceiro
+      await adminService.updatePartner(editingPartner.id, editFormData);
+      
+      // Fechar modal e atualizar dados
+      closeEditModal();
+      await fetchRevendedores();
+      
+    } catch (error) {
+      console.error('Erro ao atualizar parceiro:', error);
+      alert(error.message || 'Erro ao atualizar parceiro');
+    }
+  };
+
   const formatDate = (dateString) => {
     if (!dateString) return 'Data não disponível';
     try {
@@ -112,6 +177,16 @@ const AdminDashboard = () => {
     } catch {
       return 'Data inválida';
     }
+  };
+
+  const formatRole = (role) => {
+    if (!role) return 'N/A';
+    return role.charAt(0).toUpperCase() + role.slice(1);
+  };
+
+  const formatBusinessModel = (businessModel) => {
+    if (!businessModel) return 'Não definido';
+    return businessModel;
   };
 
   return (
@@ -145,7 +220,7 @@ const AdminDashboard = () => {
                         Solicitações pendentes
                       </dt>
                       <dd className="text-lg font-medium text-gray-900">
-                        {statsLoading ? '...' : stats.revendedores.pending_approval}
+                        {statsLoading ? '...' : stats.parceiros?.pending_approval || 0}
                       </dd>
                     </dl>
                   </div>
@@ -166,10 +241,10 @@ const AdminDashboard = () => {
                   <div className="ml-5 w-0 flex-1">
                     <dl>
                       <dt className="text-sm font-medium text-gray-500 truncate">
-                        Revendedores ativos
+                        Parceiros ativos
                       </dt>
                       <dd className="text-lg font-medium text-gray-900">
-                        {statsLoading ? '...' : stats.revendedores.active}
+                        {statsLoading ? '...' : stats.parceiros?.active || 0}
                       </dd>
                     </dl>
                   </div>
@@ -193,7 +268,7 @@ const AdminDashboard = () => {
                         Vendas totais este mês
                       </dt>
                       <dd className="text-lg font-medium text-gray-900">
-                        {statsLoading ? '...' : stats.sales.total_this_month}
+                        {statsLoading ? '...' : stats.sales?.total_this_month || 0}
                       </dd>
                     </dl>
                   </div>
@@ -217,7 +292,7 @@ const AdminDashboard = () => {
                         Encomendas ativas
                       </dt>
                       <dd className="text-lg font-medium text-gray-900">
-                        {statsLoading ? '...' : stats.orders.active_count}
+                        {statsLoading ? '...' : stats.orders?.active_count || 0}
                       </dd>
                     </dl>
                   </div>
@@ -231,11 +306,11 @@ const AdminDashboard = () => {
             <StockFileManager />
           </div>
 
-          {/* Revendedores Management */}
+          {/* Parceiros Management */}
           <div className="bg-white shadow rounded-lg">
             <div className="px-6 py-4 border-b border-gray-200">
               <h3 className="text-lg font-medium text-gray-900 mb-4">
-                Gestão de Revendedores
+                Gestão de Parceiros
               </h3>
               
               {/* Headless UI Tabs */}
@@ -250,7 +325,7 @@ const AdminDashboard = () => {
                       }`
                     }
                   >
-                    Pendentes ({statsLoading ? '...' : stats.revendedores.pending_approval})
+                    Pendentes ({statsLoading ? '...' : stats.parceiros?.pending_approval || 0})
                   </Tab>
                   <Tab
                     className={({ selected }) =>
@@ -261,7 +336,7 @@ const AdminDashboard = () => {
                       }`
                     }
                   >
-                    Ativos ({statsLoading ? '...' : stats.revendedores.active})
+                    Ativos ({statsLoading ? '...' : stats.parceiros?.active || 0})
                   </Tab>
                   <Tab
                     className={({ selected }) =>
@@ -272,7 +347,7 @@ const AdminDashboard = () => {
                       }`
                     }
                   >
-                    Rejeitados ({statsLoading ? '...' : stats.revendedores.rejected})
+                    Rejeitados ({statsLoading ? '...' : stats.parceiros?.rejected || 0})
                   </Tab>
                 </Tab.List>
               </Tab.Group>
@@ -281,7 +356,7 @@ const AdminDashboard = () => {
               {loading ? (
                 <div className="flex justify-center items-center py-12">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                  <span className="ml-3 text-gray-600">A carregar revendedores...</span>
+                  <span className="ml-3 text-gray-600">A carregar parceiros...</span>
                 </div>
               ) : error ? (
                 <div className="text-center py-12">
@@ -307,14 +382,14 @@ const AdminDashboard = () => {
                     </svg>
                   </div>
                   <h3 className="text-lg font-medium text-gray-900 mb-2">
-                    {currentStatus === 'pending_approval' && 'Nenhum revendedor pendente'}
-                    {currentStatus === 'active' && 'Nenhum revendedor ativo'}
-                    {currentStatus === 'rejected' && 'Nenhum revendedor rejeitado'}
+                    {currentStatus === 'pending_approval' && 'Nenhum parceiro pendente'}
+                    {currentStatus === 'active' && 'Nenhum parceiro ativo'}
+                    {currentStatus === 'rejected' && 'Nenhum parceiro rejeitado'}
                   </h3>
                   <p className="text-gray-600 max-w-md mx-auto">
-                    {currentStatus === 'pending_approval' && 'No momento não há revendedores aguardando aprovação.'}
-                    {currentStatus === 'active' && 'No momento não há revendedores ativos no sistema.'}
-                    {currentStatus === 'rejected' && 'No momento não há revendedores rejeitados.'}
+                    {currentStatus === 'pending_approval' && 'No momento não há parceiros aguardando aprovação.'}
+                    {currentStatus === 'active' && 'No momento não há parceiros ativos no sistema.'}
+                    {currentStatus === 'rejected' && 'No momento não há parceiros rejeitados.'}
                   </p>
                 </div>
               ) : (
@@ -346,7 +421,7 @@ const AdminDashboard = () => {
                                 Registado em {formatDate(revendedor.created_at)}
                               </span>
                             </div>
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
                             <div className="flex items-center">
                               <span className="font-medium text-gray-700 w-16">Email:</span>
                               <span className="text-gray-600">{revendedor.email}</span>
@@ -359,10 +434,29 @@ const AdminDashboard = () => {
                               <span className="font-medium text-gray-700 w-20">Telefone:</span>
                               <span className="text-gray-600">{revendedor.profile?.phone_number || 'N/A'}</span>
                             </div>
+                            <div className="flex items-center">
+                              <span className="font-medium text-gray-700 w-16">Tipo:</span>
+                              <span className="text-gray-600">{formatRole(revendedor.role)}</span>
+                            </div>
+                            <div className="flex items-center">
+                              <span className="font-medium text-gray-700 w-24">Modelo:</span>
+                              <span className="text-gray-600">{formatBusinessModel(revendedor.profile?.business_model)}</span>
+                            </div>
                           </div>
                         </div>
                         
                         <div className="flex flex-col sm:flex-row gap-2 mt-4 lg:mt-0 lg:ml-6">
+                          {/* Botão Editar */}
+                          <button
+                            onClick={() => openEditModal(revendedor)}
+                            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors text-sm font-medium flex items-center justify-center"
+                          >
+                            <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                            Editar
+                          </button>
+
                           {revendedor.profile?.alvara_path ? (
                             <button
                               onClick={() => handleViewAlvara(revendedor.id)}
@@ -563,6 +657,80 @@ const AdminDashboard = () => {
           </div>
         </div>
       </main>
+
+      {/* Modal de Edição */}
+      <Dialog
+        open={isEditModalOpen}
+        onClose={closeEditModal}
+        className="relative z-50"
+      >
+        {/* Backdrop */}
+        <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
+
+        {/* Modal */}
+        <div className="fixed inset-0 flex items-center justify-center p-4">
+          <Dialog.Panel className="mx-auto max-w-md w-full bg-white rounded-lg shadow-xl">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <Dialog.Title className="text-lg font-medium text-gray-900">
+                Editar Parceiro: {editingPartner?.name}
+              </Dialog.Title>
+            </div>
+
+            <form onSubmit={handleEditSubmit} className="px-6 py-4 space-y-4">
+              <div>
+                <label htmlFor="edit-role" className="block text-sm font-medium text-gray-700 mb-2">
+                  Tipo de Conta
+                </label>
+                <select
+                  id="edit-role"
+                  value={editFormData.role}
+                  onChange={(e) => setEditFormData(prev => ({ ...prev, role: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  required
+                >
+                  <option value="">Selecione uma opção...</option>
+                  <option value="revendedor">Revendedor</option>
+                  <option value="distribuidor">Distribuidor</option>
+                </select>
+              </div>
+
+              <div>
+                <label htmlFor="edit-business-model" className="block text-sm font-medium text-gray-700 mb-2">
+                  Modelo de Negócio
+                </label>
+                <select
+                  id="edit-business-model"
+                  value={editFormData.business_model}
+                  onChange={(e) => setEditFormData(prev => ({ ...prev, business_model: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  required
+                >
+                  <option value="">Selecione uma opção...</option>
+                  <option value="B2B">B2B</option>
+                  <option value="B2C">B2C</option>
+                </select>
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-4">
+                <button
+                  type="button"
+                  onClick={closeEditModal}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={editLoading}
+                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {editLoading ? 'A guardar...' : 'Guardar Alterações'}
+                </button>
+              </div>
+            </form>
+          </Dialog.Panel>
+        </div>
+      </Dialog>
     </div>
   );
 };

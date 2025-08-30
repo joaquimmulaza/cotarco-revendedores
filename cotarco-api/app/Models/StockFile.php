@@ -53,6 +53,6 @@ class StockFile extends Model
      */
     public static function getLatestActive()
     {
-        return static::active()->latest()->first();
+        return static::where('is_active', true)->latest()->first();
     }
 }

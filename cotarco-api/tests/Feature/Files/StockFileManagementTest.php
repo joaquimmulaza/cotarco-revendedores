@@ -24,6 +24,9 @@ class StockFileManagementTest extends TestCase
         $this->admin = User::factory()->create(['role' => 'admin']);
         $this->approvedReseller = User::factory()->create(['role' => 'revendedor', 'status' => 'active']);
         $this->pendingReseller = User::factory()->create(['role' => 'revendedor', 'status' => 'pending_approval']);
+        
+        // Limpar qualquer ficheiro de stock existente
+        StockFile::query()->delete();
     }
 
     /**
@@ -51,18 +54,31 @@ class StockFileManagementTest extends TestCase
     public function test_an_approved_reseller_can_download_an_active_stock_file()
     {
         Storage::fake('local');
-        $file = UploadedFile::fake()->create('stock.xlsx', 100);
-        $filePath = Storage::disk('local')->put('stock_files', $file);
+        
+        // Criar um ficheiro real no storage
+        $fileContent = 'fake excel content';
+        $filePath = 'stock_files/test_stock.xlsx';
+        Storage::disk('local')->put($filePath, $fileContent);
 
-        StockFile::create([
+        $stockFile = StockFile::create([
             'display_name' => 'Mapa de Stock Teste',
             'file_path' => $filePath,
             'original_filename' => 'stock.xlsx',
             'mime_type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            'size' => 100,
+            'size' => strlen($fileContent),
             'is_active' => true, // Ficheiro está ativo
             'uploaded_by_user_id' => $this->admin->id,
         ]);
+
+        // Debug: verificar se o ficheiro foi criado
+        $this->assertDatabaseHas('stock_files', [
+            'id' => $stockFile->id,
+            'is_active' => true
+        ]);
+
+        // Debug: verificar se o método getLatestActive retorna o ficheiro
+        $latestActive = StockFile::getLatestActive();
+        $this->assertNotNull($latestActive, 'getLatestActive deve retornar um ficheiro ativo');
 
         $response = $this->actingAs($this->approvedReseller)->getJson('/api/revendedor/stock-file/download');
 

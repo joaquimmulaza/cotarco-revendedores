@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\UpdateRevendedorStatusRequest;
 use App\Models\User;
 use App\Mail\RevendedorApproved;
 use App\Mail\RevendedorRejected;
@@ -29,8 +30,8 @@ class AdminController extends Controller
     public function index(Request $request)
     {
         try {
-            $query = User::with('revendedorProfile')
-                ->where('role', 'revendedor')
+            $query = User::with('partnerProfile')
+                ->whereIn('role', ['revendedor', 'distribuidor'])
                 ->where('status', '!=', 'pending_email_validation'); // Regra de segurança
 
             // Filtrar por status se fornecido
@@ -42,47 +43,56 @@ class AdminController extends Controller
                 $query->where('status', 'pending_approval');
             }
 
+            // Filtrar por role se fornecido
+            $role = $request->query('role');
+            if ($role && in_array($role, ['revendedor', 'distribuidor'])) {
+                $query->where('role', $role);
+            }
+
             // Paginação
             $perPage = $request->query('per_page', 15);
-            $revendedores = $query->paginate($perPage);
+            $partners = $query->paginate($perPage);
 
             // Mapear os dados
-            $revendedores->getCollection()->transform(function ($user) {
+            $partners->getCollection()->transform(function ($user) {
                 return [
                     'id' => $user->id,
                     'name' => $user->name,
                     'email' => $user->email,
+                    'role' => $user->role,
                     'status' => $user->status,
                     'created_at' => $user->created_at,
                     'updated_at' => $user->updated_at,
-                    'profile' => $user->revendedorProfile ? [
-                        'company_name' => $user->revendedorProfile->company_name,
-                        'phone_number' => $user->revendedorProfile->phone_number,
-                        'alvara_path' => $user->revendedorProfile->alvara_path,
+                    'profile' => $user->partnerProfile ? [
+                        'company_name' => $user->partnerProfile->company_name,
+                        'phone_number' => $user->partnerProfile->phone_number,
+                        'business_model' => $user->partnerProfile->business_model,
+                        'alvara_path' => $user->partnerProfile->alvara_path,
                     ] : [
                         'company_name' => 'Não informado',
                         'phone_number' => 'Não informado',
+                        'business_model' => null,
                         'alvara_path' => null,
                     ],
                 ];
             });
 
             return response()->json([
-                'message' => 'Revendedores listados com sucesso.',
-                'data' => $revendedores->items(),
+                'message' => 'Parceiros listados com sucesso.',
+                'data' => $partners->items(),
                 'pagination' => [
-                    'current_page' => $revendedores->currentPage(),
-                    'per_page' => $revendedores->perPage(),
-                    'total' => $revendedores->total(),
-                    'last_page' => $revendedores->lastPage(),
-                    'from' => $revendedores->firstItem(),
-                    'to' => $revendedores->lastItem(),
+                    'current_page' => $partners->currentPage(),
+                    'per_page' => $partners->perPage(),
+                    'total' => $partners->total(),
+                    'last_page' => $partners->lastPage(),
+                    'from' => $partners->firstItem(),
+                    'to' => $partners->lastItem(),
                 ],
             ], 200);
             
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Erro ao obter revendedores.',
+                'message' => 'Erro ao obter parceiros.',
                 'error' => $e->getMessage(),
             ], 500);
         }
@@ -97,8 +107,8 @@ class AdminController extends Controller
     public function getPendingRevendedores()
     {
         try {
-            $pendingRevendedores = User::with('revendedorProfile')
-                ->where('role', 'revendedor')
+            $pendingPartners = User::with('partnerProfile')
+                ->whereIn('role', ['revendedor', 'distribuidor'])
                 ->where('status', 'pending_approval')
                 ->get()
                 ->map(function ($user) {
@@ -106,29 +116,32 @@ class AdminController extends Controller
                         'id' => $user->id,
                         'name' => $user->name,
                         'email' => $user->email,
+                        'role' => $user->role,
                         'status' => $user->status,
                         'created_at' => $user->created_at,
-                        'profile' => $user->revendedorProfile ? [
-                            'company_name' => $user->revendedorProfile->company_name,
-                            'phone_number' => $user->revendedorProfile->phone_number,
-                            'alvara_path' => $user->revendedorProfile->alvara_path,
+                        'profile' => $user->partnerProfile ? [
+                            'company_name' => $user->partnerProfile->company_name,
+                            'phone_number' => $user->partnerProfile->phone_number,
+                            'business_model' => $user->partnerProfile->business_model,
+                            'alvara_path' => $user->partnerProfile->alvara_path,
                         ] : [
                             'company_name' => 'Não informado',
                             'phone_number' => 'Não informado',
+                            'business_model' => null,
                             'alvara_path' => null,
                         ],
                     ];
                 });
 
             return response()->json([
-                'message' => 'Revendedores pendentes listados com sucesso.',
-                'data' => $pendingRevendedores,
-                'total' => $pendingRevendedores->count(),
+                'message' => 'Parceiros pendentes listados com sucesso.',
+                'data' => $pendingPartners,
+                'total' => $pendingPartners->count(),
             ], 200);
             
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Erro ao obter revendedores pendentes.',
+                'message' => 'Erro ao obter parceiros pendentes.',
                 'error' => $e->getMessage(),
             ], 500);
         }
@@ -172,6 +185,7 @@ class AdminController extends Controller
                     'id' => $user->id,
                     'name' => $user->name,
                     'email' => $user->email,
+                    'role' => $user->role,
                     'status' => $user->status,
                 ],
             ], 200);
@@ -183,6 +197,7 @@ class AdminController extends Controller
                     'id' => $user->id,
                     'name' => $user->name,
                     'email' => $user->email,
+                    'role' => $user->role,
                     'status' => $user->status,
                 ],
                 'email_error' => $e->getMessage(),
@@ -225,7 +240,7 @@ class AdminController extends Controller
         }
 
         // Obter o perfil do revendedor
-        $profile = $user->revendedorProfile;
+        $profile = $user->partnerProfile;
         if (!$profile || !$profile->alvara_path) {
             return response()->json([
                 'message' => 'Alvará não encontrado para este revendedor.',
@@ -297,6 +312,7 @@ class AdminController extends Controller
                     'id' => $user->id,
                     'name' => $user->name,
                     'email' => $user->email,
+                    'role' => $user->role,
                     'status' => $user->status,
                 ],
             ], 200);
@@ -308,6 +324,7 @@ class AdminController extends Controller
                     'id' => $user->id,
                     'name' => $user->name,
                     'email' => $user->email,
+                    'role' => $user->role,
                     'status' => $user->status,
                 ],
                 'email_error' => $e->getMessage(),
@@ -318,11 +335,11 @@ class AdminController extends Controller
     /**
      * Atualizar status de um revendedor de forma genérica
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Http\Requests\UpdateRevendedorStatusRequest  $request
      * @param  \App\Models\User  $user
      * @return \Illuminate\Http\JsonResponse
      */
-    public function updateStatus(Request $request, User $user)
+    public function updateStatus(UpdateRevendedorStatusRequest $request, User $user)
     {
         // Verificar se o usuário é revendedor
         if ($user->role !== 'revendedor') {
@@ -331,10 +348,8 @@ class AdminController extends Controller
             ], 400);
         }
 
-        // Validar o status fornecido
-        $validatedData = $request->validate([
-            'status' => 'required|in:active,rejected,pending_approval,inactive'
-        ]);
+        // O status já foi validado pelo Form Request
+        $validatedData = $request->validated();
 
         $newStatus = $validatedData['status'];
         $oldStatus = $user->status;
@@ -347,6 +362,7 @@ class AdminController extends Controller
                     'id' => $user->id,
                     'name' => $user->name,
                     'email' => $user->email,
+                    'role' => $user->role,
                     'status' => $user->status,
                 ],
             ], 200);
@@ -381,6 +397,7 @@ class AdminController extends Controller
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
+                'role' => $user->role,
                 'status' => $user->status,
                 'previous_status' => $oldStatus,
             ],
@@ -405,21 +422,30 @@ class AdminController extends Controller
     public function getDashboardStats()
     {
         try {
-            // Contar revendedores por status (excluindo pending_email_validation)
-            $pendingCount = User::where('role', 'revendedor')
+            // Contar parceiros por status (excluindo pending_email_validation)
+            $pendingCount = User::whereIn('role', ['revendedor', 'distribuidor'])
                 ->where('status', 'pending_approval')
                 ->count();
 
-            $activeCount = User::where('role', 'revendedor')
+            $activeCount = User::whereIn('role', ['revendedor', 'distribuidor'])
                 ->where('status', 'active')
                 ->count();
 
-            $rejectedCount = User::where('role', 'revendedor')
+            $rejectedCount = User::whereIn('role', ['revendedor', 'distribuidor'])
                 ->where('status', 'rejected')
                 ->count();
 
-            $inactiveCount = User::where('role', 'revendedor')
+            $inactiveCount = User::whereIn('role', ['revendedor', 'distribuidor'])
                 ->where('status', 'inactive')
+                ->count();
+
+            // Contar por tipo de parceiro
+            $revendedoresCount = User::where('role', 'revendedor')
+                ->where('status', '!=', 'pending_email_validation')
+                ->count();
+
+            $distribuidoresCount = User::where('role', 'distribuidor')
+                ->where('status', '!=', 'pending_email_validation')
                 ->count();
 
             // Estatísticas adicionais (placeholder para futuras funcionalidades)
@@ -429,12 +455,16 @@ class AdminController extends Controller
             return response()->json([
                 'message' => 'Estatísticas obtidas com sucesso.',
                 'data' => [
-                    'revendedores' => [
+                    'parceiros' => [
                         'pending_approval' => $pendingCount,
                         'active' => $activeCount,
                         'rejected' => $rejectedCount,
                         'inactive' => $inactiveCount,
                         'total' => $pendingCount + $activeCount + $rejectedCount + $inactiveCount,
+                    ],
+                    'por_tipo' => [
+                        'revendedores' => $revendedoresCount,
+                        'distribuidores' => $distribuidoresCount,
                     ],
                     'sales' => [
                         'total_this_month' => $totalSalesThisMonth,

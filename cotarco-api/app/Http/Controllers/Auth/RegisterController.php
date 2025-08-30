@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use App\Models\RevendedorProfile;
+use App\Models\PartnerProfile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
@@ -29,6 +29,7 @@ class RegisterController extends Controller
             'phone_number' => 'required|string|max:20',
             'company_name' => 'required|string|max:255',
             'password' => 'required|string|min:8|confirmed',
+            'role' => 'required|in:revendedor,distribuidor',
             'alvara' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048',
         ], [
             'alvara.required' => 'O arquivo do alvará é obrigatório.',
@@ -38,6 +39,8 @@ class RegisterController extends Controller
             'email.unique' => 'Este email já está registrado.',
             'password.confirmed' => 'A confirmação da palavra-passe não confere.',
             'password.min' => 'A palavra-passe deve ter pelo menos 8 caracteres.',
+            'role.required' => 'O tipo de parceiro é obrigatório.',
+            'role.in' => 'O tipo de parceiro deve ser revendedor ou distribuidor.',
         ]);
 
         // Iniciar transação de base de dados
@@ -49,7 +52,7 @@ class RegisterController extends Controller
                 'name' => $validated['name'],
                 'email' => $validated['email'],
                 'password' => Hash::make($validated['password']),
-                'role' => 'revendedor',
+                'role' => $validated['role'],
                 'status' => 'pending_email_validation',
             ]);
 
@@ -65,8 +68,8 @@ class RegisterController extends Controller
             
             $alvaraPath = $alvaraFile->storeAs('alvaras', $alvaraFileName, 'local');
 
-            // 4. Criar o RevendedorProfile associado
-            RevendedorProfile::create([
+            // 4. Criar o PartnerProfile associado
+            PartnerProfile::create([
                 'user_id' => $user->id,
                 'company_name' => $validated['company_name'],
                 'phone_number' => $validated['phone_number'],
@@ -86,6 +89,7 @@ class RegisterController extends Controller
                     'id' => $user->id,
                     'name' => $user->name,
                     'email' => $user->email,
+                    'role' => $user->role,
                     'status' => $user->status,
                 ],
             ], 201);
@@ -95,7 +99,7 @@ class RegisterController extends Controller
             DB::rollBack();
             
             // Log do erro para debugging
-            \Log::error('Erro no registro de revendedor: ' . $e->getMessage(), [
+            \Log::error('Erro no registro de parceiro: ' . $e->getMessage(), [
                 'email' => $validated['email'] ?? 'N/A',
                 'trace' => $e->getTraceAsString()
             ]);
