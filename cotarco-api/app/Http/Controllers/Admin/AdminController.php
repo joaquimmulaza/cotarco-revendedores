@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\UpdateRevendedorStatusRequest;
+use App\Http\Requests\UpdatePartnerStatusRequest;
 use App\Models\User;
 use App\Mail\RevendedorApproved;
 use App\Mail\RevendedorRejected;
@@ -333,18 +333,18 @@ class AdminController extends Controller
     }
 
     /**
-     * Atualizar status de um revendedor de forma genérica
+     * Atualizar status de um parceiro (revendedor ou distribuidor) de forma genérica
      *
-     * @param  \App\Http\Requests\UpdateRevendedorStatusRequest  $request
+     * @param  \App\Http\Requests\UpdatePartnerStatusRequest  $request
      * @param  \App\Models\User  $user
      * @return \Illuminate\Http\JsonResponse
      */
-    public function updateStatus(UpdateRevendedorStatusRequest $request, User $user)
+    public function updateStatus(UpdatePartnerStatusRequest $request, User $user)
     {
-        // Verificar se o usuário é revendedor
-        if ($user->role !== 'revendedor') {
+        // Verificar se o usuário é revendedor ou distribuidor
+        if (!in_array($user->role, ['revendedor', 'distribuidor'])) {
             return response()->json([
-                'message' => 'Este usuário não é um revendedor.',
+                'message' => 'Este usuário não é um parceiro válido (revendedor ou distribuidor).',
             ], 400);
         }
 
@@ -392,7 +392,7 @@ class AdminController extends Controller
 
         // Preparar resposta
         $response = [
-            'message' => 'Status do revendedor atualizado com sucesso.',
+            'message' => 'Status do parceiro atualizado com sucesso.',
             'user' => [
                 'id' => $user->id,
                 'name' => $user->name,
