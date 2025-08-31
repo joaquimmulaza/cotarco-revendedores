@@ -8,62 +8,69 @@ use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\PartnerController;
 use App\Http\Controllers\StockFileController;
 
-Route::get('/user', function (Request $request) {
-    return $request->user();
-})->middleware('auth:sanctum');
+/*
+|--------------------------------------------------------------------------
+| API Routes
+|--------------------------------------------------------------------------
+*/
 
-// Rota de teste para verificar se a API está funcionando
-Route::get('/test', function () {
-    return response()->json([
-        'message' => 'API funcionando!',
-        'timestamp' => now(),
-        'status' => 'success'
-    ]);
-});
-
-// Rotas de autenticação
+// Rotas públicas (não precisam de autenticação)
 Route::post('/register', [RegisterController::class, 'store']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/admin/login', [AuthController::class, 'adminLogin']);
-Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
 
-// Rotas de administração
-Route::prefix('admin')->group(function () {
-    // Rota para estatísticas do dashboard
-    Route::get('/dashboard-stats', [AdminController::class, 'getDashboardStats']);
-    
-    // Nova rota flexível para listar revendedores com filtros
-    Route::get('/revendedores', [AdminController::class, 'index']);
-    
+// Rota de teste
+Route::get('/test', fn() => response()->json(['message' => 'API funcionando!']));
 
+
+// Rotas Protegidas (requerem autenticação)
+Route::middleware('auth:sanctum')->group(function () {
     
-    // Rotas específicas mantidas para compatibilidade (podem ser removidas futuramente)
-    Route::get('/revendedores/pending', [AdminController::class, 'getPendingRevendedores']);
-    Route::post('/revendedores/{user}/approve', [AdminController::class, 'approveRevendedor']);
-    Route::post('/revendedores/{user}/reject', [AdminController::class, 'rejectRevendedor']);
-    
-    // Rota para download do alvará
-    Route::get('/revendedores/{user}/alvará', [AdminController::class, 'downloadAlvara']);
-    
-    // Rotas para gestão de ficheiros de stock
-    Route::post('/stock-file/upload', [StockFileController::class, 'uploadOrUpdate']);
-    Route::get('/stock-file/current', [StockFileController::class, 'getCurrentForAdmin']);
-    Route::patch('/stock-file/{file}/toggle-status', [StockFileController::class, 'toggleStatus']);
-    Route::delete('/stock-file/{file}', [StockFileController::class, 'destroy']);
-    
-    // Rotas para gestão de parceiros
-    Route::prefix('partners')->group(function () {
-        Route::get('/', [PartnerController::class, 'index']);
-        Route::get('/{user}', [PartnerController::class, 'show']);
-        Route::put('/{user}', [PartnerController::class, 'update']);
-        Route::put('/{user}/status', [PartnerController::class, 'updateStatus']);
-        Route::patch('/{user}/profile', [PartnerController::class, 'updateProfile']);
-        Route::get('/statistics', [PartnerController::class, 'statistics']);
+    // Rota para obter dados do utilizador autenticado
+    Route::get('/user', function (Request $request) {
+        return $request->user();
     });
-});
 
-// Rotas para revendedores
-Route::prefix('revendedor')->group(function () {
-    Route::get('/stock-file/info', [StockFileController::class, 'getForRevendedor']);
-    Route::get('/stock-file/download', [StockFileController::class, 'downloadForRevendedor']);
+    // Rota de logout
+    Route::post('/logout', [AuthController::class, 'logout']);
+
+    // Grupo de Rotas de Administração
+    Route::prefix('admin')->middleware('admin')->group(function () {
+        
+        // Dashboard
+        Route::get('/dashboard-stats', [AdminController::class, 'getDashboardStats']);
+
+        // Gestão de Parceiros (nova estrutura)
+        Route::prefix('partners')->group(function () {
+            Route::get('/', [PartnerController::class, 'index']);
+            Route::get('/statistics', [PartnerController::class, 'statistics']);
+            Route::get('/{user}', [PartnerController::class, 'show']);
+            Route::put('/{user}', [PartnerController::class, 'update']);
+            Route::put('/{user}/status', [PartnerController::class, 'updateStatus']);
+            Route::patch('/{user}/profile', [PartnerController::class, 'updateProfile']);
+        });
+
+        // Gestão de Ficheiros de Stock
+        Route::prefix('stock-file')->group(function () {
+            Route::get('/current', [StockFileController::class, 'getCurrentForAdmin']);
+            Route::post('/upload', [StockFileController::class, 'uploadOrUpdate']);
+            Route::patch('/{file}/toggle-status', [StockFileController::class, 'toggleStatus']);
+            Route::delete('/{file}', [StockFileController::class, 'destroy']);
+        });
+
+        // Rotas de Revendedores (estrutura antiga e outras)
+        Route::prefix('revendedores')->group(function () {
+            Route::get('/', [AdminController::class, 'index']);
+            Route::get('/pending', [AdminController::class, 'getPendingRevendedores']); // Rota antiga
+            Route::get('/{user}/alvara', [AdminController::class, 'downloadAlvara'])->name('admin.alvara.download');
+            Route::post('/{user}/approve', [AdminController::class, 'approveRevendedor']); // Rota antiga
+            Route::post('/{user}/reject', [AdminController::class, 'rejectRevendedor']); // Rota antiga
+        });
+    });
+
+    // Grupo de Rotas para Revendedores/Distribuidores
+    Route::prefix('revendedor')->middleware('revendedor')->group(function () {
+        Route::get('/stock-file/info', [StockFileController::class, 'getForRevendedor']);
+        Route::get('/stock-file/download', [StockFileController::class, 'downloadForRevendedor']);
+    });
 });

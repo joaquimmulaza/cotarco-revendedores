@@ -32,7 +32,7 @@ const AdminDashboard = () => {
   const [editLoading, setEditLoading] = useState(false); // Loading para edição de parceiro
   
   // Mapear índices de tabs para status (para revendedores e distribuidores)
-  const tabStatusMap = ['pending_approval', 'active', 'rejected'];
+  const tabStatusMap = ['pending_approval', 'active', 'rejected', 'inactive'];
   const currentStatus = tabStatusMap[selectedTabIndex];
   
   // Estados para estatísticas (de revendedores e distribuidores)
@@ -357,6 +357,17 @@ const AdminDashboard = () => {
                   >
                     Rejeitados ({statsLoading ? '...' : stats.parceiros?.rejected || 0})
                   </Tab>
+                  <Tab
+                    className={({ selected }) =>
+                      `px-3 py-2 text-sm font-medium rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                        selected
+                          ? 'bg-white text-gray-900 shadow-sm'
+                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                      }`
+                    }
+                  >
+                    Desativados ({statsLoading ? '...' : stats.parceiros?.inactive || 0})
+                  </Tab>
                 </Tab.List>
               </Tab.Group>
             </div>
@@ -393,11 +404,13 @@ const AdminDashboard = () => {
                     {currentStatus === 'pending_approval' && 'Nenhum parceiro pendente'}
                     {currentStatus === 'active' && 'Nenhum parceiro ativo'}
                     {currentStatus === 'rejected' && 'Nenhum parceiro rejeitado'}
+                    {currentStatus === 'inactive' && 'Nenhum parceiro desativado'}
                   </h3>
                   <p className="text-gray-600 max-w-md mx-auto">
                     {currentStatus === 'pending_approval' && 'No momento não há revendedores ou distribuidores aguardando aprovação.'}
                     {currentStatus === 'active' && 'No momento não há revendedores ou distribuidores ativos no sistema.'}
                     {currentStatus === 'rejected' && 'No momento não há revendedores ou distribuidores rejeitados.'}
+                    {currentStatus === 'inactive' && 'No momento não há revendedores ou distribuidores que foram desativados.'}
                   </p>
                 </div>
               ) : (
@@ -558,6 +571,28 @@ const AdminDashboard = () => {
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636M5.636 18.364l12.728-12.728" />
                                   </svg>
                                   Desativar
+                                </>
+                              )}
+                            </button>
+                          )}
+
+{revendedor.status === 'inactive' && (
+                            <button
+                              onClick={() => handleUpdateStatus(revendedor.id, 'active')}
+                              disabled={actionLoading[revendedor.id]}
+                              className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium flex items-center justify-center"
+                            >
+                              {actionLoading[revendedor.id] === 'updating-active' ? (
+                                <>
+                                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                                  A reativar...
+                                </>
+                              ) : (
+                                <>
+                                  <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                  </svg>
+                                  Reativar
                                 </>
                               )}
                             </button>
