@@ -191,15 +191,15 @@ export const adminService = {
     }
   },
 
-  // Atualizar status de um revendedor
+  // Atualizar status de um parceiro (revendedor ou distribuidor)
   async updateRevendedorStatus(userId, status) {
     try {
-      const response = await api.put(`/admin/revendedores/${userId}/status`, {
+      const response = await api.put(`/admin/partners/${userId}/status`, {
         status: status
       });
       return response.data;
     } catch (error) {
-      throw error.response?.data || { message: 'Erro ao atualizar status do revendedor' };
+      throw error.response?.data || { message: 'Erro ao atualizar status do parceiro' };
     }
   },
 

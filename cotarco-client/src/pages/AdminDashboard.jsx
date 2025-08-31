@@ -12,30 +12,30 @@ const AdminDashboard = () => {
   console.log('AdminDashboard renderizado:', { user, authLoading, isAdmin });
   
   // Estados para gestão de dados
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [revendedores, setRevendedores] = useState([]);
-  const [actionLoading, setActionLoading] = useState({});
+  const [loading, setLoading] = useState(true); // Loading para parceiros
+  const [error, setError] = useState(''); // Erro ao carregar parceiros
+  const [revendedores, setRevendedores] = useState([]); // Array de parceiros (revendedores e distribuidores)
+  const [actionLoading, setActionLoading] = useState({}); // Loading para ações de parceiros
   
-  // Estados para navegação e paginação
-  const [selectedTabIndex, setSelectedTabIndex] = useState(0);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pagination, setPagination] = useState(null);
+  // Estados para navegação e paginação (para revendedores e distribuidores)
+  const [selectedTabIndex, setSelectedTabIndex] = useState(0); // Tab selecionada para parceiros
+  const [currentPage, setCurrentPage] = useState(1); // Página atual de parceiros
+  const [pagination, setPagination] = useState(null); // Paginação de parceiros
   
-  // Estados para o modal de edição
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editingPartner, setEditingPartner] = useState(null);
+  // Estados para o modal de edição (de revendedores e distribuidores)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false); // Modal de edição de parceiro
+  const [editingPartner, setEditingPartner] = useState(null); // Parceiro sendo editado
   const [editFormData, setEditFormData] = useState({
-    role: '',
-    business_model: ''
+    role: '', // Role do parceiro (revendedor ou distribuidor)
+    business_model: '' // Modelo de negócio do parceiro
   });
-  const [editLoading, setEditLoading] = useState(false);
+  const [editLoading, setEditLoading] = useState(false); // Loading para edição de parceiro
   
-  // Mapear índices de tabs para status
+  // Mapear índices de tabs para status (para revendedores e distribuidores)
   const tabStatusMap = ['pending_approval', 'active', 'rejected'];
   const currentStatus = tabStatusMap[selectedTabIndex];
   
-  // Estados para estatísticas
+  // Estados para estatísticas (de revendedores e distribuidores)
   const [stats, setStats] = useState({
     parceiros: {
       pending_approval: 0,
@@ -47,13 +47,13 @@ const AdminDashboard = () => {
     sales: { total_this_month: 0 },
     orders: { active_count: 0 }
   });
-  const [statsLoading, setStatsLoading] = useState(true);
+  const [statsLoading, setStatsLoading] = useState(true); // Loading para estatísticas de parceiros
 
   const fetchStats = async () => {
     try {
       setStatsLoading(true);
       const response = await adminService.getDashboardStats();
-      // Garantir que a estrutura de dados seja válida
+      // Garantir que a estrutura de dados seja válida (para revendedores e distribuidores)
       if (response.data) {
         setStats({
           parceiros: {
@@ -84,10 +84,10 @@ const AdminDashboard = () => {
       setLoading(true);
       setError('');
       const response = await adminService.getRevendedores(currentStatus, currentPage);
-      setRevendedores(response.data || []);
+      setRevendedores(response.data || []); // Dados de revendedores e distribuidores
       setPagination(response.pagination || null);
     } catch (error) {
-      console.error('Erro ao carregar revendedores:', error);
+      console.error('Erro ao carregar parceiros:', error);
       setError(error.message || 'Erro ao carregar dados');
     } finally {
       setLoading(false);
@@ -97,58 +97,16 @@ const AdminDashboard = () => {
   // Carregar estatísticas (apenas uma vez no carregamento, após autenticação)
   useEffect(() => {
     if (!authLoading && isAdmin) {
-      fetchStats();
+      fetchStats(); // Estatísticas de revendedores e distribuidores
     }
   }, [authLoading, isAdmin]);
 
-  // Carregar revendedores (sempre que status ou página mudar, após autenticação)
+  // Carregar revendedores e distribuidores (sempre que status ou página mudar, após autenticação)
   useEffect(() => {
     if (!authLoading && isAdmin) {
       fetchRevendedores();
     }
   }, [fetchRevendedores, authLoading, isAdmin]);
-
-  const handleUpdateStatus = async (id, newStatus) => {
-    try {
-      setActionLoading(prev => ({ ...prev, [id]: `updating-${newStatus}` }));
-      await adminService.updateRevendedorStatus(id, newStatus);
-      
-      // Refazer busca dos dados após atualização
-      await Promise.all([fetchRevendedores(), fetchStats()]);
-      
-    } catch (error) {
-      console.error('Erro ao atualizar status do revendedor:', error);
-      alert(error.message || 'Erro ao atualizar status do revendedor');
-    } finally {
-      setActionLoading(prev => ({ ...prev, [id]: null }));
-    }
-  };
-
-  const handleTabChange = (index) => {
-    setSelectedTabIndex(index);
-    setCurrentPage(1); // Reset página ao mudar tab
-  };
-
-  const handleViewAlvara = (userId) => {
-    adminService.viewAlvara(userId);
-  };
-
-  // Funções para o modal de edição
-  const openEditModal = (partner) => {
-    setEditingPartner(partner);
-    setEditFormData({
-      role: partner.role || '',
-      business_model: partner.profile?.business_model || ''
-    });
-    setIsEditModalOpen(true);
-  };
-
-  const closeEditModal = () => {
-    setIsEditModalOpen(false);
-    setEditingPartner(null);
-    setEditFormData({ role: '', business_model: '' });
-    setEditLoading(false);
-  };
 
   const handleEditSubmit = async (e) => {
     e.preventDefault();
@@ -157,12 +115,12 @@ const AdminDashboard = () => {
     try {
       setEditLoading(true);
       
-      // Chamar a API para atualizar o parceiro
+      // Chamar a API para atualizar o parceiro (revendedor ou distribuidor)
       await adminService.updatePartner(editingPartner.id, editFormData);
       
       // Fechar modal e atualizar dados
       closeEditModal();
-      await fetchRevendedores();
+      await fetchRevendedores(); // Recarregar lista de parceiros
       
     } catch (error) {
       console.error('Erro ao atualizar parceiro:', error);
@@ -170,22 +128,72 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleTabChange = (index) => {
+    setSelectedTabIndex(index);
+    setCurrentPage(1); // Reset página ao mudar tab (para revendedores e distribuidores)
+  };
+
+  const handleViewAlvara = (userId) => {
+    adminService.viewAlvara(userId); // Visualizar alvará de revendedor ou distribuidor
+  };
+
+  const handleUpdateStatus = async (userId, newStatus) => {
+    try {
+      setActionLoading(prev => ({ ...prev, [userId]: `updating-${newStatus}` }));
+      
+      // Chamar a API para atualizar o status do parceiro (revendedor ou distribuidor)
+      await adminService.updateRevendedorStatus(userId, newStatus);
+      
+      // Atualizar a lista de parceiros
+      await fetchRevendedores();
+      
+      // Mostrar mensagem de sucesso
+      alert('Status do parceiro atualizado com sucesso!');
+      
+    } catch (error) {
+      console.error('Erro ao atualizar status do parceiro:', error);
+      alert(error.message || 'Erro ao atualizar status do parceiro');
+    } finally {
+      setActionLoading(prev => ({ ...prev, [userId]: false }));
+    }
+  };
+
+  // Funções para o modal de edição
+  const openEditModal = (partner) => {
+    setEditingPartner(partner); // partner pode ser revendedor ou distribuidor
+    setEditFormData({
+      role: partner.role || '', // Role do parceiro
+      business_model: partner.profile?.business_model || '' // Modelo de negócio do parceiro
+    });
+    setIsEditModalOpen(true);
+  };
+
+  const closeEditModal = () => {
+    setIsEditModalOpen(false);
+    setEditingPartner(null);
+    setEditFormData({ role: '', business_model: '' }); // Reset dados do parceiro
+    setEditLoading(false);
+  };
+
   const formatDate = (dateString) => {
     if (!dateString) return 'Data não disponível';
     try {
+      // Formatar data de registo de revendedor ou distribuidor
       return new Date(dateString).toLocaleDateString('pt-PT');
     } catch {
       return 'Data inválida';
     }
   };
 
-  const formatRole = (role) => {
+    const formatRole = (role) => {
     if (!role) return 'N/A';
+    // Formatar role de revendedor ou distribuidor
     return role.charAt(0).toUpperCase() + role.slice(1);
   };
-
+  
   const formatBusinessModel = (businessModel) => {
     if (!businessModel) return 'Não definido';
+    // Formatar modelo de negócio de revendedor ou distribuidor
     return businessModel;
   };
 
@@ -195,7 +203,7 @@ const AdminDashboard = () => {
       <Header 
         user={user}
         onLogout={logout}
-        title="Painel de Administração"
+        title="Painel de Administração - Gestão de Parceiros"
         isAdmin={true}
       />
 
@@ -310,7 +318,7 @@ const AdminDashboard = () => {
           <div className="bg-white shadow rounded-lg">
             <div className="px-6 py-4 border-b border-gray-200">
               <h3 className="text-lg font-medium text-gray-900 mb-4">
-                Gestão de Parceiros
+                Gestão de Parceiros (Revendedores e Distribuidores)
               </h3>
               
               {/* Headless UI Tabs */}
@@ -356,7 +364,7 @@ const AdminDashboard = () => {
               {loading ? (
                 <div className="flex justify-center items-center py-12">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                  <span className="ml-3 text-gray-600">A carregar parceiros...</span>
+                  <span className="ml-3 text-gray-600">A carregar parceiros (revendedores e distribuidores)...</span>
                 </div>
               ) : error ? (
                 <div className="text-center py-12">
@@ -387,9 +395,9 @@ const AdminDashboard = () => {
                     {currentStatus === 'rejected' && 'Nenhum parceiro rejeitado'}
                   </h3>
                   <p className="text-gray-600 max-w-md mx-auto">
-                    {currentStatus === 'pending_approval' && 'No momento não há parceiros aguardando aprovação.'}
-                    {currentStatus === 'active' && 'No momento não há parceiros ativos no sistema.'}
-                    {currentStatus === 'rejected' && 'No momento não há parceiros rejeitados.'}
+                    {currentStatus === 'pending_approval' && 'No momento não há revendedores ou distribuidores aguardando aprovação.'}
+                    {currentStatus === 'active' && 'No momento não há revendedores ou distribuidores ativos no sistema.'}
+                    {currentStatus === 'rejected' && 'No momento não há revendedores ou distribuidores rejeitados.'}
                   </p>
                 </div>
               ) : (
@@ -415,6 +423,17 @@ const AdminDashboard = () => {
                                    revendedor.status === 'active' ? 'Ativo' :
                                    revendedor.status === 'rejected' ? 'Rejeitado' :
                                    revendedor.status}
+                                </span>
+                                
+                                {/* Role Badge */}
+                                <span className={`text-xs font-medium px-2 py-1 rounded-full ${
+                                  revendedor.role === 'revendedor' ? 'bg-blue-100 text-blue-800' :
+                                  revendedor.role === 'distribuidor' ? 'bg-purple-100 text-purple-800' :
+                                  'bg-gray-100 text-gray-800'
+                                }`}>
+                                  {revendedor.role === 'revendedor' ? 'Revendedor' :
+                                   revendedor.role === 'distribuidor' ? 'Distribuidor' :
+                                   revendedor.role}
                                 </span>
                               </div>
                               <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">

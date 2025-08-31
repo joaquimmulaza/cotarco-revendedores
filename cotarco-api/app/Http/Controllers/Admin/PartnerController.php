@@ -173,7 +173,7 @@ class PartnerController extends Controller
     public function updateStatus(Request $request, User $partner): JsonResponse
     {
         $validated = $request->validate([
-            'status' => 'required|in:active,suspended,pending_email_validation'
+            'status' => 'required|in:active,suspended,pending_email_validation,pending_approval,rejected,inactive'
         ]);
 
         if (!in_array($partner->role, ['revendedor', 'distribuidor'])) {

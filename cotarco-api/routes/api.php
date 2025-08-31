@@ -35,8 +35,7 @@ Route::prefix('admin')->group(function () {
     // Nova rota flexível para listar revendedores com filtros
     Route::get('/revendedores', [AdminController::class, 'index']);
     
-    // Nova rota genérica para atualizar status
-    Route::put('/revendedores/{user}/status', [AdminController::class, 'updateStatus']);
+
     
     // Rotas específicas mantidas para compatibilidade (podem ser removidas futuramente)
     Route::get('/revendedores/pending', [AdminController::class, 'getPendingRevendedores']);
