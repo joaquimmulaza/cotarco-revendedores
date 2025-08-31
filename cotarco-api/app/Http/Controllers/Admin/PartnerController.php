@@ -29,8 +29,8 @@ class PartnerController extends Controller
             ->whereIn('role', ['revendedor', 'distribuidor']);
 
         // Filtros
-        if ($request->has('role') && in_array($request->role, ['revendedor', 'distribuidor'])) {
-            $query->where('role', $request->role);
+        if ($request->has('status') && in_array($request->status, ['pending_approval', 'active', 'rejected', 'inactive', 'suspended'])) {
+            $query->where('status', $request->status);
         }
 
         if ($request->has('status') && in_array($request->status, ['pending_email_validation', 'active', 'suspended'])) {
@@ -170,21 +170,22 @@ class PartnerController extends Controller
     /**
      * Update the specified partner's status.
      */
-    public function updateStatus(Request $request, User $partner): JsonResponse
+    public function updateStatus(Request $request, User $user): JsonResponse
     {
         $validated = $request->validate([
             'status' => 'required|in:active,suspended,pending_email_validation,pending_approval,rejected,inactive'
         ]);
-
-        if (!in_array($partner->role, ['revendedor', 'distribuidor'])) {
+    
+        // A verificação agora usa $user, que será o modelo correto injetado pelo Laravel
+        if (!in_array($user->role, ['revendedor', 'distribuidor'])) {
             return response()->json(['message' => 'Utilizador não é um parceiro.'], 404);
         }
-
-        $partner->update(['status' => $validated['status']]);
-
+    
+        $user->update(['status' => $validated['status']]);
+    
         return response()->json([
             'message' => 'Status do parceiro atualizado com sucesso.',
-            'partner' => $partner->fresh()->load('partnerProfile')
+            'partner' => $user->fresh()->load('partnerProfile')
         ]);
     }
 
