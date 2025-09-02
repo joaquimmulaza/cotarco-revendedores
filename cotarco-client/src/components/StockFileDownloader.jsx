@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { revendedorService } from '../services/api';
+import { parceiroService } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
+import Skeleton from 'react-loading-skeleton';
+import 'react-loading-skeleton/dist/skeleton.css';
 
 const StockFileDownloader = () => {
   const { loading: authLoading, isAuthenticated } = useAuth();
@@ -13,7 +15,7 @@ const StockFileDownloader = () => {
     try {
       setLoading(true);
       setError('');
-      const response = await revendedorService.getStockFileInfo();
+      const response = await parceiroService.getStockFileInfo();
       setStockFileInfo(response.file);
     } catch (error) {
       console.error('Erro ao carregar informações do ficheiro de stock:', error);
@@ -64,7 +66,7 @@ const StockFileDownloader = () => {
   // Fazer download do ficheiro
   const handleDownload = async () => {
     try {
-      await revendedorService.downloadStockFile();
+      await parceiroService.downloadStockFile();
     } catch (error) {
       console.error('Erro no download:', error);
       alert('Erro ao fazer download do ficheiro: ' + (error.message || 'Erro desconhecido'));
@@ -75,9 +77,13 @@ const StockFileDownloader = () => {
     return (
       <div className="bg-white overflow-hidden shadow rounded-lg">
         <div className="p-6">
-          <div className="flex justify-center items-center py-8">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-            <span className="ml-3 text-gray-600">A verificar disponibilidade do mapa de stock...</span>
+          <div className="space-y-4">
+            <Skeleton width={200} height={24} />
+            <Skeleton width={300} height={16} />
+            <div className="flex space-x-4 mt-4">
+              <Skeleton width={120} height={40} />
+              <Skeleton width={100} height={20} />
+            </div>
           </div>
         </div>
       </div>

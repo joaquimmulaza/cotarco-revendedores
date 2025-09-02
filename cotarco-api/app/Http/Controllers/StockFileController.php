@@ -24,11 +24,8 @@ class StockFileController extends Controller
             'destroy'
         ]);
         
-        // Middleware de revendedor para métodos de revendedor
-        $this->middleware(['auth:sanctum', 'revendedor'])->only([
-            'getForRevendedor', 
-            'downloadForRevendedor'
-        ]);
+        // Nota: Os middlewares para parceiros são aplicados nas rotas da API
+        // para permitir flexibilidade entre revendedores e distribuidores
     }
 
     /**

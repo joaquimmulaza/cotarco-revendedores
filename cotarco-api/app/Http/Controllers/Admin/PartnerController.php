@@ -8,6 +8,7 @@ use App\Models\PartnerProfile;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class PartnerController extends Controller
 {
@@ -16,8 +17,7 @@ class PartnerController extends Controller
      */
     public function __construct()
     {
-        $this->middleware('auth:sanctum');
-        $this->middleware('admin');
+        $this->middleware(['auth:sanctum', 'admin']);
     }
 
     /**
@@ -240,5 +240,59 @@ class PartnerController extends Controller
             'active_partners' => $activePartners,
             'by_role' => $stats,
         ]);
+    }
+
+    /**
+     * Visualizar/baixar alvará de um parceiro
+     *
+     * @param  \App\Models\User  $user
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function downloadAlvara(User $user, Request $request)
+    {
+        // A autenticação é feita automaticamente pelo middleware 'admin'
+        // que já verifica se o usuário está autenticado e é admin
+
+        // Verificar se o usuário é um parceiro (revendedor ou distribuidor)
+        if (!in_array($user->role, ['revendedor', 'distribuidor'])) {
+            return response()->json([
+                'message' => 'Este usuário não é um parceiro.',
+            ], 400);
+        }
+
+        // Obter o perfil do parceiro
+        $profile = $user->partnerProfile;
+        if (!$profile || !$profile->alvara_path) {
+            return response()->json([
+                'message' => 'Alvará não encontrado para este parceiro.',
+            ], 404);
+        }
+
+        // Verificar se o arquivo existe
+        if (!Storage::disk('local')->exists($profile->alvara_path)) {
+            return response()->json([
+                'message' => 'Arquivo do alvará não encontrado no servidor.',
+            ], 404);
+        }
+
+        try {
+            // Obter o caminho completo do arquivo
+            $filePath = $profile->alvara_path;
+            $fileName = basename($filePath);
+            
+            // Retornar o arquivo como download
+            return Storage::disk('local')->download($filePath, $fileName);
+            
+        } catch (\Exception $e) {
+            \Log::error('Erro ao baixar alvará: ' . $e->getMessage(), [
+                'user_id' => $user->id,
+                'file_path' => $profile->alvara_path ?? 'N/A'
+            ]);
+            
+            return response()->json([
+                'message' => 'Erro ao baixar o alvará. Tente novamente.',
+            ], 500);
+        }
     }
 }

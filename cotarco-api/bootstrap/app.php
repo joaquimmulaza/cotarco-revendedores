@@ -3,6 +3,7 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Request;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -18,8 +19,18 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
             'revendedor' => \App\Http\Middleware\RevendedorMiddleware::class,
+            'parceiro' => \App\Http\Middleware\ParceiroMiddleware::class,
             'token.query' => \App\Http\Middleware\TokenFromQuery::class,
         ]);
+
+        // Configurar tratamento de falhas de autenticação para API
+        $middleware->redirectGuestsTo(function (Request $request) {
+            if ($request->expectsJson()) {
+                return null; // Não redireciona para pedidos de API
+            }
+            // Mantenha um redirecionamento padrão para rotas web, se necessário
+            return route('login'); 
+        });
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

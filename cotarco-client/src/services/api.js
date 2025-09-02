@@ -255,16 +255,57 @@ export const adminService = {
     }
   },
 
-  // Obter URL do alvará para visualização/download
-  getAlvaraUrl(userId) {
-    const token = localStorage.getItem(appConfig.AUTH.TOKEN_KEY);
-    return `${appConfig.API_BASE_URL}/admin/revendedores/${userId}/alvara?token=${token}`;
-  },
+  // Esta função irá agora fazer o download do ficheiro de forma segura
+  async downloadAlvara(userId) {
+    try {
+      const token = localStorage.getItem(appConfig.AUTH.TOKEN_KEY);
+      if (!token) {
+        throw new Error('Token de autenticação não encontrado');
+      }
 
-  // Visualizar alvará (abrir em nova aba)
-  viewAlvara(userId) {
-    const url = this.getAlvaraUrl(userId);
-    window.open(url, '_blank');
+      // Faz a requisição autenticada para o endpoint do alvará
+      const response = await fetch(`${appConfig.API_BASE_URL}/admin/partners/${userId}/alvara`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/pdf, application/json', // Aceita PDF ou JSON para erros
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Erro ao baixar o alvará.' }));
+        throw new Error(errorData.message || 'Erro desconhecido ao baixar o alvará.');
+      }
+
+      // Obter o nome do ficheiro do header Content-Disposition
+      const contentDisposition = response.headers.get('content-disposition');
+      let filename = 'alvara.pdf'; // Nome padrão
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename="([^"]+)"/);
+        if (filenameMatch && filenameMatch[1]) {
+          filename = filenameMatch[1];
+        }
+      }
+
+      const blob = await response.blob();
+      
+      // Cria um link temporário e aciona o download
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      
+      // Limpeza
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+    } catch (error) {
+      console.error('Erro no download do alvará:', error);
+      // Lança o erro para que possa ser apanhado na UI e mostrado num toast
+      throw error; 
+    }
   },
 
   // === GESTÃO DE FICHEIROS DE STOCK ===
@@ -312,12 +353,12 @@ export const adminService = {
   }
 };
 
-// Serviços para revendedores
-export const revendedorService = {
+// Serviços para parceiros (revendedores e distribuidores)
+export const parceiroService = {
   // Obter informações do ficheiro de stock disponível
   async getStockFileInfo() {
     try {
-      const response = await api.get('/revendedor/stock-file/info');
+      const response = await api.get('/parceiro/stock-file/info');
       return response.data;
     } catch (error) {
       // Se for 404, retornar null para indicar que não há ficheiro disponível
@@ -331,7 +372,7 @@ export const revendedorService = {
   // Obter URL para download do ficheiro de stock
   getStockFileDownloadUrl() {
     const token = localStorage.getItem(appConfig.AUTH.TOKEN_KEY);
-    return `${appConfig.API_BASE_URL}/revendedor/stock-file/download?token=${token}`;
+    return `${appConfig.API_BASE_URL}/parceiro/stock-file/download?token=${token}`;
   },
 
   // Fazer download do ficheiro de stock
@@ -343,7 +384,7 @@ export const revendedorService = {
       }
 
       // Fazer requisição para download usando fetch
-      const response = await fetch(`${appConfig.API_BASE_URL}/revendedor/stock-file/download`, {
+      const response = await fetch(`${appConfig.API_BASE_URL}/parceiro/stock-file/download`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -388,5 +429,8 @@ export const revendedorService = {
     }
   }
 };
+
+// Serviços para revendedores (mantido para compatibilidade)
+export const revendedorService = parceiroService;
 
 export default api;

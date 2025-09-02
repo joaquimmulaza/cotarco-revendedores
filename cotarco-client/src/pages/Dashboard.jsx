@@ -1,13 +1,22 @@
 import { useAuth } from '../contexts/AuthContext';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import StockFileDownloader from '../components/StockFileDownloader';
 import Header from '../components/Header';
+import Skeleton from 'react-loading-skeleton';
+import 'react-loading-skeleton/dist/skeleton.css';
 
 const Dashboard = () => {
   const { user, logout } = useAuth();
 
   // Estado para controlar se está a mostrar o mapa de stock
   const [showStockMap, setShowStockMap] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  // Simular loading inicial
+  useEffect(() => {
+    const timer = setTimeout(() => setLoading(false), 1500);
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleStockMapClick = () => {
     setShowStockMap(true);
@@ -44,19 +53,33 @@ const Dashboard = () => {
                 className="bg-white shadow rounded-lg p-6"
               >
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-                  {Array.from({ length: 15 }, (_, index) => (
-                    <div
-                      key={index}
-                      className="border border-gray-200 rounded-lg p-4 text-center hover:border-primary hover:shadow-md transition-all duration-200 cursor-pointer"
-                    >
-                      <div className="text-gray-400 mb-2">
-                        <svg className="h-8 w-8 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                        </svg>
+                  {loading ? (
+                    // Skeleton Loading para produtos
+                    Array.from({ length: 15 }, (_, index) => (
+                      <div
+                        key={index}
+                        className="border border-gray-200 rounded-lg p-4 text-center"
+                      >
+                        <Skeleton width={32} height={32} className="mx-auto mb-2" />
+                        <Skeleton width={60} height={16} />
                       </div>
-                      <span className="text-sm font-medium text-gray-600">Produto</span>
-                    </div>
-                  ))}
+                    ))
+                  ) : (
+                    // Produtos reais
+                    Array.from({ length: 15 }, (_, index) => (
+                      <div
+                        key={index}
+                        className="border border-gray-200 rounded-lg p-4 text-center hover:border-primary hover:shadow-md transition-all duration-200 cursor-pointer"
+                      >
+                        <div className="text-gray-400 mb-2">
+                          <svg className="h-8 w-8 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                          </svg>
+                        </div>
+                        <span className="text-sm font-medium text-gray-600">Produto</span>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
 
