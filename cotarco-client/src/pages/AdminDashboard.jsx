@@ -229,12 +229,6 @@ const AdminDashboard = () => {
       return 'Data inválida';
     }
   };
-
-    const formatRole = (role) => {
-    if (!role) return 'N/A';
-    // Formatar role de revendedor ou distribuidor
-    return role.charAt(0).toUpperCase() + role.slice(1);
-  };
   
   const formatBusinessModel = (businessModel) => {
     if (!businessModel) return 'Não definido';
@@ -542,25 +536,21 @@ const AdminDashboard = () => {
                                 Registado em {formatDate(revendedor.created_at)}
                               </span>
                             </div>
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
-                            <div className="flex items-center">
-                              <span className="font-medium text-gray-700 w-16">Email:</span>
-                              <span className="text-gray-600">{revendedor.email}</span>
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 text-sm">
+                            <div className="flex items-start space-x-3">
+                              <span className="font-medium text-gray-700 w-20 flex-shrink-0">Email:</span>
+                              <span className="text-gray-600 break-all">{revendedor.email}</span>
                             </div>
-                            <div className="flex items-center">
-                              <span className="font-medium text-gray-700 w-20">Empresa:</span>
+                            <div className="flex items-start space-x-3">
+                              <span className="font-medium text-gray-700 w-20 flex-shrink-0">Empresa:</span>
                               <span className="text-gray-600">{revendedor.profile?.company_name || 'N/A'}</span>
                             </div>
-                            <div className="flex items-center">
-                              <span className="font-medium text-gray-700 w-20">Telefone:</span>
+                            <div className="flex items-start space-x-3">
+                              <span className="font-medium text-gray-700 w-20 flex-shrink-0">Telefone:</span>
                               <span className="text-gray-600">{revendedor.profile?.phone_number || 'N/A'}</span>
                             </div>
-                            {/* <div className="flex items-center hidden">
-                              <span className="font-medium text-gray-700 w-16">Tipo:</span>
-                              <span className="text-gray-600">{formatRole(revendedor.role)}</span>
-                            </div> */}
-                            <div className="flex items-center">
-                              <span className="font-medium text-gray-700 w-24">Modelo:</span>
+                            <div className="flex items-start space-x-3">
+                              <span className="font-medium text-gray-700 w-20 flex-shrink-0">Modelo:</span>
                               <span className="text-gray-600">{formatBusinessModel(revendedor.profile?.business_model)}</span>
                             </div>
                           </div>
