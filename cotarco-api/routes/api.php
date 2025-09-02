@@ -48,6 +48,9 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::put('/{user}', [PartnerController::class, 'update']);
             Route::put('/{user}/status', [PartnerController::class, 'updateStatus']);
             Route::patch('/{user}/profile', [PartnerController::class, 'updateProfile']);
+            
+            // Adicione a rota de alvará aqui
+            Route::get('/{user}/alvara', [PartnerController::class, 'downloadAlvara'])->name('admin.partner.alvara.download');
         });
 
         // Gestão de Ficheiros de Stock
@@ -62,13 +65,18 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::prefix('revendedores')->group(function () {
             Route::get('/', [AdminController::class, 'index']);
             Route::get('/pending', [AdminController::class, 'getPendingRevendedores']); // Rota antiga
-            Route::get('/{user}/alvara', [AdminController::class, 'downloadAlvara'])->name('admin.alvara.download');
             Route::post('/{user}/approve', [AdminController::class, 'approveRevendedor']); // Rota antiga
             Route::post('/{user}/reject', [AdminController::class, 'rejectRevendedor']); // Rota antiga
         });
     });
 
-    // Grupo de Rotas para Revendedores/Distribuidores
+    // Grupo de Rotas para Parceiros (Revendedores e Distribuidores)
+    Route::prefix('parceiro')->middleware('parceiro')->group(function () {
+        Route::get('/stock-file/info', [StockFileController::class, 'getForRevendedor']);
+        Route::get('/stock-file/download', [StockFileController::class, 'downloadForRevendedor']);
+    });
+
+    // Manter rotas antigas para compatibilidade (deprecated)
     Route::prefix('revendedor')->middleware('revendedor')->group(function () {
         Route::get('/stock-file/info', [StockFileController::class, 'getForRevendedor']);
         Route::get('/stock-file/download', [StockFileController::class, 'downloadForRevendedor']);

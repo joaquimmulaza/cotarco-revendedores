@@ -1,9 +1,11 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import logoCotarco from '../assets/logo-cotarco.png';
+import Skeleton from 'react-loading-skeleton';
+import 'react-loading-skeleton/dist/skeleton.css';
 import './Header.css';
 
-const Header = ({ user, onLogout, isAdmin = false, showStockMap = false, onStockMapClick, onLogoClick }) => {
+const Header = ({ user, onLogout, isAdmin = false, showStockMap = false, onStockMapClick, onLogoClick, loading = false }) => {
   const navigate = useNavigate();
 
   const handleLogoClick = () => {
@@ -57,12 +59,21 @@ const Header = ({ user, onLogout, isAdmin = false, showStockMap = false, onStock
           {/* Informações do usuário e botão de logout */}
           <div className="flex items-center space-x-4">
             <div className="hidden sm:block text-right">
-              <p className="text-sm font-medium text-gray-900">
-                {user?.name || (isAdmin ? 'Administrador' : 'Usuário')}
-              </p>
-              <p className="text-xs text-gray-500">
-                {user?.email || ''}
-              </p>
+              {loading ? (
+                <div className="space-y-1">
+                  <Skeleton width={96} height={16} />
+                  <Skeleton width={128} height={12} />
+                </div>
+              ) : (
+                <>
+                  <p className="text-sm font-medium text-gray-900">
+                    {user?.name || (isAdmin ? 'Administrador' : 'Usuário')}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {user?.email || ''}
+                  </p>
+                </>
+              )}
             </div>
             <button 
               onClick={onLogout}

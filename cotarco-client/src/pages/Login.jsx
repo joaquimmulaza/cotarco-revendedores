@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { authService } from '../services/api';
 import { config } from '../config/config';
 import { useAuth } from '../contexts/AuthContext';
+import Skeleton from 'react-loading-skeleton';
+import 'react-loading-skeleton/dist/skeleton.css';
 import logoCotarco from '../assets/logo-cotarco.png';
 
 const Login = () => {
@@ -70,7 +72,7 @@ const Login = () => {
         </div>
         
         <h2 className="mt-6 text-center text-3xl font-bold text-gray-900">
-          Login do Revendedor
+          Login
         </h2>
         
       </div>
@@ -124,7 +126,14 @@ const Login = () => {
                 disabled={loading}
                 className="cursor-pointer w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white my-bg-red hover: focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ? 'A entrar...' : 'Entrar'}
+                                 {loading ? (
+                   <div className="flex items-center">
+                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                     A entrar...
+                   </div>
+                 ) : (
+                  'Entrar'
+                )}
               </button>
             </div>
           </form>

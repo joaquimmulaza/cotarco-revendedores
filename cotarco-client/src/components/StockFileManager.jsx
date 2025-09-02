@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { adminService } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
+import Skeleton from 'react-loading-skeleton';
+import 'react-loading-skeleton/dist/skeleton.css';
 
 const StockFileManager = () => {
   const { loading: authLoading, isAdmin } = useAuth();
@@ -178,10 +180,21 @@ const StockFileManager = () => {
 
   if (loading) {
     return (
-      <div className="bg-white shadow rounded-lg p-6">
-        <div className="flex justify-center items-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <span className="ml-3 text-gray-600">A carregar dados do mapa de stock...</span>
+      <div className="bg-white shadow rounded-lg">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <div className="flex items-center">
+            <Skeleton width={32} height={20} className="mr-2" />
+            <Skeleton width={192} height={24} />
+          </div>
+        </div>
+        <div className="px-6 py-6">
+          <div className="space-y-4">
+            <Skeleton height={128} />
+            <div className="flex space-x-4">
+              <Skeleton width={128} height={40} />
+              <Skeleton width={128} height={40} />
+            </div>
+          </div>
         </div>
       </div>
     );

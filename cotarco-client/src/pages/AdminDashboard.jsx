@@ -5,6 +5,9 @@ import { useAuth } from '../contexts/AuthContext';
 import { adminService } from '../services/api';
 import StockFileManager from '../components/StockFileManager';
 import Header from '../components/Header';
+import Skeleton from 'react-loading-skeleton';
+import 'react-loading-skeleton/dist/skeleton.css';
+import toast from 'react-hot-toast';
 
 const AdminDashboard = () => {
   const { user, logout, loading: authLoading, isAdmin } = useAuth();
@@ -73,6 +76,7 @@ const AdminDashboard = () => {
       }
     } catch (error) {
       console.error('Erro ao carregar estatísticas:', error);
+      toast.error('Erro ao carregar estatísticas do painel');
       // Em caso de erro, manter o estado inicial
     } finally {
       setStatsLoading(false);
@@ -86,20 +90,36 @@ const AdminDashboard = () => {
       const response = await adminService.getRevendedores(currentStatus, currentPage);
       setRevendedores(response.data || []); // Dados de revendedores e distribuidores
       setPagination(response.pagination || null);
+      
+      // Atualizar estatísticas após carregar parceiros para manter contadores sincronizados
+      if (!authLoading && isAdmin) {
+        fetchStats();
+      }
     } catch (error) {
       console.error('Erro ao carregar parceiros:', error);
-      setError(error.message || 'Erro ao carregar dados');
+      const errorMessage = error.message || 'Erro ao carregar dados';
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
-  }, [currentStatus, currentPage]);
+  }, [currentStatus, currentPage, authLoading, isAdmin]);
 
   // Carregar estatísticas (apenas uma vez no carregamento, após autenticação)
   useEffect(() => {
     if (!authLoading && isAdmin) {
       fetchStats(); // Estatísticas de revendedores e distribuidores
+      
+      // Atualizar estatísticas automaticamente a cada 30 segundos
+      const interval = setInterval(() => {
+        fetchStats();
+      }, 30000);
+      
+      return () => clearInterval(interval);
     }
   }, [authLoading, isAdmin]);
+
+
 
   // Carregar revendedores e distribuidores (sempre que status ou página mudar, após autenticação)
   useEffect(() => {
@@ -120,21 +140,43 @@ const AdminDashboard = () => {
       
       // Fechar modal e atualizar dados
       closeEditModal();
-      await fetchRevendedores(); // Recarregar lista de parceiros
+      
+      // Atualizar a lista de parceiros E as estatísticas
+      await Promise.all([
+        fetchRevendedores(),
+        fetchStats()
+      ]);
+      
+      // Mostrar mensagem de sucesso
+      toast.success('Parceiro atualizado com sucesso!');
       
     } catch (error) {
       console.error('Erro ao atualizar parceiro:', error);
-      alert(error.message || 'Erro ao atualizar parceiro');
+      toast.error(error.message || 'Erro ao atualizar parceiro');
     }
   };
 
   const handleTabChange = (index) => {
     setSelectedTabIndex(index);
     setCurrentPage(1); // Reset página ao mudar tab (para revendedores e distribuidores)
+    
+    // Atualizar estatísticas quando mudar de tab para garantir dados atualizados
+    if (!authLoading && isAdmin) {
+      fetchStats();
+    }
   };
 
-  const handleViewAlvara = (userId) => {
-    adminService.viewAlvara(userId); // Visualizar alvará de revendedor ou distribuidor
+  // Altere esta função para ser assíncrona e usar o novo serviço
+  const handleViewAlvara = async (userId) => {
+    try {
+      toast.loading('A preparar o alvará para download...'); // Notificação de loading
+      await adminService.downloadAlvara(userId);
+      toast.dismiss(); // Remove a notificação de loading
+      toast.success('Download do alvará iniciado!');
+    } catch (error) {
+      toast.dismiss(); // Remove a notificação de loading
+      toast.error(error.message || 'Não foi possível baixar o alvará.');
+    }
   };
 
   const handleUpdateStatus = async (userId, newStatus) => {
@@ -144,15 +186,18 @@ const AdminDashboard = () => {
       // Chamar a API para atualizar o status do parceiro (revendedor ou distribuidor)
       await adminService.updateRevendedorStatus(userId, newStatus);
       
-      // Atualizar a lista de parceiros
-      await fetchRevendedores();
+      // Atualizar a lista de parceiros E as estatísticas
+      await Promise.all([
+        fetchRevendedores(),
+        fetchStats()
+      ]);
       
       // Mostrar mensagem de sucesso
-      alert('Status do parceiro atualizado com sucesso!');
+      toast.success('Status do parceiro atualizado com sucesso!');
       
     } catch (error) {
       console.error('Erro ao atualizar status do parceiro:', error);
-      alert(error.message || 'Erro ao atualizar status do parceiro');
+      toast.error(error.message || 'Erro ao atualizar status do parceiro');
     } finally {
       setActionLoading(prev => ({ ...prev, [userId]: false }));
     }
@@ -205,6 +250,7 @@ const AdminDashboard = () => {
         onLogout={logout}
         title="Painel de Administração - Gestão de Parceiros"
         isAdmin={true}
+        loading={authLoading}
       />
 
       {/* Main Content */}
@@ -228,7 +274,11 @@ const AdminDashboard = () => {
                         Solicitações pendentes
                       </dt>
                       <dd className="text-lg font-medium text-gray-900">
-                        {statsLoading ? '...' : stats.parceiros?.pending_approval || 0}
+                        {statsLoading ? (
+                          <Skeleton width={32} height={24} />
+                        ) : (
+                          stats.parceiros?.pending_approval || 0
+                        )}
                       </dd>
                     </dl>
                   </div>
@@ -252,7 +302,11 @@ const AdminDashboard = () => {
                         Parceiros ativos
                       </dt>
                       <dd className="text-lg font-medium text-gray-900">
-                        {statsLoading ? '...' : stats.parceiros?.active || 0}
+                        {statsLoading ? (
+                          <Skeleton width={32} height={24} />
+                        ) : (
+                          stats.parceiros?.active || 0
+                        )}
                       </dd>
                     </dl>
                   </div>
@@ -276,7 +330,11 @@ const AdminDashboard = () => {
                         Vendas totais este mês
                       </dt>
                       <dd className="text-lg font-medium text-gray-900">
-                        {statsLoading ? '...' : stats.sales?.total_this_month || 0}
+                        {statsLoading ? (
+                          <Skeleton width={64} height={24} />
+                        ) : (
+                          stats.sales?.total_this_month || 0
+                        )}
                       </dd>
                     </dl>
                   </div>
@@ -300,7 +358,11 @@ const AdminDashboard = () => {
                         Encomendas ativas
                       </dt>
                       <dd className="text-lg font-medium text-gray-900">
-                        {statsLoading ? '...' : stats.orders?.active_count || 0}
+                        {statsLoading ? (
+                          <Skeleton width={40} height={24} />
+                        ) : (
+                          stats.orders?.active_count || 0
+                        )}
                       </dd>
                     </dl>
                   </div>
@@ -373,9 +435,36 @@ const AdminDashboard = () => {
             </div>
             <div className="px-6 py-4">
               {loading ? (
-                <div className="flex justify-center items-center py-12">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                  <span className="ml-3 text-gray-600">A carregar parceiros (revendedores e distribuidores)...</span>
+                <div className="space-y-4">
+                  {Array.from({ length: 3 }).map((_, index) => (
+                    <div key={index} className="border border-gray-200 rounded-lg p-6">
+                      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center space-x-3">
+                              <Skeleton width={128} height={24} />
+                              <Skeleton width={80} height={20} />
+                              <Skeleton width={96} height={20} />
+                            </div>
+                            <Skeleton width={128} height={20} />
+                          </div>
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            {Array.from({ length: 4 }).map((_, i) => (
+                              <div key={i} className="flex items-center">
+                                <Skeleton width={64} height={16} className="mr-2" />
+                                <Skeleton width={96} height={16} />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="flex flex-col sm:flex-row gap-2 mt-4 lg:mt-0 lg:ml-6">
+                          {Array.from({ length: 3 }).map((_, i) => (
+                            <Skeleton key={i} width={80} height={32} />
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               ) : error ? (
                 <div className="text-center py-12">
@@ -466,10 +555,10 @@ const AdminDashboard = () => {
                               <span className="font-medium text-gray-700 w-20">Telefone:</span>
                               <span className="text-gray-600">{revendedor.profile?.phone_number || 'N/A'}</span>
                             </div>
-                            <div className="flex items-center">
+                            {/* <div className="flex items-center hidden">
                               <span className="font-medium text-gray-700 w-16">Tipo:</span>
                               <span className="text-gray-600">{formatRole(revendedor.role)}</span>
-                            </div>
+                            </div> */}
                             <div className="flex items-center">
                               <span className="font-medium text-gray-700 w-24">Modelo:</span>
                               <span className="text-gray-600">{formatBusinessModel(revendedor.profile?.business_model)}</span>
@@ -790,4 +879,6 @@ const AdminDashboard = () => {
 };
 
 export default AdminDashboard;
+
+
 

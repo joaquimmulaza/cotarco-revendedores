@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { authService } from '../services/api';
 import { config } from '../config/config';
+import Skeleton from 'react-loading-skeleton';
+import 'react-loading-skeleton/dist/skeleton.css';
 import logoCotarco from '../assets/logo-cotarco.png';
 
 const Register = () => {
@@ -285,7 +287,14 @@ const Register = () => {
                 disabled={loading}
                 className="cursor-pointer w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white my-bg-red hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ? 'A registar...' : 'Registar'}
+                {loading ? (
+                  <div className="flex items-center">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    A registar...
+                  </div>
+                ) : (
+                  'Registar'
+                )}
               </button>
             </div>
           </form>
