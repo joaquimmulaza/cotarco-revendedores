@@ -17,8 +17,7 @@ const Register = () => {
     register,
     handleSubmit,
     formState: { errors },
-    watch,
-    setValue
+    watch
   } = useForm({
     defaultValues: {
       name: '',
@@ -224,7 +223,7 @@ const Register = () => {
                   type="file"
                   accept=".pdf,.jpg,.jpeg,.png"
                   {...register('alvara', { required: 'Alvará é obrigatório' })}
-                  className="block w-full text-sm text-gray-900 border border-gray-300 rounded-md cursor-pointer focus:outline-none"
+                  className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                 />
                 {errors.alvara && (
                   <p className="mt-1 text-sm text-red-600">{errors.alvara.message}</p>
