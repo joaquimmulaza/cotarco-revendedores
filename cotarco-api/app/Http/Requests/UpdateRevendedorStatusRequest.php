@@ -39,3 +39,4 @@ class UpdateRevendedorStatusRequest extends FormRequest
         ];
     }
 }
+

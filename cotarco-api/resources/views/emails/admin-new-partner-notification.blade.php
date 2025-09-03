@@ -7,9 +7,9 @@
     <style>
         body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
         .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-        .header { background-color: #2563eb; color: white; padding: 20px; text-align: center; }
+        .header { background-color: #f22f1d; color: white; padding: 20px; text-align: center; }
         .content { padding: 20px; background-color: #f9f9f9; }
-        .button { display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 5px; margin: 15px 0; }
+        .button { display: inline-block; padding: 12px 24px; background-color: #f22f1d; color: white; text-decoration: none; border-radius: 5px; margin: 15px 0; }
         .footer { text-align: center; color: #666; font-size: 12px; padding: 20px; }
         .partner-info { background-color: #e5e7eb; padding: 15px; border-radius: 5px; margin: 15px 0; }
         .partner-info h3 { margin-top: 0; color: #1f2937; }
@@ -46,15 +46,9 @@
                 <div class="info-item">
                     <span class="info-label">Telefone:</span> {{ $partner->partnerProfile->phone_number }}
                 </div>
-                <div class="info-item">
-                    <span class="info-label">Modelo de Negócio:</span> {{ $partner->partnerProfile->business_model }}
-                </div>
                 @endif
                 <div class="info-item">
                     <span class="info-label">Data de Registro:</span> {{ $partner->created_at ? $partner->created_at->format('d/m/Y H:i') : 'N/A' }}
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Status:</span> {{ $partner->status }}
                 </div>
             </div>
             

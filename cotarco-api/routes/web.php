@@ -37,10 +37,14 @@ Route::get('/email/verify/{id}/{hash}', function ($id, $hash, Request $request) 
             try {
                 // Obter email do admin principal
                 $adminUser = \App\Models\User::where('role', 'admin')->first();
-                if ($adminUser) {
+                if ($adminUser && filter_var($adminUser->email, FILTER_VALIDATE_EMAIL)) {
                     $dashboardUrl = env('FRONTEND_URL', 'http://localhost:5173') . '/admin';
                     \Illuminate\Support\Facades\Mail::to($adminUser->email)
                         ->send(new \App\Mail\AdminNewPartnerNotification($user, $dashboardUrl));
+                    
+                    \Illuminate\Support\Facades\Log::info('Email de notificação enviado para admin: ' . $adminUser->email);
+                } else {
+                    \Illuminate\Support\Facades\Log::warning('Admin não encontrado ou email inválido para notificação de novo parceiro');
                 }
             } catch (\Exception $e) {
                 // Log do erro mas não impedir o processo
