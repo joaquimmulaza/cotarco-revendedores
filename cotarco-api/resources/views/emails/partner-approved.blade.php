@@ -22,9 +22,9 @@
         <div class="content">
             <p>Olá <strong>{{ $user->name }}</strong>,</p>
             
-            <p>Temos o prazer de informar que sua conta de revendedor foi <strong>aprovada</strong> pela nossa equipe!</p>
+            <p>Temos o prazer de informar que sua conta de parceiro foi <strong>aprovada</strong> pela nossa equipe!</p>
             
-            <p>Agora você já pode fazer login em nossa plataforma e começar a acessar todos os recursos disponíveis para revendedores.</p>
+            <p>Agora você já pode fazer login em nossa plataforma e começar a acessar todos os recursos disponíveis para parceiros.</p>
             
             <p style="text-align: center;">
                 <a href="{{ $loginUrl }}" class="button">Fazer Login Agora</a>
@@ -51,4 +51,3 @@
     </div>
 </body>
 </html>
-

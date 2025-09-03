@@ -32,15 +32,15 @@ Route::get('/email/verify/{id}/{hash}', function ($id, $hash, Request $request) 
         // Atualizar status do usuário para pending_approval
         $user->update(['status' => 'pending_approval']);
         
-        // Enviar notificação para admin apenas se for revendedor
-        if ($user->role === 'revendedor') {
+        // Enviar notificação para admin se for parceiro (revendedor ou distribuidor)
+        if (in_array($user->role, ['revendedor', 'distribuidor'])) {
             try {
                 // Obter email do admin principal
                 $adminUser = \App\Models\User::where('role', 'admin')->first();
                 if ($adminUser) {
                     $dashboardUrl = env('FRONTEND_URL', 'http://localhost:5173') . '/admin';
                     \Illuminate\Support\Facades\Mail::to($adminUser->email)
-                        ->send(new \App\Mail\AdminNewRevendedorNotification($user, $dashboardUrl));
+                        ->send(new \App\Mail\AdminNewPartnerNotification($user, $dashboardUrl));
                 }
             } catch (\Exception $e) {
                 // Log do erro mas não impedir o processo

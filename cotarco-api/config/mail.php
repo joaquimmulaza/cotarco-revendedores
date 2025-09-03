@@ -115,4 +115,16 @@ return [
         'name' => env('MAIL_FROM_NAME', 'Example'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Admin Email Address
+    |--------------------------------------------------------------------------
+    |
+    | This option controls the email address that will receive admin
+    | notifications when new partners register.
+    |
+    */
+
+    'admin_address' => env('ADMIN_EMAIL'),
+
 ];

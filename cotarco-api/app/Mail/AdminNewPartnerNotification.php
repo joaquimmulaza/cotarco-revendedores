@@ -10,7 +10,7 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class RevendedorApproved extends Mailable
+class AdminNewPartnerNotification extends Mailable
 {
     use Queueable, SerializesModels;
 
@@ -18,8 +18,8 @@ class RevendedorApproved extends Mailable
      * Create a new message instance.
      */
     public function __construct(
-        public User $user,
-        public string $loginUrl
+        public User $partner,
+        public string $dashboardUrl
     ) {
         //
     }
@@ -30,7 +30,7 @@ class RevendedorApproved extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Conta Aprovada - Cotarco Revendedores',
+            subject: 'Novo Parceiro Aguarda Aprovação - Cotarco',
         );
     }
 
@@ -40,7 +40,7 @@ class RevendedorApproved extends Mailable
     public function content(): Content
     {
         return new Content(
-            html: 'emails.revendedor-approved',
+            html: 'emails.admin-new-partner-notification',
         );
     }
 

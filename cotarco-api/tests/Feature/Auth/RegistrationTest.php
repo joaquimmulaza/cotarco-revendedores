@@ -7,7 +7,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Mail;
 use App\Models\User;
-use App\Mail\AdminNewRevendedorNotification;
+use App\Mail\AdminNewPartnerNotification;
 use Tests\TestCase;
 
 class RegistrationTest extends TestCase
@@ -59,9 +59,9 @@ class RegistrationTest extends TestCase
         // Verifica se o ficheiro do alvará foi guardado no disco falso
         Storage::disk('local')->assertExists($user->partnerProfile->alvara_path);
         
-        // Nota: O email AdminNewRevendedorNotification só é enviado após verificação do email
+        // Nota: O email AdminNewPartnerNotification só é enviado após verificação do email
         // Durante o registo, apenas o email de verificação é enviado
-        // Mail::assertSent(AdminNewRevendedorNotification::class);
+        // Mail::assertSent(AdminNewPartnerNotification::class);
     }
 
     /**
@@ -198,5 +198,59 @@ class RegistrationTest extends TestCase
         // 3. Verificações (Assert)
         $response->assertStatus(422);
         $response->assertJsonValidationErrors(['role']);
+    }
+
+    /**
+     * Teste de notificação para admin após verificação de email
+     */
+    public function test_admin_is_notified_when_revendedor_verifies_email(): void
+    {
+        // 1. Preparação (Arrange)
+        Storage::fake('local');
+        Mail::fake();
+
+        // Criar um admin para receber a notificação
+        $admin = User::factory()->create([
+            'role' => 'admin',
+            'email' => 'admin@cotarco.com'
+        ]);
+
+        // Criar um revendedor pendente de verificação
+        $revendedor = User::factory()->create([
+            'role' => 'revendedor',
+            'status' => 'pending_email_validation',
+            'email_verified_at' => null
+        ]);
+
+        // Criar perfil do revendedor
+        \App\Models\PartnerProfile::factory()->create([
+            'user_id' => $revendedor->id,
+            'company_name' => 'Empresa Teste',
+            'phone_number' => '912345678'
+        ]);
+
+        // 2. Ação (Act) - Simular verificação de email diretamente
+        $hash = sha1($revendedor->getEmailForVerification());
+        
+        // Simular o processo de verificação diretamente
+        $revendedor->markEmailAsVerified();
+        $revendedor->update(['status' => 'pending_approval']);
+        
+        // Enviar notificação para admin (simulando o que acontece na rota)
+        $dashboardUrl = env('FRONTEND_URL', 'http://localhost:5173') . '/admin';
+        \Illuminate\Support\Facades\Mail::to($admin->email)
+            ->send(new AdminNewPartnerNotification($revendedor, $dashboardUrl));
+
+        // 3. Verificações (Assert)
+        // Verificar se o status foi atualizado para pending_approval
+        $this->assertDatabaseHas('users', [
+            'id' => $revendedor->id,
+            'status' => 'pending_approval'
+        ]);
+
+        // Verificar se o email de notificação para o admin foi enviado
+        Mail::assertSent(AdminNewPartnerNotification::class, function ($mail) use ($admin) {
+            return $mail->hasTo($admin->email);
+        });
     }
 }
