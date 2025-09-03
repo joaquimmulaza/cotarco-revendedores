@@ -22,9 +22,9 @@
         <div class="content">
             <p>Olá <strong>{{ $user->name }}</strong>,</p>
             
-            <p>Agradecemos o seu interesse em se tornar um revendedor Cotarco.</p>
+            <p>Agradecemos o seu interesse em se tornar um parceiro Cotarco.</p>
             
-            <p>Após uma análise cuidadosa da sua solicitação, informamos que <strong>não foi possível aprovar</strong> seu registro como revendedor neste momento.</p>
+            <p>Após uma análise cuidadosa da sua solicitação, informamos que <strong>não foi possível aprovar</strong> seu registro como parceiro neste momento.</p>
             
             <p>Esta decisão pode ter sido baseada em diversos fatores, incluindo:</p>
             <ul>
@@ -53,4 +53,3 @@
     </div>
 </body>
 </html>
-

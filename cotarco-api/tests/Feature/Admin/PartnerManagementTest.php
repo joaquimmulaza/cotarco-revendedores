@@ -97,17 +97,23 @@ class PartnerManagementTest extends TestCase
     {
         // Filtrar apenas revendedores
         $response = $this->getJson('/api/admin/partners?role=revendedor');
-
         $response->assertStatus(200);
-        $response->assertJsonFragment(['role' => 'revendedor']);
-        $response->assertJsonMissing(['role' => 'distribuidor']);
-
+        
+        $partners = $response->json('partners');
+        foreach ($partners as $partner) {
+            $this->assertEquals('revendedor', $partner['role']);
+        }
+        $this->assertGreaterThanOrEqual(1, count($partners)); // Verifica que pelo menos 1 revendedor foi retornado
+        
         // Filtrar apenas distribuidores
         $response = $this->getJson('/api/admin/partners?role=distribuidor');
-
         $response->assertStatus(200);
-        $response->assertJsonFragment(['role' => 'distribuidor']);
-        $response->assertJsonMissing(['role' => 'revendedor']);
+        
+        $partners = $response->json('partners');
+        foreach ($partners as $partner) {
+            $this->assertEquals('distribuidor', $partner['role']);
+        }
+        $this->assertGreaterThanOrEqual(1, count($partners)); // Verifica que pelo menos 1 distribuidor foi retornado
     }
 
     /**

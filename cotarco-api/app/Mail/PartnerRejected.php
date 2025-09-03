@@ -10,7 +10,7 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class RevendedorRejected extends Mailable
+class PartnerRejected extends Mailable
 {
     use Queueable, SerializesModels;
 
@@ -39,7 +39,7 @@ class RevendedorRejected extends Mailable
     public function content(): Content
     {
         return new Content(
-            html: 'emails.revendedor-rejected',
+            html: 'emails.partner-rejected',
         );
     }
 

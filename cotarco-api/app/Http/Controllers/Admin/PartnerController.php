@@ -9,6 +9,9 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\PartnerApproved;
+use App\Mail\PartnerRejected;
 
 class PartnerController extends Controller
 {
@@ -29,11 +32,11 @@ class PartnerController extends Controller
             ->whereIn('role', ['revendedor', 'distribuidor']);
 
         // Filtros
-        if ($request->has('status') && in_array($request->status, ['pending_approval', 'active', 'rejected', 'inactive', 'suspended'])) {
-            $query->where('status', $request->status);
+        if ($request->has('role') && in_array($request->role, ['revendedor', 'distribuidor'])) {
+            $query->where('role', $request->role);
         }
-
-        if ($request->has('status') && in_array($request->status, ['pending_email_validation', 'active', 'suspended'])) {
+        
+        if ($request->has('status') && in_array($request->status, ['pending_approval', 'active', 'rejected', 'inactive', 'suspended'])) {
             $query->where('status', $request->status);
         }
 
@@ -182,6 +185,14 @@ class PartnerController extends Controller
         }
     
         $user->update(['status' => $validated['status']]);
+    
+        // Enviar email de notificação baseado no status
+        if ($validated['status'] === 'active') {
+            $loginUrl = env('FRONTEND_URL', 'http://localhost:5173') . '/login';
+            Mail::to($user->email)->send(new PartnerApproved($user, $loginUrl));
+        } elseif ($validated['status'] === 'rejected') {
+            Mail::to($user->email)->send(new PartnerRejected($user));
+        }
     
         return response()->json([
             'message' => 'Status do parceiro atualizado com sucesso.',

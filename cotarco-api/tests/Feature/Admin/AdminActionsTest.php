@@ -5,8 +5,8 @@ namespace Tests\Feature\Admin;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
-use App\Mail\RevendedorApproved;
-use App\Mail\RevendedorRejected;
+use App\Mail\PartnerApproved;
+use App\Mail\PartnerRejected;
 use Tests\TestCase;
 
 class AdminActionsTest extends TestCase
@@ -36,13 +36,13 @@ class AdminActionsTest extends TestCase
         Mail::fake(); // Prepara o sistema de Mail falso
 
         // 2. Act: Atua como o admin e chama o endpoint de aprovação
-        $response = $this->actingAs($this->admin)->putJson("/api/admin/revendedores/{$revendedor->id}/status", [
+        $response = $this->actingAs($this->admin)->putJson("/api/admin/partners/{$revendedor->id}/status", [
             'status' => 'active'
         ]);
 
         // 3. Assert
         $response->assertStatus(200)
-                 ->assertJsonPath('user.status', 'active');
+                 ->assertJsonPath('partner.status', 'active');
 
         // Verifica se o status do utilizador na base de dados foi realmente atualizado
         $this->assertDatabaseHas('users', [
@@ -51,7 +51,7 @@ class AdminActionsTest extends TestCase
         ]);
 
         // Verifica se o email de aprovação foi enviado para o revendedor
-        Mail::assertSent(RevendedorApproved::class, function ($mail) use ($revendedor) {
+        Mail::assertSent(PartnerApproved::class, function ($mail) use ($revendedor) {
             return $mail->hasTo($revendedor->email);
         });
     }
@@ -70,13 +70,13 @@ class AdminActionsTest extends TestCase
         Mail::fake();
 
         // 2. Act: Atua como o admin e chama o endpoint de rejeição
-        $response = $this->actingAs($this->admin)->putJson("/api/admin/revendedores/{$revendedor->id}/status", [
+        $response = $this->actingAs($this->admin)->putJson("/api/admin/partners/{$revendedor->id}/status", [
             'status' => 'rejected'
         ]);
 
         // 3. Assert
         $response->assertStatus(200)
-                 ->assertJsonPath('user.status', 'rejected');
+                 ->assertJsonPath('partner.status', 'rejected');
 
         $this->assertDatabaseHas('users', [
             'id' => $revendedor->id,
@@ -84,7 +84,7 @@ class AdminActionsTest extends TestCase
         ]);
 
         // Verifica se o email de rejeição foi enviado
-        Mail::assertSent(RevendedorRejected::class, function ($mail) use ($revendedor) {
+        Mail::assertSent(PartnerRejected::class, function ($mail) use ($revendedor) {
             return $mail->hasTo($revendedor->email);
         });
     }
@@ -98,7 +98,7 @@ class AdminActionsTest extends TestCase
         $revendedor = User::factory()->create(['status' => 'pending_approval']);
 
         // 2. Act
-        $response = $this->actingAs($this->admin)->putJson("/api/admin/revendedores/{$revendedor->id}/status", [
+        $response = $this->actingAs($this->admin)->putJson("/api/admin/partners/{$revendedor->id}/status", [
             'status' => 'invalid_status' // Um status que não existe
         ]);
 
