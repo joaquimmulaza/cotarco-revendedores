@@ -23,47 +23,52 @@ const PartnerCard = ({
 
   return (
     <div className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex-1">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center space-x-3">
-              <h4 className="text-xl font-semibold text-gray-900">
-                {partner.name}
-              </h4>
-              {/* Status Badge */}
-              <span className={`text-xs font-medium px-2 py-1 rounded-full ${
-                partner.status === 'pending_approval' ? 'bg-yellow-100 text-yellow-800' :
-                partner.status === 'active' ? 'bg-green-100 text-green-800' :
-                partner.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                'bg-gray-100 text-gray-800'
-              }`}>
-                {partner.status === 'pending_approval' ? 'Pendente' :
-                 partner.status === 'active' ? 'Ativo' :
-                 partner.status === 'rejected' ? 'Rejeitado' :
-                 partner.status}
-              </span>
-              
-              {/* Role Badge */}
-              <span className={`text-xs font-medium px-2 py-1 rounded-full ${
-                partner.role === 'revendedor' ? 'bg-blue-100 text-blue-800' :
-                partner.role === 'distribuidor' ? 'bg-purple-100 text-purple-800' :
-                'bg-gray-100 text-gray-800'
-              }`}>
-                {partner.role === 'revendedor' ? 'Revendedor' :
-                 partner.role === 'distribuidor' ? 'Distribuidor' :
-                 partner.role}
-              </span>
-            </div>
-            <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">
+      <div className="flex flex-col">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center space-x-3">
+            <h4 className="text-xl font-semibold text-gray-900">
+              {partner.name}
+            </h4>
+            {/* Status Badge */}
+            <span className={`text-xs font-medium px-2 py-1 rounded-full ${
+              partner.status === 'pending_approval' ? 'bg-yellow-100 text-yellow-800' :
+              partner.status === 'active' ? 'bg-green-50 text-green-800' :
+              partner.status === 'rejected' ? 'bg-red-100 text-red-800' :
+              'bg-gray-100 text-gray-800'
+            }`}>
+              {partner.status === 'pending_approval' ? 'Pendente' :
+               partner.status === 'active' ? 'Ativo' :
+               partner.status === 'rejected' ? 'Rejeitado' :
+               partner.status}
+            </span>
+            
+            {/* Role Badge */}
+            <span className={`text-xs font-medium px-2 py-1 rounded-full ${
+              partner.role === 'revendedor' ? 'bg-tags' :
+              partner.role === 'distribuidor' ? 'bg-tags' :
+              'bg-gray-100 text-gray-800'
+            }`}>
+              {partner.role === 'revendedor' ? 'Revendedor' :
+               partner.role === 'distribuidor' ? 'Distribuidor' :
+               partner.role}
+            </span>
+            
+          </div>
+          <span className="text-sm text-gray-500 ">
               Registado em {formatDate(partner.created_at)}
             </span>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 text-sm">
+        </div>
+        
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-y-6 gap-x-26 text-sm">
             <div className="flex items-start space-x-3">
               <span className="font-medium text-gray-700 w-20 flex-shrink-0">Email:</span>
               <span className="text-gray-600 break-all">{partner.email}</span>
             </div>
+            
             <div className="flex items-start space-x-3">
+            
               <span className="font-medium text-gray-700 w-20 flex-shrink-0">Empresa:</span>
               <span className="text-gray-600">{partner.profile?.company_name || 'N/A'}</span>
             </div>
@@ -76,13 +81,12 @@ const PartnerCard = ({
               <span className="text-gray-600">{formatBusinessModel(partner.profile?.business_model)}</span>
             </div>
           </div>
-        </div>
-        
-        <div className="flex flex-col sm:flex-row gap-2 mt-4 lg:mt-0 lg:ml-6">
+          
+          <div className="flex flex-col sm:flex-row gap-2 mt-4 lg:mt-0 lg:ml-6">
           {/* Botão Editar */}
           <button
             onClick={() => onEdit(partner)}
-            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors text-sm font-medium flex items-center justify-center"
+            className="cursor-pointer bg-gray-100 my-text-gray px-3 py-1.5 rounded-md hover:bg-blue-700 transition-colors text-xs font-medium flex items-center justify-center"
           >
             <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -93,7 +97,7 @@ const PartnerCard = ({
           {partner.profile?.alvara_path ? (
             <button
               onClick={() => onViewAlvara(partner.id)}
-              className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors text-sm font-medium flex items-center justify-center"
+              className="cursor-pointer bg-gray-100 my-text-gray my-text-red px-3 py-1.5 rounded-md hover-color hover:bg-white transition-colors text-xs font-medium flex items-center justify-center"
             >
               <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -102,7 +106,7 @@ const PartnerCard = ({
               Ver Alvará
             </button>
           ) : (
-            <div className="bg-gray-100 text-gray-500 px-4 py-2 rounded-md text-sm font-medium flex items-center justify-center">
+            <div className="bg-gray-100 text-gray-500 px-3 py-1.5 rounded-md text-xs font-medium flex items-center justify-center">
               <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.966-.833-2.732 0L3.732 19c-.77.833.192 2.5 1.732 2.5z" />
               </svg>
@@ -116,7 +120,7 @@ const PartnerCard = ({
               <button
                 onClick={() => onUpdateStatus(partner.id, 'active')}
                 disabled={actionLoading[partner.id]}
-                className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium flex items-center justify-center"
+                className="bg-green-600 text-white px-3 py-1.5 rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-xs font-medium flex items-center justify-center"
               >
                 {actionLoading[partner.id] === 'updating-active' ? (
                   <>
@@ -136,7 +140,7 @@ const PartnerCard = ({
               <button
                 onClick={() => onUpdateStatus(partner.id, 'rejected')}
                 disabled={actionLoading[partner.id]}
-                className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium flex items-center justify-center"
+                className="bg-red-600 text-white px-3 py-1.5 rounded-md hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-xs font-medium flex items-center justify-center"
               >
                 {actionLoading[partner.id] === 'updating-rejected' ? (
                   <>
@@ -159,7 +163,7 @@ const PartnerCard = ({
             <button
               onClick={() => onUpdateStatus(partner.id, 'inactive')}
               disabled={actionLoading[partner.id]}
-              className="bg-orange-600 text-white px-4 py-2 rounded-md hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium flex items-center justify-center"
+              className="cursor-pointer my-stroke-red my-text-red px-3 py-1.5 rounded-md hover: disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-xs font-medium flex items-center justify-center"
             >
               {actionLoading[partner.id] === 'updating-inactive' ? (
                 <>
@@ -181,7 +185,7 @@ const PartnerCard = ({
             <button
               onClick={() => onUpdateStatus(partner.id, 'active')}
               disabled={actionLoading[partner.id]}
-              className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium flex items-center justify-center"
+              className="bg-green-600 text-white px-3 py-1.5 rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-xs font-medium flex items-center justify-center"
             >
               {actionLoading[partner.id] === 'updating-active' ? (
                 <>
@@ -203,7 +207,7 @@ const PartnerCard = ({
             <button
               onClick={() => onUpdateStatus(partner.id, 'pending_approval')}
               disabled={actionLoading[partner.id]}
-              className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium flex items-center justify-center"
+              className="bg-blue-600 text-white px-3 py-1.5 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-xs font-medium flex items-center justify-center"
             >
               {actionLoading[partner.id] === 'updating-pending_approval' ? (
                 <>
@@ -220,6 +224,7 @@ const PartnerCard = ({
               )}
             </button>
           )}
+          </div>
         </div>
       </div>
     </div>

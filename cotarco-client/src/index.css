@@ -15,6 +15,12 @@
     background-color: #c32517;
 }
 
+.bg-tags{
+    background-color: #E5E7EB;
+    color: #6B7280;
+    border: none;
+}
+
 .my-text-gray{
     color: #666;
 }
@@ -47,4 +53,8 @@
 
   .hover-color:hover{
     background-color: #f22f1d0c;
+  }
+
+  .bg-danger{
+    background-color: #DC3545 ;
   }

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Tab } from '@headlessui/react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Tab, TabGroup, TabList, TabPanel, TabPanels } from '@headlessui/react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import StockFileManager from '../components/StockFileManager';
 import Header from '../components/Header';
@@ -31,9 +31,9 @@ const AdminDashboard = () => {
       />
 
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <Tab.Group selectedIndex={selectedIndex} onChange={setSelectedIndex}>
+        <TabGroup selectedIndex={selectedIndex} onChange={setSelectedIndex}>
           {/* Navegação Principal em formato de Cards */}
-          <Tab.List className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <TabList className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             {navigationTabs.map((tab, index) => (
               <Tab
                 key={tab.name}
@@ -61,10 +61,10 @@ const AdminDashboard = () => {
                 </div>
               </Tab>
             ))}
-                </Tab.List>
+                </TabList>
 
           {/* Painéis de Conteúdo com Animação */}
-          <Tab.Panels>
+          <TabPanels>
             <AnimatePresence mode="wait">
               <motion.div
                 key={selectedIndex}
@@ -73,16 +73,16 @@ const AdminDashboard = () => {
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.3, ease: 'easeInOut' }}
               >
-                <Tab.Panel>
+                <TabPanel>
                   <PartnerManager />
-                </Tab.Panel>
-                <Tab.Panel>
+                </TabPanel>
+                <TabPanel>
                   <StockFileManager />
-                </Tab.Panel>
+                </TabPanel>
               </motion.div>
             </AnimatePresence>
-          </Tab.Panels>
-        </Tab.Group>
+          </TabPanels>
+        </TabGroup>
       </main>
     </div>
   );
