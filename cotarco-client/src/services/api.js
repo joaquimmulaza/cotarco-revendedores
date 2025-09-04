@@ -172,6 +172,31 @@ export const authService = {
     } catch (error) {
       throw error.response?.data || { message: 'Erro ao obter dados do utilizador' };
     }
+  },
+
+  // Solicitar reset de senha
+  async forgotPassword(email) {
+    try {
+      const response = await api.post('/forgot-password', { email });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: 'Erro ao solicitar reset de senha' };
+    }
+  },
+
+  // Redefinir senha
+  async resetPassword(token, email, password, passwordConfirmation) {
+    try {
+      const response = await api.post('/reset-password', {
+        token,
+        email,
+        password,
+        password_confirmation: passwordConfirmation
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: 'Erro ao redefinir senha' };
+    }
   }
 };
 

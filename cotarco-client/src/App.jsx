@@ -9,6 +9,8 @@ import Dashboard from './pages/Dashboard';
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
 import ApiTestPage from './pages/ApiTestPage';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 
 // Import components
 import ProtectedRoute from './components/ProtectedRoute';
@@ -26,6 +28,8 @@ function AppContent() {
           <Route path="/email-verification-pending" element={<EmailVerificationPending />} />
           <Route path="/email-validated" element={<EmailValidated />} />
           <Route path="/api-test" element={<ApiTestPage />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           
           {/* Rota protegida do revendedor */}
           <Route 
