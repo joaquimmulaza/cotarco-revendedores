@@ -19,6 +19,10 @@ Route::post('/register', [RegisterController::class, 'store']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/admin/login', [AuthController::class, 'adminLogin']);
 
+// Rotas para Password Reset
+Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
+Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('password.reset');
+
 // Rota de teste
 Route::get('/test', fn() => response()->json(['message' => 'API funcionando!']));
 
