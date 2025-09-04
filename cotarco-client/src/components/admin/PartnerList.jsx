@@ -88,7 +88,7 @@ const PartnerList = ({
           {currentStatus === 'pending_approval' && 'No momento não há revendedores ou distribuidores aguardando aprovação.'}
           {currentStatus === 'active' && 'No momento não há revendedores ou distribuidores ativos no sistema.'}
           {currentStatus === 'rejected' && 'No momento não há revendedores ou distribuidores rejeitados.'}
-          {currentStatus === 'inactive' && 'No momento não há revendedores ou distribuidores que foram desativados.'}
+          {currentStatus === 'inactive' && 'No momento não há revendedores ou distribuidores que foram desativados temporariamente.'}
         </p>
       </div>
     );

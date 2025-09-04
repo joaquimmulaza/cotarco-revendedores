@@ -4,6 +4,7 @@ namespace Tests\Feature\Auth;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class AuthenticationTest extends TestCase
@@ -13,7 +14,8 @@ class AuthenticationTest extends TestCase
     /**
      * Teste de login bem-sucedido para um revendedor aprovado
      */
-    public function test_an_approved_reseller_can_login_successfully()
+    #[Test]
+    public function test_an_approved_reseller_can_login_successfully(): void
     {
         // 1. Arrange: Cria um utilizador aprovado
         $user = User::factory()->create([
@@ -37,7 +39,8 @@ class AuthenticationTest extends TestCase
     /**
      * Teste de falha no login para um revendedor pendente
      */
-    public function test_a_pending_reseller_cannot_login()
+    #[Test]
+    public function test_a_pending_reseller_cannot_login(): void
     {
         // 1. Arrange: Cria um utilizador pendente
         $user = User::factory()->create([
@@ -60,7 +63,8 @@ class AuthenticationTest extends TestCase
     /**
      * Teste de falha no login para um revendedor reprovado
      */
-    public function test_a_rejected_reseller_cannot_login()
+    #[Test]
+    public function test_a_rejected_reseller_cannot_login(): void
     {
         // 1. Arrange: Cria um utilizador reprovado
         $user = User::factory()->create([
@@ -83,7 +87,8 @@ class AuthenticationTest extends TestCase
     /**
      * Teste de acesso negado para utilizadores não-admin
      */
-    public function test_a_non_admin_user_cannot_access_admin_routes()
+    #[Test]
+    public function test_a_non_admin_user_cannot_access_admin_routes(): void
     {
         // 1. Arrange: Cria um revendedor normal e autentica-o
         $revendedor = User::factory()->create([

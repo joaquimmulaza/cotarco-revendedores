@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Mail;
 use App\Models\User;
 use App\Mail\AdminNewPartnerNotification;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class RegistrationTest extends TestCase
@@ -17,6 +18,7 @@ class RegistrationTest extends TestCase
     /**
      * Teste de registo bem-sucedido de um novo revendedor
      */
+    #[Test]
     public function test_it_should_register_a_new_reseller_successfully_and_await_email_verification(): void
     {
         // 1. Preparação (Arrange)
@@ -67,6 +69,7 @@ class RegistrationTest extends TestCase
     /**
      * Teste de registo bem-sucedido de um novo distribuidor
      */
+    #[Test]
     public function test_it_should_register_a_new_distributor_successfully(): void
     {
         // 1. Preparação (Arrange)
@@ -113,7 +116,8 @@ class RegistrationTest extends TestCase
     /**
      * Teste de falha no registo quando o email já existe
      */
-    public function test_it_should_fail_registration_if_email_already_exists()
+    #[Test]
+    public function test_it_should_fail_registration_if_email_already_exists(): void
     {
         // 1. Preparação (Arrange)
         // Primeiro, criamos um utilizador existente na base de dados.
@@ -147,7 +151,8 @@ class RegistrationTest extends TestCase
     /**
      * Teste de falha no registo quando o role não é fornecido
      */
-    public function test_it_should_fail_registration_if_role_is_missing()
+    #[Test]
+    public function test_it_should_fail_registration_if_role_is_missing(): void
     {
         // 1. Preparação (Arrange)
         Storage::fake('local');
@@ -175,7 +180,8 @@ class RegistrationTest extends TestCase
     /**
      * Teste de falha no registo quando o role é inválido
      */
-    public function test_it_should_fail_registration_if_role_is_invalid()
+    #[Test]
+    public function test_it_should_fail_registration_if_role_is_invalid(): void
     {
         // 1. Preparação (Arrange)
         Storage::fake('local');
@@ -203,6 +209,7 @@ class RegistrationTest extends TestCase
     /**
      * Teste de notificação para admin após verificação de email
      */
+    #[Test]
     public function test_admin_is_notified_when_revendedor_verifies_email(): void
     {
         // 1. Preparação (Arrange)

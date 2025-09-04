@@ -7,6 +7,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\PartnerApproved;
 use App\Mail\PartnerRejected;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class AdminActionsTest extends TestCase
@@ -25,7 +26,8 @@ class AdminActionsTest extends TestCase
     /**
      * Teste de aprovação de um revendedor pendente
      */
-    public function test_an_admin_can_approve_a_pending_reseller()
+    #[Test]
+    public function test_an_admin_can_approve_a_pending_reseller(): void
     {
         // 1. Arrange: Cria um revendedor pendente
         $revendedor = User::factory()->create([
@@ -59,7 +61,8 @@ class AdminActionsTest extends TestCase
     /**
      * Teste de rejeição de um revendedor pendente
      */
-    public function test_an_admin_can_reject_a_pending_reseller()
+    #[Test]
+    public function test_an_admin_can_reject_a_pending_reseller(): void
     {
         // 1. Arrange: Cria um revendedor pendente
         $revendedor = User::factory()->create([
@@ -92,7 +95,8 @@ class AdminActionsTest extends TestCase
     /**
      * Teste de validação de status inválido
      */
-    public function test_an_admin_cannot_change_status_to_an_invalid_one()
+    #[Test]
+    public function test_an_admin_cannot_change_status_to_an_invalid_one(): void
     {
         // 1. Arrange
         $revendedor = User::factory()->create(['status' => 'pending_approval']);
@@ -105,5 +109,42 @@ class AdminActionsTest extends TestCase
         // 3. Assert: Verifica se a API retorna um erro de validação (422)
         $response->assertStatus(422)
                  ->assertJsonValidationErrors(['status']);
+    }
+
+    #[Test]
+    public function an_admin_can_deactivate_an_active_partner_and_an_email_is_sent(): void
+    {
+        $partner = User::factory()->create(['role' => 'revendedor', 'status' => 'active']);
+        Mail::fake();
+
+        $this->actingAs($this->admin)->putJson("/api/admin/partners/{$partner->id}/status", [
+            'status' => 'inactive'
+        ]);
+
+        $this->assertDatabaseHas('users', ['id' => $partner->id, 'status' => 'inactive']);
+        Mail::assertSent(\App\Mail\PartnerDeactivated::class, function ($mail) use ($partner) {
+            return $mail->hasTo($partner->email);
+        });
+    }
+
+    #[Test]
+    public function an_admin_can_reactivate_an_inactive_partner_and_a_reactivation_email_is_sent(): void
+    {
+        $partner = User::factory()->create(['role' => 'distribuidor', 'status' => 'inactive']);
+        Mail::fake();
+
+        $this->actingAs($this->admin)->putJson("/api/admin/partners/{$partner->id}/status", [
+            'status' => 'active'
+        ]);
+
+        $this->assertDatabaseHas('users', ['id' => $partner->id, 'status' => 'active']);
+        
+        // Verifica que o email de REATIVAÇÃO foi enviado
+        Mail::assertSent(\App\Mail\PartnerReactivated::class, function ($mail) use ($partner) {
+            return $mail->hasTo($partner->email);
+        });
+
+        // E garante que o email de APROVAÇÃO (o antigo) NÃO foi enviado
+        Mail::assertNotSent(\App\Mail\PartnerApproved::class);
     }
 }

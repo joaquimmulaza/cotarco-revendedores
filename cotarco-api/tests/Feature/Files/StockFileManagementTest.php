@@ -7,6 +7,7 @@ use App\Models\StockFile;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class StockFileManagementTest extends TestCase
@@ -32,7 +33,8 @@ class StockFileManagementTest extends TestCase
     /**
      * Teste de upload de ficheiro de stock por um administrador
      */
-    public function test_an_admin_can_upload_a_stock_file()
+    #[Test]
+    public function test_an_admin_can_upload_a_stock_file(): void
     {
         Storage::fake('local');
 
@@ -51,7 +53,8 @@ class StockFileManagementTest extends TestCase
     /**
      * Teste de download de ficheiro de stock por um revendedor aprovado
      */
-    public function test_an_approved_reseller_can_download_an_active_stock_file()
+    #[Test]
+    public function test_an_approved_reseller_can_download_an_active_stock_file(): void
     {
         Storage::fake('local');
         
@@ -89,7 +92,8 @@ class StockFileManagementTest extends TestCase
     /**
      * Teste de acesso negado para revendedores pendentes
      */
-    public function test_a_pending_reseller_cannot_download_a_stock_file()
+    #[Test]
+    public function test_a_pending_reseller_cannot_download_a_stock_file(): void
     {
         StockFile::create([
             'display_name' => 'Mapa de Stock Teste',
@@ -110,7 +114,8 @@ class StockFileManagementTest extends TestCase
     /**
      * Teste de download de ficheiro inativo
      */
-    public function test_an_approved_reseller_cannot_download_an_inactive_stock_file()
+    #[Test]
+    public function test_an_approved_reseller_cannot_download_an_inactive_stock_file(): void
     {
         StockFile::create([
             'display_name' => 'Mapa de Stock Inativo',

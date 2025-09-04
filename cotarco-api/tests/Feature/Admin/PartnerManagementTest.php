@@ -6,6 +6,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use App\Models\User;
 use App\Models\PartnerProfile;
 use Laravel\Sanctum\Sanctum;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class PartnerManagementTest extends TestCase
@@ -61,6 +62,7 @@ class PartnerManagementTest extends TestCase
     /**
      * Teste para listar parceiros
      */
+    #[Test]
     public function test_admin_can_list_partners(): void
     {
         $response = $this->getJson('/api/admin/partners');
@@ -93,6 +95,7 @@ class PartnerManagementTest extends TestCase
     /**
      * Teste para filtrar parceiros por role
      */
+    #[Test]
     public function test_admin_can_filter_partners_by_role(): void
     {
         // Filtrar apenas revendedores
@@ -119,6 +122,7 @@ class PartnerManagementTest extends TestCase
     /**
      * Teste para filtrar parceiros por status
      */
+    #[Test]
     public function test_admin_can_filter_partners_by_status(): void
     {
         $response = $this->getJson('/api/admin/partners?status=active');
@@ -135,6 +139,7 @@ class PartnerManagementTest extends TestCase
     /**
      * Teste para buscar parceiros por texto
      */
+    #[Test]
     public function test_admin_can_search_partners_by_text(): void
     {
         $response = $this->getJson('/api/admin/partners?search=Revendedora');
@@ -147,6 +152,7 @@ class PartnerManagementTest extends TestCase
     /**
      * Teste para verificar que apenas administradores podem acessar
      */
+    #[Test]
     public function test_non_admin_users_cannot_access_partner_management(): void
     {
         // Tentar aceder como revendedor
@@ -165,6 +171,7 @@ class PartnerManagementTest extends TestCase
     /**
      * Teste para verificar que utilizadores não autenticados não podem acessar
      */
+    #[Test]
     public function test_unauthenticated_users_cannot_access_partner_management(): void
     {
         // Fazer logout do admin usando Sanctum corretamente
@@ -183,6 +190,7 @@ class PartnerManagementTest extends TestCase
     /**
      * Teste para paginação dos parceiros
      */
+    #[Test]
     public function test_admin_can_paginate_partners(): void
     {
         // Criar mais parceiros para testar paginação

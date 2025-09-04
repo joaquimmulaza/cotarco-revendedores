@@ -34,11 +34,13 @@ const PartnerCard = ({
               partner.status === 'pending_approval' ? 'bg-yellow-100 text-yellow-800' :
               partner.status === 'active' ? 'bg-green-50 text-green-800' :
               partner.status === 'rejected' ? 'bg-red-100 text-red-800' :
+              partner.status === 'inactive' ? 'bg-gray-100 text-gray-800' :
               'bg-gray-100 text-gray-800'
             }`}>
               {partner.status === 'pending_approval' ? 'Pendente' :
                partner.status === 'active' ? 'Ativo' :
                partner.status === 'rejected' ? 'Rejeitado' :
+               partner.status === 'inactive' ? 'Desativado' :
                partner.status}
             </span>
             
@@ -167,7 +169,7 @@ const PartnerCard = ({
             >
               {actionLoading[partner.id] === 'updating-inactive' ? (
                 <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red mr-2"></div>
                   A desativar...
                 </>
               ) : (
