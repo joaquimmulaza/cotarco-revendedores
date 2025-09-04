@@ -40,3 +40,4 @@ class UpdateRevendedorStatusRequest extends FormRequest
     }
 }
 
+

@@ -71,8 +71,8 @@ const Login = () => {
           />
         </div>
         
-        <h2 className="mt-6 text-center text-3xl font-bold text-gray-900">
-          Login
+        <h2 className="mt-6 text-center text-3xl font-bold text-gray-600">
+          Iniciar sessão
         </h2>
         
       </div>
@@ -142,7 +142,7 @@ const Login = () => {
             <div className="text-center">
               <Link
                 to="/register"
-                className="font-medium text-primary hover:text-red-700"
+                className="font-medium text-gray-600 hover:text-red-700"
               >
                 Não tem conta? Registe-se aqui
               </Link>

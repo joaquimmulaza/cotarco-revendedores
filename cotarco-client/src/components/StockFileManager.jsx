@@ -3,6 +3,7 @@ import { adminService } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
+import ConfirmDialog from './ConfirmDialog';
 
 const StockFileManager = () => {
   const { loading: authLoading, isAdmin } = useAuth();
@@ -16,6 +17,9 @@ const StockFileManager = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [displayName, setDisplayName] = useState('');
   const [uploadLoading, setUploadLoading] = useState(false);
+  
+  // Estados para confirmação
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   // Carregar dados do ficheiro atual
   const fetchCurrentStockFile = async () => {
@@ -124,15 +128,14 @@ const StockFileManager = () => {
     }
   };
 
+  // Mostrar confirmação de apagar
+  const handleDeleteClick = () => {
+    setShowDeleteConfirm(true);
+  };
+
   // Apagar ficheiro
   const handleDelete = async () => {
     if (!stockFile) return;
-    
-    const confirmed = window.confirm(
-      'Tem a certeza que deseja apagar este ficheiro de stock? Esta ação não pode ser desfeita.'
-    );
-    
-    if (!confirmed) return;
     
     try {
       setActionLoading(true);
@@ -203,8 +206,8 @@ const StockFileManager = () => {
   return (
     <div className="bg-white shadow rounded-lg">
       <div className="px-6 py-4 border-b border-gray-200">
-        <h3 className="text-lg font-medium text-gray-900 flex items-center">
-          <svg className="h-5 w-5 mr-2 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <h3 className="text-lg font-medium text-gray-700 flex items-center">
+          <svg className="h-5 w-5 mr-2 my-text-red" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
           Gestão do Mapa de Stock
@@ -260,7 +263,7 @@ const StockFileManager = () => {
                   type="file"
                   accept=".xlsx,.xls"
                   onChange={handleFileSelect}
-                  className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                  className="cursor-pointer block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:cursor-pointer file:font-medium file:bg-gray-200 file:text-gray-600 hover:file:bg-gray-300"
                   required
                 />
               </div>
@@ -283,7 +286,7 @@ const StockFileManager = () => {
               <button
                 type="submit"
                 disabled={uploadLoading || !selectedFile || !displayName.trim()}
-                className="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
+                className="cursor-pointer w-full bg-gray-200 text-gray-600 px-4 py-2 rounded-md hover:bg-gray-300 disabled:opacity-60 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
               >
                 {uploadLoading ? (
                   <>
@@ -306,7 +309,7 @@ const StockFileManager = () => {
           <div className="space-y-6">
             {/* Informações do ficheiro atual */}
             <div className="bg-gray-50 rounded-lg p-4">
-              <h4 className="text-md font-medium text-gray-900 mb-3 flex items-center">
+              <h4 className="text-md font-medium text-gray-700 mb-3 flex items-center">
                 <svg className="h-5 w-5 mr-2 text-green-600" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
@@ -335,7 +338,7 @@ const StockFileManager = () => {
                   <div className="mt-1">
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                       stockFile.is_active 
-                        ? 'bg-green-100 text-green-800' 
+                        ? 'bg-green-50 text-green-800' 
                         : 'bg-red-100 text-red-800'
                     }`}>
                       {stockFile.is_active ? 'Ativo' : 'Inativo'}
@@ -358,8 +361,8 @@ const StockFileManager = () => {
                 disabled={actionLoading}
                 className={`px-4 py-2 rounded-md font-medium transition-colors flex items-center disabled:opacity-50 disabled:cursor-not-allowed ${
                   stockFile.is_active
-                    ? 'bg-orange-600 text-white hover:bg-orange-700'
-                    : 'bg-green-600 text-white hover:bg-green-700'
+                    ? 'my-stroke-red my-text-red hover-color cursor-pointer'
+                    : 'bg-green-600 text-white hover:bg-green-700 cursor-pointer'
                 }`}
               >
                 {actionLoading ? (
@@ -378,9 +381,9 @@ const StockFileManager = () => {
               </button>
               
               <button
-                onClick={handleDelete}
+                onClick={handleDeleteClick}
                 disabled={actionLoading}
-                className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center"
+                className="cursor-pointer bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center"
               >
                 {actionLoading ? (
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
@@ -395,7 +398,7 @@ const StockFileManager = () => {
             
             {/* Formulário para substituir ficheiro */}
             <div className="border-t pt-6">
-              <h4 className="text-md font-medium text-gray-900 mb-4">
+              <h4 className="text-md font-medium text-gray-700 mb-4">
                 Substituir Mapa de Stock
               </h4>
               
@@ -410,7 +413,7 @@ const StockFileManager = () => {
                       type="file"
                       accept=".xlsx,.xls"
                       onChange={handleFileSelect}
-                      className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                      className="cursor-pointer block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-gray-200 file:text-gray-600 file:cursor-pointer hover:file:bg-gray-300"
                     />
                   </div>
                   
@@ -432,7 +435,7 @@ const StockFileManager = () => {
                 <button
                   type="submit"
                   disabled={uploadLoading || !selectedFile || !displayName.trim()}
-                  className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center"
+                  className="cursor-pointer bg-gray-200 text-gray-600 px-6 py-2 rounded-md hover:bg-gray-300 disabled:opacity-60 disabled:cursor-not-allowed transition-colors flex items-center"
                 >
                   {uploadLoading ? (
                     <>
@@ -453,6 +456,18 @@ const StockFileManager = () => {
           </div>
         )}
       </div>
+      
+      {/* Dialog de confirmação para apagar */}
+      <ConfirmDialog
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={handleDelete}
+        title="Apagar ficheiro de stock"
+        description="Tem a certeza que deseja apagar este ficheiro de stock? Esta ação não pode ser desfeita."
+        confirmText="Apagar"
+        cancelText="Cancelar"
+        type="danger"
+      />
     </div>
   );
 };
