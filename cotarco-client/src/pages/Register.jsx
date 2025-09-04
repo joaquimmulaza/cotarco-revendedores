@@ -89,8 +89,8 @@ const Register = () => {
           />
         </div>
         
-        <h2 className="mt-6 text-center text-3xl font-bold text-gray-900">
-          Registo de Parceiro
+        <h2 className="mt-6 text-center text-3xl font-bold text-gray-600">
+          Criar conta
         </h2>
       
       </div>
@@ -217,13 +217,13 @@ const Register = () => {
               <label htmlFor="alvara" className="block text-sm font-medium text-gray-700">
                 Alvará (PDF, JPG, PNG)
               </label>
-              <div className="mt-1">
+              <div className="mt-1 ">
                 <input
                   id="alvara"
                   type="file"
                   accept=".pdf,.jpg,.jpeg,.png"
                   {...register('alvara', { required: 'Alvará é obrigatório' })}
-                  className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                  className="cursor-pointer block w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:cursor-pointer file:bg-gray-200  file:text-gray-700 hover:file:bg-gray-300 "
                 />
                 {errors.alvara && (
                   <p className="mt-1 text-sm text-red-600">{errors.alvara.message}</p>
@@ -302,7 +302,7 @@ const Register = () => {
             <div className="text-center">
               <Link
                 to="/login"
-                className="font-medium text-primary hover:text-red-700"
+                className="font-medium text-gray-600 hover:text-red-700"
               >
                 Já tem conta? Faça login aqui
               </Link>

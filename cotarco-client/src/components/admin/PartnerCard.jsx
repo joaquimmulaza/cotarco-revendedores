@@ -86,7 +86,7 @@ const PartnerCard = ({
           {/* Botão Editar */}
           <button
             onClick={() => onEdit(partner)}
-            className="cursor-pointer bg-gray-100 my-text-gray px-3 py-1.5 rounded-md hover:bg-blue-700 transition-colors text-xs font-medium flex items-center justify-center"
+            className="cursor-pointer bg-gray-100 my-text-gray px-3 py-1.5 rounded-md hover:bg-gray-300 transition-colors text-xs font-medium flex items-center justify-center"
           >
             <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -97,7 +97,7 @@ const PartnerCard = ({
           {partner.profile?.alvara_path ? (
             <button
               onClick={() => onViewAlvara(partner.id)}
-              className="cursor-pointer bg-gray-100 my-text-gray my-text-red px-3 py-1.5 rounded-md hover-color hover:bg-white transition-colors text-xs font-medium flex items-center justify-center"
+              className="cursor-pointer bg-gray-100 my-text-gray my-text-red px-3 py-1.5 rounded-md  hover:bg-gray-300 transition-colors text-xs font-medium flex items-center justify-center"
             >
               <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -118,7 +118,7 @@ const PartnerCard = ({
           {partner.status === 'pending_approval' && (
             <>
               <button
-                onClick={() => onUpdateStatus(partner.id, 'active')}
+                onClick={() => onUpdateStatus(partner, 'active')}
                 disabled={actionLoading[partner.id]}
                 className="bg-green-600 text-white px-3 py-1.5 rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-xs font-medium flex items-center justify-center"
               >
@@ -138,7 +138,7 @@ const PartnerCard = ({
               </button>
               
               <button
-                onClick={() => onUpdateStatus(partner.id, 'rejected')}
+                onClick={() => onUpdateStatus(partner, 'rejected')}
                 disabled={actionLoading[partner.id]}
                 className="bg-red-600 text-white px-3 py-1.5 rounded-md hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-xs font-medium flex items-center justify-center"
               >
@@ -161,9 +161,9 @@ const PartnerCard = ({
           
           {partner.status === 'active' && (
             <button
-              onClick={() => onUpdateStatus(partner.id, 'inactive')}
+              onClick={() => onUpdateStatus(partner, 'inactive')}
               disabled={actionLoading[partner.id]}
-              className="cursor-pointer my-stroke-red my-text-red px-3 py-1.5 rounded-md hover: disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-xs font-medium flex items-center justify-center"
+              className="cursor-pointer my-stroke-red my-text-red px-3 py-1.5 rounded-md hover-color disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-xs font-medium flex items-center justify-center"
             >
               {actionLoading[partner.id] === 'updating-inactive' ? (
                 <>
@@ -183,7 +183,7 @@ const PartnerCard = ({
 
           {partner.status === 'inactive' && (
             <button
-              onClick={() => onUpdateStatus(partner.id, 'active')}
+              onClick={() => onUpdateStatus(partner, 'active')}
               disabled={actionLoading[partner.id]}
               className="bg-green-600 text-white px-3 py-1.5 rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-xs font-medium flex items-center justify-center"
             >
@@ -205,7 +205,7 @@ const PartnerCard = ({
           
           {partner.status === 'rejected' && (
             <button
-              onClick={() => onUpdateStatus(partner.id, 'pending_approval')}
+              onClick={() => onUpdateStatus(partner, 'pending_approval')}
               disabled={actionLoading[partner.id]}
               className="bg-blue-600 text-white px-3 py-1.5 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-xs font-medium flex items-center justify-center"
             >

@@ -71,7 +71,7 @@ const AdminLogin = () => {
         
         <div className="text-center">
           
-          <h2 className="mt-6 text-center text-3xl font-bold text-gray-900">
+          <h2 className="mt-6 text-center text-3xl font-bold text-gray-600">
             Painel de Administração
           </h2>
           
@@ -79,7 +79,7 @@ const AdminLogin = () => {
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10 border-t-4 border-primary">
+        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10 border-primary">
           {error && (
             <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
               {error}
@@ -137,7 +137,7 @@ const AdminLogin = () => {
             <div className="text-center">
               <Link
                 to="/"
-                className="font-medium text-secondary hover:text-gray-800"
+                className="font-medium text-gray-600 hover:text-gray-800"
               >
                 ← Voltar ao site principal
               </Link>

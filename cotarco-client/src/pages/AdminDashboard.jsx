@@ -39,7 +39,7 @@ const AdminDashboard = () => {
                 key={tab.name}
                 className={({ selected }) =>
                   classNames(
-                    'bg-white overflow-hidden shadow rounded-lg transition-all duration-200 ease-in-out transform focus:outline-none',
+                    'bg-white  overflow-hidden shadow rounded-lg transition-all duration-200 ease-in-out transform focus:outline-none',
                     selected ? 'my-stroke-red scale-100' : 'hover:shadow-lg hover:-translate-y-1'
                   )
                 }
@@ -53,7 +53,7 @@ const AdminDashboard = () => {
                       />
                     </div>
                     <div className="ml-5 w-0 flex-1">
-                      <p className="text-lg font-medium text-gray-900 truncate">
+                      <p className="text-lg font-medium text-gray-700 truncate">
                         {tab.name}
                       </p>
                     </div>
