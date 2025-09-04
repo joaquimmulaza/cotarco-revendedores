@@ -187,11 +187,17 @@ const PartnerManager = () => {
         fetchStats()
       ]);
       
+      // Determinar se é reativação ou primeira aprovação baseado no status anterior
+      const isReactivation = confirmAction === 'active' && 
+        (confirmPartner.status === 'inactive' || confirmPartner.status === 'rejected');
+      
       const statusMessages = {
-        'active': 'Parceiro aprovado com sucesso!',
-        'rejected': 'Parceiro rejeitado com sucesso!',
-        'inactive': 'Parceiro desativado com sucesso!',
-        'pending_approval': 'Parceiro reativado com sucesso!'
+        'active': isReactivation 
+          ? 'Parceiro reativado com sucesso! Email de reativação enviado.'
+          : 'Parceiro aprovado com sucesso! Email de aprovação enviado.',
+        'rejected': 'Parceiro rejeitado com sucesso! Email de notificação enviado.',
+        'inactive': 'Parceiro desativado com sucesso! Email de notificação enviado.',
+        'pending_approval': 'Parceiro reativado com sucesso! Email de notificação enviado.'
       };
       
       toast.success(statusMessages[confirmAction] || 'Status do parceiro atualizado com sucesso!');
@@ -223,8 +229,12 @@ const PartnerManager = () => {
   const getConfirmTitle = () => {
     if (!confirmAction || !confirmPartner) return '';
     
+    // Determinar se é reativação ou primeira aprovação baseado no status atual
+    const isReactivation = confirmAction === 'active' && 
+      (confirmPartner.status === 'inactive' || confirmPartner.status === 'rejected');
+    
     const titles = {
-      'active': 'Aprovar Parceiro',
+      'active': isReactivation ? 'Reativar Parceiro' : 'Aprovar Parceiro',
       'rejected': 'Rejeitar Parceiro',
       'inactive': 'Desativar Parceiro',
       'pending_approval': 'Reativar Parceiro'
@@ -236,11 +246,17 @@ const PartnerManager = () => {
   const getConfirmDescription = () => {
     if (!confirmAction || !confirmPartner) return '';
     
+    // Determinar se é reativação ou primeira aprovação baseado no status atual
+    const isReactivation = confirmAction === 'active' && 
+      (confirmPartner.status === 'inactive' || confirmPartner.status === 'rejected');
+    
     const descriptions = {
-      'active': `Tem a certeza que deseja aprovar o parceiro "${confirmPartner.name}"? Esta ação irá ativar a conta e enviar notificação por email.`,
+      'active': isReactivation 
+        ? `Tem a certeza que deseja reativar o parceiro "${confirmPartner.name}"? Esta ação irá reativar a conta e enviar email de reativação.`
+        : `Tem a certeza que deseja aprovar o parceiro "${confirmPartner.name}"? Esta ação irá ativar a conta e enviar email de aprovação.`,
       'rejected': `Tem a certeza que deseja rejeitar o parceiro "${confirmPartner.name}"? Esta ação irá rejeitar a conta e enviar notificação por email.`,
-      'inactive': `Tem a certeza que deseja desativar o parceiro "${confirmPartner.name}"? Esta ação irá desativar a conta temporariamente.`,
-      'pending_approval': `Tem a certeza que deseja reativar o parceiro "${confirmPartner.name}"? Esta ação irá colocar a conta em estado pendente.`
+      'inactive': `Tem a certeza que deseja desativar o parceiro "${confirmPartner.name}"? Esta ação irá desativar a conta temporariamente e enviar notificação por email.`,
+      'pending_approval': `Tem a certeza que deseja reativar o parceiro "${confirmPartner.name}"? Esta ação irá colocar a conta em estado pendente para nova aprovação.`
     };
     
     return descriptions[confirmAction] || 'Tem a certeza que deseja continuar?';
@@ -249,8 +265,12 @@ const PartnerManager = () => {
   const getConfirmButtonText = () => {
     if (!confirmAction) return 'Confirmar';
     
+    // Determinar se é reativação ou primeira aprovação baseado no status atual
+    const isReactivation = confirmAction === 'active' && 
+      (confirmPartner.status === 'inactive' || confirmPartner.status === 'rejected');
+    
     const buttonTexts = {
-      'active': 'Aprovar',
+      'active': isReactivation ? 'Reativar' : 'Aprovar',
       'rejected': 'Rejeitar',
       'inactive': 'Desativar',
       'pending_approval': 'Reativar'

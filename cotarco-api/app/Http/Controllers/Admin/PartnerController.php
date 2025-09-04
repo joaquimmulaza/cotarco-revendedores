@@ -176,22 +176,32 @@ class PartnerController extends Controller
     public function updateStatus(Request $request, User $user): JsonResponse
     {
         $validated = $request->validate([
-            'status' => 'required|in:active,suspended,pending_email_validation,pending_approval,rejected,inactive'
+            'status' => 'required|in:active,suspended,pending_approval,rejected,inactive'
         ]);
     
-        // A verificação agora usa $user, que será o modelo correto injetado pelo Laravel
         if (!in_array($user->role, ['revendedor', 'distribuidor'])) {
             return response()->json(['message' => 'Utilizador não é um parceiro.'], 404);
         }
     
-        $user->update(['status' => $validated['status']]);
+        $oldStatus = $user->status;
+        $newStatus = $validated['status'];
     
-        // Enviar email de notificação baseado no status
-        if ($validated['status'] === 'active') {
-            $loginUrl = env('FRONTEND_URL', 'http://localhost:5173') . '/login';
-            Mail::to($user->email)->send(new PartnerApproved($user, $loginUrl));
-        } elseif ($validated['status'] === 'rejected') {
-            Mail::to($user->email)->send(new PartnerRejected($user));
+        $user->update(['status' => $newStatus]);
+    
+        // Lógica de notificação por email
+        $loginUrl = env('FRONTEND_URL', 'http://localhost:5173') . '/login';
+
+        if ($newStatus === 'active' && $oldStatus !== 'active') {
+            // Se o estado anterior era inativo/rejeitado, é uma reativação
+            if ($oldStatus === 'inactive' || $oldStatus === 'rejected') {
+                Mail::to($user->email)->send(new \App\Mail\PartnerReactivated($user, $loginUrl));
+            } else { // Senão, é a primeira aprovação
+                Mail::to($user->email)->send(new \App\Mail\PartnerApproved($user, $loginUrl));
+            }
+        } elseif ($newStatus === 'rejected') {
+            Mail::to($user->email)->send(new \App\Mail\PartnerRejected($user));
+        } elseif ($newStatus === 'inactive') {
+            Mail::to($user->email)->send(new \App\Mail\PartnerDeactivated($user));
         }
     
         return response()->json([
