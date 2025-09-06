@@ -29,7 +29,7 @@ class StockFileController extends Controller
     }
 
     /**
-     * Upload ou atualizar o ficheiro de stock (Admin)
+     * Upload de novo ficheiro de stock (Admin)
      */
     public function uploadOrUpdate(Request $request): JsonResponse
     {
@@ -48,17 +48,6 @@ class StockFileController extends Controller
         }
 
         try {
-            // Apagar ficheiro e registo antigo, se existir
-            $existingFile = StockFile::latest()->first();
-            if ($existingFile) {
-                // Apagar ficheiro físico
-                if (Storage::exists($existingFile->file_path)) {
-                    Storage::delete($existingFile->file_path);
-                }
-                // Apagar registo da BD
-                $existingFile->delete();
-            }
-
             // Guardar novo ficheiro
             $file = $request->file('file');
             $fileName = time() . '_' . hash('sha256', $file->getClientOriginalName()) . '.' . $file->getClientOriginalExtension();
@@ -84,6 +73,7 @@ class StockFileController extends Controller
                     'original_filename' => $stockFile->original_filename,
                     'size' => $stockFile->size,
                     'is_active' => $stockFile->is_active,
+                    'target_role' => $stockFile->target_role,
                     'uploaded_at' => $stockFile->created_at,
                 ],
             ], 201);
@@ -219,31 +209,30 @@ class StockFileController extends Controller
     }
 
     /**
-     * Obter informações do ficheiro para revendedor
+     * Obter informações dos ficheiros para revendedor
      */
     public function getForRevendedor(): JsonResponse
     {
         $user = auth()->user();
         
-        $stockFile = StockFile::where('is_active', true)
+        $stockFiles = StockFile::where('is_active', true)
             ->where('target_role', $user->role)
-            ->latest()
-            ->first();
-
-        if (!$stockFile) {
-            return response()->json([
-                'message' => 'Nenhum mapa de stock disponível no momento.',
-                'file' => null,
-            ], 404);
-        }
+            ->orderBy('created_at', 'desc')
+            ->get();
 
         return response()->json([
-            'file' => [
-                'display_name' => $stockFile->display_name,
-                'size' => $stockFile->size,
-                'target_role' => $stockFile->target_role,
-                'updated_at' => $stockFile->updated_at,
-            ],
+            'files' => $stockFiles->map(function ($file) {
+                return [
+                    'id' => $file->id,
+                    'display_name' => $file->display_name,
+                    'original_filename' => $file->original_filename,
+                    'size' => $file->size,
+                    'target_role' => $file->target_role,
+                    'is_active' => $file->is_active,
+                    'created_at' => $file->created_at,
+                    'updated_at' => $file->updated_at,
+                ];
+            }),
         ], 200);
     }
 
@@ -282,6 +271,55 @@ class StockFileController extends Controller
                 [
                     'Content-Type' => $stockFile->mime_type,
                     'Content-Disposition' => 'attachment; filename="' . $stockFile->original_filename . '"',
+                ]
+            );
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Erro ao fazer download do ficheiro.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Download de ficheiro específico para revendedor
+     */
+    public function downloadSpecificFile(StockFile $file): BinaryFileResponse|JsonResponse
+    {
+        $user = auth()->user();
+        
+        // Verificar se o ficheiro pertence ao utilizador (baseado no target_role)
+        if ($file->target_role !== $user->role) {
+            return response()->json([
+                'message' => 'Ficheiro não disponível para o seu tipo de utilizador.',
+            ], 403);
+        }
+
+        // Verificar se o ficheiro está ativo
+        if (!$file->is_active) {
+            return response()->json([
+                'message' => 'Ficheiro não está disponível para download.',
+            ], 404);
+        }
+
+        // Verificar se o ficheiro existe fisicamente
+        if (!Storage::exists($file->file_path)) {
+            return response()->json([
+                'message' => 'Ficheiro não encontrado no servidor.',
+            ], 404);
+        }
+
+        try {
+            // Fazer download do ficheiro
+            $filePath = Storage::path($file->file_path);
+            
+            return response()->download(
+                $filePath,
+                $file->original_filename,
+                [
+                    'Content-Type' => $file->mime_type,
+                    'Content-Disposition' => 'attachment; filename="' . $file->original_filename . '"',
                 ]
             );
 

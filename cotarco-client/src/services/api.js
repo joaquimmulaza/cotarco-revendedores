@@ -411,7 +411,7 @@ export const parceiroService = {
   },
 
   // Fazer download do ficheiro de stock
-  async downloadStockFile() {
+  async downloadStockFile(fileId) {
     try {
       const token = localStorage.getItem(appConfig.AUTH.TOKEN_KEY);
       if (!token) {
@@ -419,7 +419,7 @@ export const parceiroService = {
       }
 
       // Fazer requisição para download usando fetch
-      const response = await fetch(`${appConfig.API_BASE_URL}/parceiro/stock-files/download`, {
+      const response = await fetch(`${appConfig.API_BASE_URL}/parceiro/stock-files/${fileId}/download`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
