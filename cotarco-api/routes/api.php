@@ -79,6 +79,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::prefix('stock-files')->group(function () {
             Route::get('/', [StockFileController::class, 'getForRevendedor']);
             Route::get('/download', [StockFileController::class, 'downloadForRevendedor']);
+            Route::get('/{file}/download', [StockFileController::class, 'downloadSpecificFile']);
         });
     });
 
@@ -87,6 +88,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::prefix('stock-files')->group(function () {
             Route::get('/', [StockFileController::class, 'getForRevendedor']);
             Route::get('/download', [StockFileController::class, 'downloadForRevendedor']);
+            Route::get('/{file}/download', [StockFileController::class, 'downloadSpecificFile']);
         });
     });
 });

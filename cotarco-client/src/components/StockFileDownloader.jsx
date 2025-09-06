@@ -6,21 +6,21 @@ import 'react-loading-skeleton/dist/skeleton.css';
 
 const StockFileDownloader = () => {
   const { loading: authLoading, isAuthenticated } = useAuth();
-  const [stockFileInfo, setStockFileInfo] = useState(null);
+  const [stockFiles, setStockFiles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // Carregar informações do ficheiro de stock
-  const fetchStockFileInfo = async () => {
+  // Carregar informações dos ficheiros de stock
+  const fetchStockFiles = async () => {
     try {
       setLoading(true);
       setError('');
       const response = await parceiroService.getStockFileInfo();
-      setStockFileInfo(response.file);
+      setStockFiles(response.files || []);
     } catch (error) {
-      console.error('Erro ao carregar informações do ficheiro de stock:', error);
-      setError(error.message || 'Erro ao carregar informações do ficheiro');
-      setStockFileInfo(null);
+      console.error('Erro ao carregar informações dos ficheiros de stock:', error);
+      setError(error.message || 'Erro ao carregar informações dos ficheiros');
+      setStockFiles([]);
     } finally {
       setLoading(false);
     }
@@ -29,10 +29,10 @@ const StockFileDownloader = () => {
   useEffect(() => {
     // Só fazer a chamada se a autenticação estiver completa e o utilizador autenticado
     if (!authLoading && isAuthenticated) {
-      fetchStockFileInfo();
+      fetchStockFiles();
     } else if (!authLoading && !isAuthenticated) {
       // Se não está autenticado, limpar estado
-      setStockFileInfo(null);
+      setStockFiles([]);
       setLoading(false);
       setError('');
     }
@@ -64,10 +64,10 @@ const StockFileDownloader = () => {
   };
 
   // Fazer download do ficheiro
-  const handleDownload = async () => {
+  const handleDownload = async (fileId) => {
     try {
       setError(''); // Limpar erros anteriores
-      await parceiroService.downloadStockFile();
+      await parceiroService.downloadStockFile(fileId);
     } catch (error) {
       console.error('Erro no download:', error);
       setError('Erro ao fazer download do ficheiro: ' + (error.message || 'Erro desconhecido'));
@@ -104,7 +104,7 @@ const StockFileDownloader = () => {
             <h3 className="text-lg font-medium text-gray-900 mb-2">Erro ao carregar informações</h3>
             <p className="text-gray-600 mb-4">{error}</p>
             <button
-              onClick={fetchStockFileInfo}
+              onClick={fetchStockFiles}
               className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
             >
               Tentar novamente
@@ -115,7 +115,7 @@ const StockFileDownloader = () => {
     );
   }
 
-  if (!stockFileInfo) {
+  if (stockFiles.length === 0) {
     return (
       <div className="bg-white overflow-hidden shadow rounded-lg">
         <div className="p-6">
@@ -132,7 +132,7 @@ const StockFileDownloader = () => {
               O mapa de stock não se encontra disponível de momento. Por favor, verifique mais tarde ou contacte o administrador.
             </p>
             <button
-              onClick={fetchStockFileInfo}
+              onClick={fetchStockFiles}
               className="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition-colors flex items-center mx-auto"
             >
               <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -153,7 +153,7 @@ const StockFileDownloader = () => {
           <svg className="h-5 w-5 mr-2 my-text-red" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
-          Mapa de Stock Disponível
+          Mapas de Stock Disponíveis
         </h3>
       </div>
       
@@ -170,52 +170,59 @@ const StockFileDownloader = () => {
           </div>
         )}
         
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex-1 mb-4 lg:mb-0">
-            <div className="space-y-3">
-              <div className="flex items-start">
-                <svg className="h-5 w-5 text-gray-400 mr-2 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                </svg>
-                <div>
-                  <span className="text-sm font-medium text-gray-700">Nome do ficheiro:</span>
-                  <p className="text-gray-900 font-medium">{stockFileInfo.display_name}</p>
+        {/* Lista de ficheiros */}
+        <div className="space-y-4">
+          {stockFiles.map((file) => (
+            <div key={file.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+                <div className="flex-1 mb-4 lg:mb-0">
+                  <div className="space-y-2">
+                    <div className="flex items-start">
+                      <svg className="h-5 w-5 text-gray-400 mr-2 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                      </svg>
+                      <div>
+                        <span className="text-sm font-medium text-gray-700">Nome:</span>
+                        <p className="text-gray-900 font-medium">{file.display_name}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start">
+                      <svg className="h-5 w-5 text-gray-400 mr-2 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
+                      </svg>
+                      <div>
+                        <span className="text-sm font-medium text-gray-700">Tamanho:</span>
+                        <p className="text-gray-900">{formatFileSize(file.size)}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start">
+                      <svg className="h-5 w-5 text-gray-400 mr-2 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <div>
+                        <span className="text-sm font-medium text-gray-700">Última atualização:</span>
+                        <p className="text-gray-900">{formatDate(file.updated_at)}</p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </div>
-              
-              <div className="flex items-start">
-                <svg className="h-5 w-5 text-gray-400 mr-2 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
-                </svg>
-                <div>
-                  <span className="text-sm font-medium text-gray-700">Tamanho:</span>
-                  <p className="text-gray-900">{formatFileSize(stockFileInfo.size)}</p>
-                </div>
-              </div>
-              
-              <div className="flex items-start">
-                <svg className="h-5 w-5 text-gray-400 mr-2 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <div>
-                  <span className="text-sm font-medium text-gray-700">Última atualização:</span>
-                  <p className="text-gray-900">{formatDate(stockFileInfo.updated_at)}</p>
+                
+                <div className="lg:ml-6">
+                  <button
+                    onClick={() => handleDownload(file.id)}
+                    className="w-full lg:w-auto my-bg-red text-white px-6 py-3 rounded-md hover: transition-colors cursor-pointer flex items-center justify-center font-medium"
+                  >
+                    <svg className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    Baixar Agora
+                  </button>
                 </div>
               </div>
             </div>
-          </div>
-          
-          <div className="lg:ml-6">
-            <button
-              onClick={handleDownload}
-              className="w-full lg:w-auto my-bg-red text-white px-6 py-3 rounded-md hover: transition-colors cursor-pointer flex items-center justify-center font-medium text-lg"
-            >
-              <svg className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              Baixar Agora
-            </button>
-          </div>
+          ))}
         </div>
         
         <div className="mt-6 p-4 my-bg-red-op rounded-lg">
@@ -226,8 +233,8 @@ const StockFileDownloader = () => {
             <div className="text-sm">
               <p className="my-text-gray font-medium">Informação</p>
               <p className="my-text-gray-sub mt-1">
-                Este ficheiro contém informações atualizadas sobre o stock disponível. 
-                Certifique-se de que tem o Microsoft Excel ou uma aplicação compatível instalada para visualizar o ficheiro.
+                Estes ficheiros contêm informações atualizadas sobre o stock disponível. 
+                Certifique-se de que tem o Microsoft Excel ou uma aplicação compatível instalada para visualizar os ficheiros.
               </p>
             </div>
           </div>
