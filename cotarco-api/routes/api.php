@@ -58,8 +58,8 @@ Route::middleware('auth:sanctum')->group(function () {
         });
 
         // Gestão de Ficheiros de Stock
-        Route::prefix('stock-file')->group(function () {
-            Route::get('/current', [StockFileController::class, 'getCurrentForAdmin']);
+        Route::prefix('stock-files')->group(function () {
+            Route::get('/', [StockFileController::class, 'getStockFiles']);
             Route::post('/upload', [StockFileController::class, 'uploadOrUpdate']);
             Route::patch('/{file}/toggle-status', [StockFileController::class, 'toggleStatus']);
             Route::delete('/{file}', [StockFileController::class, 'destroy']);
@@ -76,13 +76,17 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Grupo de Rotas para Parceiros (Revendedores e Distribuidores)
     Route::prefix('parceiro')->middleware('parceiro')->group(function () {
-        Route::get('/stock-file/info', [StockFileController::class, 'getForRevendedor']);
-        Route::get('/stock-file/download', [StockFileController::class, 'downloadForRevendedor']);
+        Route::prefix('stock-files')->group(function () {
+            Route::get('/', [StockFileController::class, 'getForRevendedor']);
+            Route::get('/download', [StockFileController::class, 'downloadForRevendedor']);
+        });
     });
 
     // Manter rotas antigas para compatibilidade (deprecated)
     Route::prefix('revendedor')->middleware('revendedor')->group(function () {
-        Route::get('/stock-file/info', [StockFileController::class, 'getForRevendedor']);
-        Route::get('/stock-file/download', [StockFileController::class, 'downloadForRevendedor']);
+        Route::prefix('stock-files')->group(function () {
+            Route::get('/', [StockFileController::class, 'getForRevendedor']);
+            Route::get('/download', [StockFileController::class, 'downloadForRevendedor']);
+        });
     });
 });

@@ -338,7 +338,7 @@ export const adminService = {
   // Obter ficheiro de stock atual (admin)
   async getCurrentStockFile() {
     try {
-      const response = await api.get('/admin/stock-file/current');
+      const response = await api.get('/admin/stock-files');
       return response.data;
     } catch (error) {
       throw error.response?.data || { message: 'Erro ao obter ficheiro de stock atual' };
@@ -358,7 +358,7 @@ export const adminService = {
   // Upload ou substituir ficheiro de stock (admin)
   async uploadStockFile(formData) {
     try {
-      const response = await api.post('/admin/stock-file/upload', formData, {
+      const response = await api.post('/admin/stock-files/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       return response.data;
@@ -370,7 +370,7 @@ export const adminService = {
   // Ativar/desativar ficheiro de stock (admin)
   async toggleStockFileStatus(fileId) {
     try {
-      const response = await api.patch(`/admin/stock-file/${fileId}/toggle-status`);
+      const response = await api.patch(`/admin/stock-files/${fileId}/toggle-status`);
       return response.data;
     } catch (error) {
       throw error.response?.data || { message: 'Erro ao alterar status do ficheiro' };
@@ -380,7 +380,7 @@ export const adminService = {
   // Apagar ficheiro de stock (admin)
   async deleteStockFile(fileId) {
     try {
-      const response = await api.delete(`/admin/stock-file/${fileId}`);
+      const response = await api.delete(`/admin/stock-files/${fileId}`);
       return response.data;
     } catch (error) {
       throw error.response?.data || { message: 'Erro ao apagar ficheiro de stock' };
@@ -393,7 +393,7 @@ export const parceiroService = {
   // Obter informações do ficheiro de stock disponível
   async getStockFileInfo() {
     try {
-      const response = await api.get('/parceiro/stock-file/info');
+      const response = await api.get('/parceiro/stock-files');
       return response.data;
     } catch (error) {
       // Se for 404, retornar null para indicar que não há ficheiro disponível
@@ -407,7 +407,7 @@ export const parceiroService = {
   // Obter URL para download do ficheiro de stock
   getStockFileDownloadUrl() {
     const token = localStorage.getItem(appConfig.AUTH.TOKEN_KEY);
-    return `${appConfig.API_BASE_URL}/parceiro/stock-file/download?token=${token}`;
+    return `${appConfig.API_BASE_URL}/parceiro/stock-files/download?token=${token}`;
   },
 
   // Fazer download do ficheiro de stock
@@ -419,7 +419,7 @@ export const parceiroService = {
       }
 
       // Fazer requisição para download usando fetch
-      const response = await fetch(`${appConfig.API_BASE_URL}/parceiro/stock-file/download`, {
+      const response = await fetch(`${appConfig.API_BASE_URL}/parceiro/stock-files/download`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
