@@ -37,6 +37,7 @@ class StockFileController extends Controller
         $validator = Validator::make($request->all(), [
             'file' => 'required|file|mimes:xlsx,xls|max:10240', // 10MB
             'display_name' => 'required|string|max:255',
+            'target_role' => 'required|string|in:revendedor,distribuidor',
         ]);
 
         if ($validator->fails()) {
@@ -72,6 +73,7 @@ class StockFileController extends Controller
                 'size' => $file->getSize(),
                 'is_active' => true,
                 'uploaded_by_user_id' => auth()->id(),
+                'target_role' => $request->input('target_role'),
             ]);
 
             return response()->json([
@@ -116,10 +118,49 @@ class StockFileController extends Controller
                 'mime_type' => $stockFile->mime_type,
                 'size' => $stockFile->size,
                 'is_active' => $stockFile->is_active,
+                'target_role' => $stockFile->target_role,
                 'uploaded_by' => $stockFile->uploadedByUser,
                 'created_at' => $stockFile->created_at,
                 'updated_at' => $stockFile->updated_at,
             ],
+        ], 200);
+    }
+
+    /**
+     * Obter ficheiros de stock com lógica de autorização
+     */
+    public function getStockFiles(): JsonResponse
+    {
+        $user = auth()->user();
+        
+        if ($user->role === 'admin') {
+            // Admin vê todos os ficheiros
+            $stockFiles = StockFile::with('uploadedByUser:id,name,email')
+                ->orderBy('created_at', 'desc')
+                ->get();
+        } else {
+            // Outros utilizadores veem apenas ficheiros do seu target_role
+            $stockFiles = StockFile::with('uploadedByUser:id,name,email')
+                ->where('target_role', $user->role)
+                ->orderBy('created_at', 'desc')
+                ->get();
+        }
+
+        return response()->json([
+            'files' => $stockFiles->map(function ($file) {
+                return [
+                    'id' => $file->id,
+                    'display_name' => $file->display_name,
+                    'original_filename' => $file->original_filename,
+                    'mime_type' => $file->mime_type,
+                    'size' => $file->size,
+                    'is_active' => $file->is_active,
+                    'target_role' => $file->target_role,
+                    'uploaded_by' => $file->uploadedByUser,
+                    'created_at' => $file->created_at,
+                    'updated_at' => $file->updated_at,
+                ];
+            }),
         ], 200);
     }
 
@@ -182,7 +223,12 @@ class StockFileController extends Controller
      */
     public function getForRevendedor(): JsonResponse
     {
-        $stockFile = StockFile::getLatestActive();
+        $user = auth()->user();
+        
+        $stockFile = StockFile::where('is_active', true)
+            ->where('target_role', $user->role)
+            ->latest()
+            ->first();
 
         if (!$stockFile) {
             return response()->json([
@@ -195,6 +241,7 @@ class StockFileController extends Controller
             'file' => [
                 'display_name' => $stockFile->display_name,
                 'size' => $stockFile->size,
+                'target_role' => $stockFile->target_role,
                 'updated_at' => $stockFile->updated_at,
             ],
         ], 200);
@@ -205,7 +252,12 @@ class StockFileController extends Controller
      */
     public function downloadForRevendedor(): BinaryFileResponse|JsonResponse
     {
-        $stockFile = StockFile::getLatestActive();
+        $user = auth()->user();
+        
+        $stockFile = StockFile::where('is_active', true)
+            ->where('target_role', $user->role)
+            ->latest()
+            ->first();
 
         if (!$stockFile) {
             return response()->json([
