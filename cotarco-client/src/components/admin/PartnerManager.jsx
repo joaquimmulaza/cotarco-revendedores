@@ -432,4 +432,3 @@ const PartnerManager = () => {
 };
 
 export default PartnerManager;
-
