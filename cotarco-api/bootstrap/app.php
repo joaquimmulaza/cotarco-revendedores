@@ -18,7 +18,6 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
-            'revendedor' => \App\Http\Middleware\RevendedorMiddleware::class,
             'parceiro' => \App\Http\Middleware\ParceiroMiddleware::class,
             'token.query' => \App\Http\Middleware\TokenFromQuery::class,
         ]);

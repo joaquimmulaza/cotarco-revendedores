@@ -29,7 +29,7 @@ const ProtectedRoute = ({ children, adminOnly = false }) => {
   }
 
   if (!adminOnly && isAdmin) {
-    // Se a rota é para revendedores e o utilizador é admin, manda-o para o dashboard de admin
+    // Se a rota é para parceiros e o utilizador é admin, manda-o para o dashboard de admin
     return <Navigate to={config.ROUTES.ADMIN_DASHBOARD} replace />;
   }
   

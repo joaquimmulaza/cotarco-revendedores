@@ -1,6 +1,6 @@
 # Cotarco API - Backend
 
-Backend Laravel para o sistema de revendedores Cotarco.
+Backend Laravel para o sistema de parceiros Cotarco.
 
 ## Configuração
 

@@ -65,29 +65,19 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::delete('/{file}', [StockFileController::class, 'destroy']);
         });
 
-        // Rotas de Revendedores (estrutura antiga e outras)
+        // Rotas de Revendedores (estrutura antiga - mantida para compatibilidade)
         Route::prefix('revendedores')->group(function () {
             Route::get('/', [AdminController::class, 'index']);
-            Route::get('/pending', [AdminController::class, 'getPendingRevendedores']); // Rota antiga
-            Route::post('/{user}/approve', [AdminController::class, 'approveRevendedor']); // Rota antiga
-            Route::post('/{user}/reject', [AdminController::class, 'rejectRevendedor']); // Rota antiga
+            Route::get('/pending', [AdminController::class, 'getPendingPartners']); // Rota antiga
+            // Rotas de aprovação/rejeição removidas - usar /admin/partners/{user}/status
         });
     });
 
     // Grupo de Rotas para Parceiros (Revendedores e Distribuidores)
     Route::prefix('parceiro')->middleware('parceiro')->group(function () {
         Route::prefix('stock-files')->group(function () {
-            Route::get('/', [StockFileController::class, 'getForRevendedor']);
-            Route::get('/download', [StockFileController::class, 'downloadForRevendedor']);
-            Route::get('/{file}/download', [StockFileController::class, 'downloadSpecificFile']);
-        });
-    });
-
-    // Manter rotas antigas para compatibilidade (deprecated)
-    Route::prefix('revendedor')->middleware('revendedor')->group(function () {
-        Route::prefix('stock-files')->group(function () {
-            Route::get('/', [StockFileController::class, 'getForRevendedor']);
-            Route::get('/download', [StockFileController::class, 'downloadForRevendedor']);
+            Route::get('/', [StockFileController::class, 'getForPartner']);
+            Route::get('/download', [StockFileController::class, 'downloadForPartner']);
             Route::get('/{file}/download', [StockFileController::class, 'downloadSpecificFile']);
         });
     });

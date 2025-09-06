@@ -3,14 +3,8 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
-use App\Models\PartnerProfile;
+use App\Actions\Auth\RegisterPartnerAction;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Auth\Events\Registered;
-use Illuminate\Support\Str;
 
 class RegisterController extends Controller
 {
@@ -30,6 +24,7 @@ class RegisterController extends Controller
             'company_name' => 'required|string|max:255',
             'password' => 'required|string|min:8|confirmed',
             'role' => 'required|in:revendedor,distribuidor',
+            'business_model' => 'sometimes|in:B2B,B2C',
             'alvara' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048',
         ], [
             'alvara.required' => 'O arquivo do alvará é obrigatório.',
@@ -43,67 +38,24 @@ class RegisterController extends Controller
             'role.in' => 'O tipo de parceiro deve ser revendedor ou distribuidor.',
         ]);
 
-        // Iniciar transação de base de dados
-        DB::beginTransaction();
-
         try {
-            // 2. Criar o User com os dados fornecidos
-            $user = User::create([
-                'name' => $validated['name'],
-                'email' => $validated['email'],
-                'password' => Hash::make($validated['password']),
-                'role' => $validated['role'],
-                'status' => 'pending_email_validation',
-            ]);
+            // 2. Executar a Action de registro de parceiro
+            $registerPartnerAction = new RegisterPartnerAction();
+            $result = $registerPartnerAction->execute($validated, $request);
 
-            // 3. Guardar o ficheiro do alvará com nome único
-            $alvaraFile = $request->file('alvara');
-            $originalExtension = $alvaraFile->getClientOriginalExtension();
-            $alvaraFileName = 'alvara_' . $user->id . '_' . Str::random(10) . '.' . $originalExtension;
-            
-            // Criar diretório se não existir
-            if (!Storage::disk('local')->exists('alvaras')) {
-                Storage::disk('local')->makeDirectory('alvaras');
-            }
-            
-            $alvaraPath = $alvaraFile->storeAs('alvaras', $alvaraFileName, 'local');
-
-            // 4. Criar o PartnerProfile associado
-            PartnerProfile::create([
-                'user_id' => $user->id,
-                'company_name' => $validated['company_name'],
-                'phone_number' => $validated['phone_number'],
-                'alvara_path' => $alvaraPath,
-            ]);
-
-            // 5. Disparar o evento Registered para envio de email de verificação
-            event(new Registered($user));
-
-            // 6. Confirmar a transação
-            DB::commit();
-
-            // 7. Retornar resposta JSON com sucesso
+            // 3. Retornar resposta JSON com sucesso
             return response()->json([
-                'message' => 'Registro realizado com sucesso! Verifique seu email para ativar a conta.',
+                'message' => $result['message'],
                 'user' => [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'role' => $user->role,
-                    'status' => $user->status,
+                    'id' => $result['user']->id,
+                    'name' => $result['user']->name,
+                    'email' => $result['user']->email,
+                    'role' => $result['user']->role,
+                    'status' => $result['user']->status,
                 ],
             ], 201);
 
         } catch (\Exception $e) {
-            // Reverter a transação em caso de erro
-            DB::rollBack();
-            
-            // Log do erro para debugging
-            \Log::error('Erro no registro de parceiro: ' . $e->getMessage(), [
-                'email' => $validated['email'] ?? 'N/A',
-                'trace' => $e->getTraceAsString()
-            ]);
-
             return response()->json([
                 'message' => 'Erro durante o registro. Tente novamente.',
                 'error' => config('app.debug') ? $e->getMessage() : 'Erro interno do servidor',

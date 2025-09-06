@@ -172,6 +172,7 @@ class PartnerController extends Controller
 
     /**
      * Update the specified partner's status.
+     * Absorve a lógica dos métodos approveRevendedor e rejectRevendedor do AdminController.
      */
     public function updateStatus(Request $request, User $user): JsonResponse
     {
@@ -179,35 +180,95 @@ class PartnerController extends Controller
             'status' => 'required|in:active,suspended,pending_approval,rejected,inactive'
         ]);
     
+        // Verificar se o usuário é um parceiro (revendedor ou distribuidor)
         if (!in_array($user->role, ['revendedor', 'distribuidor'])) {
-            return response()->json(['message' => 'Utilizador não é um parceiro.'], 404);
+            return response()->json([
+                'message' => 'Este usuário não é um parceiro válido (revendedor ou distribuidor).',
+            ], 400);
         }
-    
+
         $oldStatus = $user->status;
         $newStatus = $validated['status'];
-    
-        $user->update(['status' => $newStatus]);
-    
-        // Lógica de notificação por email
-        $loginUrl = env('FRONTEND_URL', 'http://localhost:5173') . '/login';
 
-        if ($newStatus === 'active' && $oldStatus !== 'active') {
-            // Se o estado anterior era inativo/rejeitado, é uma reativação
-            if ($oldStatus === 'inactive' || $oldStatus === 'rejected') {
-                Mail::to($user->email)->send(new \App\Mail\PartnerReactivated($user, $loginUrl));
-            } else { // Senão, é a primeira aprovação
-                Mail::to($user->email)->send(new \App\Mail\PartnerApproved($user, $loginUrl));
-            }
-        } elseif ($newStatus === 'rejected') {
-            Mail::to($user->email)->send(new \App\Mail\PartnerRejected($user));
-        } elseif ($newStatus === 'inactive') {
-            Mail::to($user->email)->send(new \App\Mail\PartnerDeactivated($user));
+        // Verificar se o status realmente mudou
+        if ($oldStatus === $newStatus) {
+            return response()->json([
+                'message' => 'O status do parceiro já é ' . $newStatus . '.',
+                'partner' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'role' => $user->role,
+                    'status' => $user->status,
+                ],
+            ], 200);
+        }
+
+        // Validações específicas para aprovação e rejeição (lógica dos métodos antigos)
+        if ($newStatus === 'active' && $oldStatus !== 'pending_approval') {
+            return response()->json([
+                'message' => 'Este parceiro não está pendente de aprovação.',
+                'current_status' => $user->status,
+            ], 400);
+        }
+
+        if ($newStatus === 'rejected' && $oldStatus !== 'pending_approval') {
+            return response()->json([
+                'message' => 'Este parceiro não está pendente de aprovação.',
+                'current_status' => $user->status,
+            ], 400);
         }
     
-        return response()->json([
+        // Atualizar o status
+        $user->update(['status' => $newStatus]);
+    
+        // Lógica de notificação por email (absorvida dos métodos antigos)
+        $emailSent = false;
+        $emailError = null;
+        $loginUrl = env('FRONTEND_URL', 'http://localhost:5173') . '/login';
+
+        try {
+            if ($newStatus === 'active' && $oldStatus !== 'active') {
+                // Se o estado anterior era inativo/rejeitado, é uma reativação
+                if ($oldStatus === 'inactive' || $oldStatus === 'rejected') {
+                    Mail::to($user->email)->send(new \App\Mail\PartnerReactivated($user, $loginUrl));
+                } else { // Senão, é a primeira aprovação
+                    Mail::to($user->email)->send(new \App\Mail\PartnerApproved($user, $loginUrl));
+                }
+                $emailSent = true;
+            } elseif ($newStatus === 'rejected') {
+                Mail::to($user->email)->send(new \App\Mail\PartnerRejected($user));
+                $emailSent = true;
+            } elseif ($newStatus === 'inactive') {
+                Mail::to($user->email)->send(new \App\Mail\PartnerDeactivated($user));
+                $emailSent = true;
+            }
+        } catch (\Exception $e) {
+            $emailError = $e->getMessage();
+        }
+
+        // Preparar resposta
+        $response = [
             'message' => 'Status do parceiro atualizado com sucesso.',
-            'partner' => $user->fresh()->load('partnerProfile')
-        ]);
+            'partner' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'role' => $user->role,
+                'status' => $user->status,
+                'previous_status' => $oldStatus,
+            ],
+        ];
+
+        // Adicionar informações sobre o email se aplicável
+        if ($emailSent && !$emailError) {
+            $response['message'] .= ' Email de notificação enviado.';
+        } elseif ($emailSent && $emailError) {
+            $response['message'] .= ' Porém, houve erro no envio do email.';
+            $response['email_error'] = $emailError;
+        }
+    
+        return response()->json($response, 200);
     }
 
     /**
@@ -265,6 +326,9 @@ class PartnerController extends Controller
 
     /**
      * Visualizar/baixar alvará de um parceiro
+     * 
+     * A autenticação é garantida pelo middleware 'auth:sanctum' e 'admin' 
+     * aplicado na rota, eliminando a necessidade de validação manual de token.
      *
      * @param  \App\Models\User  $user
      * @param  \Illuminate\Http\Request  $request
@@ -272,9 +336,6 @@ class PartnerController extends Controller
      */
     public function downloadAlvara(User $user, Request $request)
     {
-        // A autenticação é feita automaticamente pelo middleware 'admin'
-        // que já verifica se o usuário está autenticado e é admin
-
         // Verificar se o usuário é um parceiro (revendedor ou distribuidor)
         if (!in_array($user->role, ['revendedor', 'distribuidor'])) {
             return response()->json([

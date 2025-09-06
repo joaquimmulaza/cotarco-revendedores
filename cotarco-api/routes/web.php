@@ -32,7 +32,7 @@ Route::get('/email/verify/{id}/{hash}', function ($id, $hash, Request $request) 
         // Atualizar status do usuário para pending_approval
         $user->update(['status' => 'pending_approval']);
         
-        // Enviar notificação para admin se for parceiro (revendedor ou distribuidor)
+        // Enviar notificação para admin se for parceiro
         if (in_array($user->role, ['revendedor', 'distribuidor'])) {
             try {
                 // Obter email do admin principal

@@ -14,8 +14,8 @@ class PartnerManagementTest extends TestCase
     use RefreshDatabase;
 
     protected $admin;
-    protected $revendedor;
-    protected $distribuidor;
+    protected $partner1;
+    protected $partner2;
 
     protected function setUp(): void
     {
@@ -27,30 +27,30 @@ class PartnerManagementTest extends TestCase
             'status' => 'active'
         ]);
 
-        // Criar revendedor
-        $this->revendedor = User::factory()->create([
+        // Criar parceiro 1 (revendedor)
+        $this->partner1 = User::factory()->create([
             'role' => 'revendedor',
             'status' => 'active'
         ]);
 
-        // Criar perfil do revendedor
+        // Criar perfil do parceiro 1
         PartnerProfile::factory()->create([
-            'user_id' => $this->revendedor->id,
-            'company_name' => 'Empresa Revendedora Teste',
+            'user_id' => $this->partner1->id,
+            'company_name' => 'Empresa Parceira Teste 1',
             'phone_number' => '912345678',
             'business_model' => 'B2B'
         ]);
 
-        // Criar distribuidor
-        $this->distribuidor = User::factory()->create([
+        // Criar parceiro 2 (distribuidor)
+        $this->partner2 = User::factory()->create([
             'role' => 'distribuidor',
             'status' => 'active'
         ]);
 
-        // Criar perfil do distribuidor
+        // Criar perfil do parceiro 2
         PartnerProfile::factory()->create([
-            'user_id' => $this->distribuidor->id,
-            'company_name' => 'Empresa Distribuidora Teste',
+            'user_id' => $this->partner2->id,
+            'company_name' => 'Empresa Parceira Teste 2',
             'phone_number' => '912345679',
             'business_model' => 'B2C'
         ]);

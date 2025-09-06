@@ -85,7 +85,7 @@ const PartnerManager = () => {
     try {
       setLoading(true);
       setError('');
-      const response = await adminService.getRevendedores(currentStatus, currentPage);
+      const response = await adminService.getPartners(currentStatus, currentPage);
       setPartners(response.data || []);
       setPagination(response.pagination || null);
       
@@ -180,7 +180,7 @@ const PartnerManager = () => {
     try {
       setActionLoading(prev => ({ ...prev, [confirmPartner.id]: `updating-${confirmAction}` }));
       
-      await adminService.updateRevendedorStatus(confirmPartner.id, confirmAction);
+      await adminService.updatePartnerStatus(confirmPartner.id, confirmAction);
       
       await Promise.all([
         fetchPartners(),
@@ -296,7 +296,7 @@ const PartnerManager = () => {
     <div className="bg-white shadow rounded-lg">
       <div className="px-6 py-4 border-b border-gray-200">
         <h3 className="text-lg font-medium text-gray-700 mb-4">
-          Gestão de Parceiros (Revendedores e Distribuidores)
+          Gestão de Parceiros
         </h3>
         
         {/* Headless UI Tabs */}
@@ -455,3 +455,4 @@ const PartnerManager = () => {
 };
 
 export default PartnerManager;
+

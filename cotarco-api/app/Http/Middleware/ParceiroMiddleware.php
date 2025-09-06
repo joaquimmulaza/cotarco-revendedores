@@ -27,7 +27,7 @@ class ParceiroMiddleware
         // Verificar se o usuário tem role de parceiro (revendedor ou distribuidor) e está ativo
         if (!in_array($user->role, ['revendedor', 'distribuidor'])) {
             return response()->json([
-                'message' => 'Acesso negado. Apenas parceiros (revendedores ou distribuidores) podem acessar esta funcionalidade.',
+                'message' => 'Acesso negado. Apenas parceiros podem acessar esta funcionalidade.',
             ], 403);
         }
 
