@@ -7,7 +7,7 @@ import ConfirmDialog from './ConfirmDialog';
 
 const StockFileManager = () => {
   const { loading: authLoading, isAdmin } = useAuth();
-  const [stockFile, setStockFile] = useState(null);
+  const [stockFiles, setStockFiles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState('');
@@ -16,22 +16,21 @@ const StockFileManager = () => {
   // Estados para upload
   const [selectedFile, setSelectedFile] = useState(null);
   const [displayName, setDisplayName] = useState('');
+  const [targetRole, setTargetRole] = useState('');
   const [uploadLoading, setUploadLoading] = useState(false);
   
-  // Estados para confirmação
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  // Carregar dados do ficheiro atual
-  const fetchCurrentStockFile = async () => {
+  // Carregar dados dos ficheiros
+  const fetchStockFiles = async () => {
     try {
       setLoading(true);
       setError('');
-      const response = await adminService.getCurrentStockFile();
-      setStockFile(response.file);
+      const response = await adminService.getStockFiles();
+      setStockFiles(response.files || []);
     } catch (error) {
-      console.error('Erro ao carregar ficheiro de stock:', error);
-      setError(error.message || 'Erro ao carregar dados do ficheiro');
-      setStockFile(null);
+      console.error('Erro ao carregar ficheiros de stock:', error);
+      setError(error.message || 'Erro ao carregar dados dos ficheiros');
+      setStockFiles([]);
     } finally {
       setLoading(false);
     }
@@ -39,7 +38,7 @@ const StockFileManager = () => {
 
   useEffect(() => {
     if (!authLoading && isAdmin) {
-      fetchCurrentStockFile();
+      fetchStockFiles();
     }
   }, [authLoading, isAdmin]);
 
@@ -70,8 +69,8 @@ const StockFileManager = () => {
   const handleUpload = async (e) => {
     e.preventDefault();
     
-    if (!selectedFile || !displayName.trim()) {
-      setError('Por favor, selecione um ficheiro e insira um nome de exibição.');
+    if (!selectedFile || !displayName.trim() || !targetRole) {
+      setError('Por favor, preencha todos os campos obrigatórios.');
       return;
     }
 
@@ -82,19 +81,21 @@ const StockFileManager = () => {
       const formData = new FormData();
       formData.append('file', selectedFile);
       formData.append('display_name', displayName.trim());
+      formData.append('target_role', targetRole);
       
       await adminService.uploadStockFile(formData);
       
       setSuccessMessage('Ficheiro de stock carregado com sucesso!');
       setSelectedFile(null);
       setDisplayName('');
+      setTargetRole('');
       
       // Limpar o input de ficheiro
       const fileInput = document.getElementById('stock-file-input');
       if (fileInput) fileInput.value = '';
       
       // Recarregar dados
-      await fetchCurrentStockFile();
+      await fetchStockFiles();
       
     } catch (error) {
       console.error('Erro ao fazer upload:', error);
@@ -105,20 +106,17 @@ const StockFileManager = () => {
   };
 
   // Alterar status do ficheiro
-  const handleToggleStatus = async () => {
-    if (!stockFile) return;
-    
+  const handleToggleStatus = async (fileId) => {
     try {
       setActionLoading(true);
       setError('');
       
-      await adminService.toggleStockFileStatus(stockFile.id);
+      await adminService.toggleStockFileStatus(fileId);
       
-      const newStatus = stockFile.is_active ? 'desativado' : 'ativado';
-      setSuccessMessage(`Ficheiro ${newStatus} com sucesso!`);
+      setSuccessMessage('Status do ficheiro alterado com sucesso!');
       
       // Recarregar dados
-      await fetchCurrentStockFile();
+      await fetchStockFiles();
       
     } catch (error) {
       console.error('Erro ao alterar status:', error);
@@ -128,25 +126,18 @@ const StockFileManager = () => {
     }
   };
 
-  // Mostrar confirmação de apagar
-  const handleDeleteClick = () => {
-    setShowDeleteConfirm(true);
-  };
-
   // Apagar ficheiro
-  const handleDelete = async () => {
-    if (!stockFile) return;
-    
+  const handleDelete = async (fileId) => {
     try {
       setActionLoading(true);
       setError('');
       
-      await adminService.deleteStockFile(stockFile.id);
+      await adminService.deleteStockFile(fileId);
       
       setSuccessMessage('Ficheiro apagado com sucesso!');
       
-      // Recarregar dados
-      await fetchCurrentStockFile();
+      // Atualizar estado removendo o ficheiro da lista
+      setStockFiles(prevFiles => prevFiles.filter(file => file.id !== fileId));
       
     } catch (error) {
       console.error('Erro ao apagar ficheiro:', error);
@@ -156,14 +147,6 @@ const StockFileManager = () => {
     }
   };
 
-  // Formatar tamanho do ficheiro
-  const formatFileSize = (bytes) => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  };
 
   // Formatar data
   const formatDate = (dateString) => {
@@ -238,8 +221,8 @@ const StockFileManager = () => {
           </div>
         )}
 
-        {/* Se não existe ficheiro - mostrar formulário de upload */}
-        {!stockFile ? (
+        {/* Se não existem ficheiros - mostrar formulário de upload */}
+        {stockFiles.length === 0 ? (
           <div className="text-center py-8">
             <div className="mb-6">
               <svg className="h-16 w-16 text-gray-400 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -283,9 +266,26 @@ const StockFileManager = () => {
                 />
               </div>
               
+              <div>
+                <label htmlFor="target-role" className="block text-sm font-medium text-gray-700 mb-2">
+                  Destinatário <span className="text-red-500">*</span>
+                </label>
+                <select
+                  id="target-role"
+                  value={targetRole}
+                  onChange={(e) => setTargetRole(e.target.value)}
+                  className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  required
+                >
+                  <option value="">Selecione o destinatário</option>
+                  <option value="revendedor">Revendedor</option>
+                  <option value="distribuidor">Distribuidor</option>
+                </select>
+              </div>
+              
               <button
                 type="submit"
-                disabled={uploadLoading || !selectedFile || !displayName.trim()}
+                disabled={uploadLoading || !selectedFile || !displayName.trim() || !targetRole}
                 className="cursor-pointer w-full bg-gray-200 text-gray-600 px-4 py-2 rounded-md hover:bg-gray-300 disabled:opacity-60 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
               >
                 {uploadLoading ? (
@@ -305,105 +305,106 @@ const StockFileManager = () => {
             </form>
           </div>
         ) : (
-          /* Se existe ficheiro - mostrar informações e opções */
+          /* Se existem ficheiros - mostrar tabela e opções */
           <div className="space-y-6">
-            {/* Informações do ficheiro atual */}
-            <div className="bg-gray-50 rounded-lg p-4">
-              <h4 className="text-md font-medium text-gray-700 mb-3 flex items-center">
-                <svg className="h-5 w-5 mr-2 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-                Ficheiro Atual
-              </h4>
+            {/* Tabela de ficheiros */}
+            <div className="bg-white shadow overflow-hidden sm:rounded-md">
+              <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
+                <h4 className="text-lg font-medium text-gray-700 flex items-center">
+                  <svg className="h-5 w-5 mr-2 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                  Ficheiros de Stock
+                </h4>
+              </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                <div>
-                  <span className="font-medium text-gray-700">Nome:</span>
-                  <p className="text-gray-900 mt-1">{stockFile.display_name}</p>
-                </div>
-                <div>
-                  <span className="font-medium text-gray-700">Ficheiro original:</span>
-                  <p className="text-gray-900 mt-1">{stockFile.original_filename}</p>
-                </div>
-                <div>
-                  <span className="font-medium text-gray-700">Tamanho:</span>
-                  <p className="text-gray-900 mt-1">{formatFileSize(stockFile.size)}</p>
-                </div>
-                <div>
-                  <span className="font-medium text-gray-700">Última atualização:</span>
-                  <p className="text-gray-900 mt-1">{formatDate(stockFile.updated_at)}</p>
-                </div>
-                <div>
-                  <span className="font-medium text-gray-700">Status:</span>
-                  <div className="mt-1">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      stockFile.is_active 
-                        ? 'bg-green-50 text-green-800' 
-                        : 'bg-red-100 text-red-800'
-                    }`}>
-                      {stockFile.is_active ? 'Ativo' : 'Inativo'}
-                    </span>
-                  </div>
-                </div>
-                <div>
-                  <span className="font-medium text-gray-700">Carregado por:</span>
-                  <p className="text-gray-900 mt-1">
-                    {stockFile.uploaded_by?.name || 'Utilizador desconhecido'}
-                  </p>
-                </div>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Nome do Ficheiro
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Destinatário
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Data de Upload
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Status
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Ações
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {stockFiles.map((file) => (
+                      <tr key={file.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm font-medium text-gray-900">
+                            {file.original_filename}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {file.display_name}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className="text-sm text-gray-900">
+                            {file.target_role === 'revendedor' ? 'Revendedor' : 
+                             file.target_role === 'distribuidor' ? 'Distribuidor' : 
+                             'Não especificado'}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {formatDate(file.created_at)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            file.is_active 
+                              ? 'bg-green-50 text-green-800' 
+                              : 'bg-red-100 text-red-800'
+                          }`}>
+                            {file.is_active ? 'Ativo' : 'Inativo'}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                          <button
+                            onClick={() => handleToggleStatus(file.id)}
+                            disabled={actionLoading}
+                            className={`px-3 py-1 rounded-md text-xs font-medium transition-colors flex items-center disabled:opacity-50 disabled:cursor-not-allowed ${
+                              file.is_active
+                                ? 'text-red-600 hover:text-red-800 hover:bg-red-50'
+                                : 'text-green-600 hover:text-green-800 hover:bg-green-50'
+                            }`}
+                          >
+                            {file.is_active ? 'Desativar' : 'Ativar'}
+                          </button>
+                          
+                          <button
+                            onClick={() => handleDelete(file.id)}
+                            disabled={actionLoading}
+                            className="text-red-600 hover:text-red-800 hover:bg-red-50 px-3 py-1 rounded-md text-xs font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            Apagar
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </div>
             
-            {/* Botões de ação */}
-            <div className="flex flex-wrap gap-3">
-              <button
-                onClick={handleToggleStatus}
-                disabled={actionLoading}
-                className={`px-4 py-2 rounded-md font-medium transition-colors flex items-center disabled:opacity-50 disabled:cursor-not-allowed ${
-                  stockFile.is_active
-                    ? 'my-stroke-red my-text-red hover-color cursor-pointer'
-                    : 'bg-green-600 text-white hover:bg-green-700 cursor-pointer'
-                }`}
-              >
-                {actionLoading ? (
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                ) : (
-                  <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                      d={stockFile.is_active 
-                        ? "M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636M5.636 18.364l12.728-12.728"
-                        : "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                      }
-                    />
-                  </svg>
-                )}
-                {stockFile.is_active ? 'Desativar' : 'Ativar'}
-              </button>
-              
-              <button
-                onClick={handleDeleteClick}
-                disabled={actionLoading}
-                className="cursor-pointer bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center"
-              >
-                {actionLoading ? (
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                ) : (
-                  <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
-                )}
-                Apagar
-              </button>
-            </div>
-            
-            {/* Formulário para substituir ficheiro */}
+            {/* Formulário para adicionar novo ficheiro */}
             <div className="border-t pt-6">
               <h4 className="text-md font-medium text-gray-700 mb-4">
-                Substituir Mapa de Stock
+                Adicionar Novo Ficheiro de Stock
               </h4>
               
               <form onSubmit={handleUpload} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <label htmlFor="replace-file-input" className="block text-sm font-medium text-gray-700 mb-2">
                       Novo ficheiro Excel
@@ -430,24 +431,41 @@ const StockFileManager = () => {
                       className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                     />
                   </div>
+                  
+                  <div>
+                    <label htmlFor="replace-target-role" className="block text-sm font-medium text-gray-700 mb-2">
+                      Destinatário <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      id="replace-target-role"
+                      value={targetRole}
+                      onChange={(e) => setTargetRole(e.target.value)}
+                      className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      required
+                    >
+                      <option value="">Selecione o destinatário</option>
+                      <option value="revendedor">Revendedor</option>
+                      <option value="distribuidor">Distribuidor</option>
+                    </select>
+                  </div>
                 </div>
                 
                 <button
                   type="submit"
-                  disabled={uploadLoading || !selectedFile || !displayName.trim()}
+                  disabled={uploadLoading || !selectedFile || !displayName.trim() || !targetRole}
                   className="cursor-pointer bg-gray-200 text-gray-600 px-6 py-2 rounded-md hover:bg-gray-300 disabled:opacity-60 disabled:cursor-not-allowed transition-colors flex items-center"
                 >
                   {uploadLoading ? (
                     <>
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      A substituir...
+                      A carregar...
                     </>
                   ) : (
                     <>
                       <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                       </svg>
-                      Substituir Ficheiro
+                      Adicionar Ficheiro
                     </>
                   )}
                 </button>
@@ -457,17 +475,6 @@ const StockFileManager = () => {
         )}
       </div>
       
-      {/* Dialog de confirmação para apagar */}
-      <ConfirmDialog
-        isOpen={showDeleteConfirm}
-        onClose={() => setShowDeleteConfirm(false)}
-        onConfirm={handleDelete}
-        title="Apagar ficheiro de stock"
-        description="Tem a certeza que deseja apagar este ficheiro de stock? Esta ação não pode ser desfeita."
-        confirmText="Apagar"
-        cancelText="Cancelar"
-        type="danger"
-      />
     </div>
   );
 };
