@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Tab, TabGroup, TabList, TabPanel, TabPanels } from '@headlessui/react';
 import { useAuth } from '../../contexts/AuthContext';
 import { adminService } from '../../services/api';
+import { usePartners } from '../../hooks/usePartners';
 import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
 import toast from 'react-hot-toast';
@@ -13,16 +14,10 @@ import ConfirmDialog from '../ConfirmDialog';
 const PartnerManager = () => {
   const { authLoading, isAdmin } = useAuth();
   
-  // Estados para gestão de dados
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [partners, setPartners] = useState([]);
-  const [actionLoading, setActionLoading] = useState({});
-  
   // Estados para navegação e paginação
   const [selectedTabIndex, setSelectedTabIndex] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pagination, setPagination] = useState(null);
+  const [actionLoading, setActionLoading] = useState({});
   
   // Estados para o modal de edição
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -37,6 +32,14 @@ const PartnerManager = () => {
   // Mapear índices de tabs para status
   const tabStatusMap = ['pending_approval', 'active', 'rejected', 'inactive'];
   const currentStatus = tabStatusMap[selectedTabIndex];
+  
+  // Usar o hook customizado para gerenciar dados dos parceiros
+  const { partners, pagination, loading, error, refetch: fetchPartners } = usePartners(
+    currentStatus, 
+    currentPage, 
+    isAdmin, 
+    authLoading
+  );
   
   // Estados para estatísticas
   const [stats, setStats] = useState({
@@ -81,26 +84,6 @@ const PartnerManager = () => {
     }
   };
 
-  const fetchPartners = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError('');
-      const response = await adminService.getPartners(currentStatus, currentPage);
-      setPartners(response.data || []);
-      setPagination(response.pagination || null);
-      
-      if (!authLoading && isAdmin) {
-        fetchStats();
-      }
-    } catch (error) {
-      console.error('Erro ao carregar parceiros:', error);
-      const errorMessage = error.message || 'Erro ao carregar dados';
-      setError(errorMessage);
-      toast.error(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  }, [currentStatus, currentPage, authLoading, isAdmin]);
 
   // Carregar estatísticas
   useEffect(() => {
@@ -115,12 +98,6 @@ const PartnerManager = () => {
     }
   }, [authLoading, isAdmin]);
 
-  // Carregar parceiros
-  useEffect(() => {
-    if (!authLoading && isAdmin) {
-      fetchPartners();
-    }
-  }, [fetchPartners, authLoading, isAdmin]);
 
   const handleEditSubmit = async (partnerId, formData) => {
     try {
