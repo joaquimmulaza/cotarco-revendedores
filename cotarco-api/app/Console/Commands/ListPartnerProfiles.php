@@ -3,36 +3,36 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
-use App\Models\RevendedorProfile;
+use App\Models\PartnerProfile;
 
-class ListRevendedorProfiles extends Command
+class ListPartnerProfiles extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'revendedores:list-profiles';
+    protected $signature = 'partners:list-profiles';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'List all revendedor profiles in the database';
+    protected $description = 'List all partner profiles in the database';
 
     /**
      * Execute the console command.
      */
     public function handle()
     {
-        $this->info('Listando todos os perfis de revendedor:');
+        $this->info('Listando todos os perfis de parceiros:');
         $this->line('');
 
-        $profiles = RevendedorProfile::with('user:id,name,email')->get();
+        $profiles = PartnerProfile::with('user:id,name,email')->get();
 
         if ($profiles->isEmpty()) {
-            $this->warn('Nenhum perfil de revendedor encontrado.');
+            $this->warn('Nenhum perfil de parceiro encontrado.');
             return 0;
         }
 
@@ -54,7 +54,3 @@ class ListRevendedorProfiles extends Command
         return 0;
     }
 }
-
-
-
-

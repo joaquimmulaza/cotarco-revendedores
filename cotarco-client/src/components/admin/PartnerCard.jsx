@@ -1,5 +1,161 @@
 import React from 'react';
 
+// Sub-componente para renderizar os botões de ação
+const RenderActionButtons = ({ 
+  partner, 
+  actionLoading, 
+  onUpdateStatus, 
+  onEdit, 
+  onViewAlvara 
+}) => {
+  return (
+    <div className="flex flex-col sm:flex-row gap-2 mt-4 lg:mt-0 lg:ml-6">
+      {/* Botão Editar */}
+      <button
+        onClick={() => onEdit(partner)}
+        className="cursor-pointer bg-gray-100 my-text-gray px-3 py-1.5 rounded-md hover:bg-gray-300 transition-colors text-xs font-medium flex items-center justify-center"
+      >
+        <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+        </svg>
+        Editar
+      </button>
+
+      {/* Botão Ver Alvará */}
+      {partner.profile?.alvara_path ? (
+        <button
+          onClick={() => onViewAlvara(partner.id)}
+          className="cursor-pointer bg-gray-100 my-text-gray my-text-red px-3 py-1.5 rounded-md  hover:bg-gray-300 transition-colors text-xs font-medium flex items-center justify-center"
+        >
+          <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+          </svg>
+          Ver Alvará
+        </button>
+      ) : (
+        <div className="bg-gray-100 text-gray-500 px-3 py-1.5 rounded-md text-xs font-medium flex items-center justify-center">
+          <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.966-.833-2.732 0L3.732 19c-.77.833.192 2.5 1.732 2.5z" />
+          </svg>
+          Sem Alvará
+        </div>
+      )}
+      
+      {/* Botões de ação baseados no status atual */}
+      {partner.status === 'pending_approval' && (
+        <>
+          <button
+            onClick={() => onUpdateStatus(partner, 'active')}
+            disabled={actionLoading[partner.id]}
+            className="bg-green-600 text-white px-3 py-1.5 rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-xs font-medium flex items-center justify-center"
+          >
+            {actionLoading[partner.id] === 'updating-active' ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                A aprovar...
+              </>
+            ) : (
+              <>
+                <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                Aprovar
+              </>
+            )}
+          </button>
+          
+          <button
+            onClick={() => onUpdateStatus(partner, 'rejected')}
+            disabled={actionLoading[partner.id]}
+            className="bg-red-600 text-white px-3 py-1.5 rounded-md hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-xs font-medium flex items-center justify-center"
+          >
+            {actionLoading[partner.id] === 'updating-rejected' ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                A rejeitar...
+              </>
+            ) : (
+              <>
+                <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+                Rejeitar
+              </>
+            )}
+          </button>
+        </>
+      )}
+      
+      {partner.status === 'active' && (
+        <button
+          onClick={() => onUpdateStatus(partner, 'inactive')}
+          disabled={actionLoading[partner.id]}
+          className="cursor-pointer my-stroke-red my-text-red px-3 py-1.5 rounded-md hover-color disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-xs font-medium flex items-center justify-center"
+        >
+          {actionLoading[partner.id] === 'updating-inactive' ? (
+            <>
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red mr-2"></div>
+              A desativar...
+            </>
+          ) : (
+            <>
+              <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636M5.636 18.364l12.728-12.728" />
+              </svg>
+              Desativar
+            </>
+          )}
+        </button>
+      )}
+
+      {partner.status === 'inactive' && (
+        <button
+          onClick={() => onUpdateStatus(partner, 'active')}
+          disabled={actionLoading[partner.id]}
+          className="bg-green-600 text-white px-3 py-1.5 rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-xs font-medium flex items-center justify-center"
+        >
+          {actionLoading[partner.id] === 'updating-active' ? (
+            <>
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+              A reativar...
+            </>
+          ) : (
+            <>
+              <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              Reativar
+            </>
+          )}
+        </button>
+      )}
+      
+      {partner.status === 'rejected' && (
+        <button
+          onClick={() => onUpdateStatus(partner, 'pending_approval')}
+          disabled={actionLoading[partner.id]}
+          className="bg-blue-600 text-white px-3 py-1.5 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-xs font-medium flex items-center justify-center"
+        >
+          {actionLoading[partner.id] === 'updating-pending_approval' ? (
+            <>
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+              A reativar...
+            </>
+          ) : (
+            <>
+              <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              Reativar
+            </>
+          )}
+        </button>
+      )}
+    </div>
+  );
+};
+
 const PartnerCard = ({ 
   partner, 
   actionLoading, 
@@ -84,149 +240,13 @@ const PartnerCard = ({
             </div>
           </div>
           
-          <div className="flex flex-col sm:flex-row gap-2 mt-4 lg:mt-0 lg:ml-6">
-          {/* Botão Editar */}
-          <button
-            onClick={() => onEdit(partner)}
-            className="cursor-pointer bg-gray-100 my-text-gray px-3 py-1.5 rounded-md hover:bg-gray-300 transition-colors text-xs font-medium flex items-center justify-center"
-          >
-            <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-            </svg>
-            Editar
-          </button>
-
-          {partner.profile?.alvara_path ? (
-            <button
-              onClick={() => onViewAlvara(partner.id)}
-              className="cursor-pointer bg-gray-100 my-text-gray my-text-red px-3 py-1.5 rounded-md  hover:bg-gray-300 transition-colors text-xs font-medium flex items-center justify-center"
-            >
-              <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-              </svg>
-              Ver Alvará
-            </button>
-          ) : (
-            <div className="bg-gray-100 text-gray-500 px-3 py-1.5 rounded-md text-xs font-medium flex items-center justify-center">
-              <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.966-.833-2.732 0L3.732 19c-.77.833.192 2.5 1.732 2.5z" />
-              </svg>
-              Sem Alvará
-            </div>
-          )}
-          
-          {/* Botões de ação baseados no status atual */}
-          {partner.status === 'pending_approval' && (
-            <>
-              <button
-                onClick={() => onUpdateStatus(partner, 'active')}
-                disabled={actionLoading[partner.id]}
-                className="bg-green-600 text-white px-3 py-1.5 rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-xs font-medium flex items-center justify-center"
-              >
-                {actionLoading[partner.id] === 'updating-active' ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    A aprovar...
-                  </>
-                ) : (
-                  <>
-                    <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    Aprovar
-                  </>
-                )}
-              </button>
-              
-              <button
-                onClick={() => onUpdateStatus(partner, 'rejected')}
-                disabled={actionLoading[partner.id]}
-                className="bg-red-600 text-white px-3 py-1.5 rounded-md hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-xs font-medium flex items-center justify-center"
-              >
-                {actionLoading[partner.id] === 'updating-rejected' ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    A rejeitar...
-                  </>
-                ) : (
-                  <>
-                    <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                    Rejeitar
-                  </>
-                )}
-              </button>
-            </>
-          )}
-          
-          {partner.status === 'active' && (
-            <button
-              onClick={() => onUpdateStatus(partner, 'inactive')}
-              disabled={actionLoading[partner.id]}
-              className="cursor-pointer my-stroke-red my-text-red px-3 py-1.5 rounded-md hover-color disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-xs font-medium flex items-center justify-center"
-            >
-              {actionLoading[partner.id] === 'updating-inactive' ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red mr-2"></div>
-                  A desativar...
-                </>
-              ) : (
-                <>
-                  <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636M5.636 18.364l12.728-12.728" />
-                  </svg>
-                  Desativar
-                </>
-              )}
-            </button>
-          )}
-
-          {partner.status === 'inactive' && (
-            <button
-              onClick={() => onUpdateStatus(partner, 'active')}
-              disabled={actionLoading[partner.id]}
-              className="bg-green-600 text-white px-3 py-1.5 rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-xs font-medium flex items-center justify-center"
-            >
-              {actionLoading[partner.id] === 'updating-active' ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  A reativar...
-                </>
-              ) : (
-                <>
-                  <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                  </svg>
-                  Reativar
-                </>
-              )}
-            </button>
-          )}
-          
-          {partner.status === 'rejected' && (
-            <button
-              onClick={() => onUpdateStatus(partner, 'pending_approval')}
-              disabled={actionLoading[partner.id]}
-              className="bg-blue-600 text-white px-3 py-1.5 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-xs font-medium flex items-center justify-center"
-            >
-              {actionLoading[partner.id] === 'updating-pending_approval' ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  A reativar...
-                </>
-              ) : (
-                <>
-                  <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                  </svg>
-                  Reativar
-                </>
-              )}
-            </button>
-          )}
-          </div>
+          <RenderActionButtons 
+            partner={partner}
+            actionLoading={actionLoading}
+            onUpdateStatus={onUpdateStatus}
+            onEdit={onEdit}
+            onViewAlvara={onViewAlvara}
+          />
         </div>
       </div>
     </div>
@@ -234,3 +254,4 @@ const PartnerCard = ({
 };
 
 export default PartnerCard;
+

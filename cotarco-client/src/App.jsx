@@ -31,7 +31,7 @@ function AppContent() {
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           
-          {/* Rota protegida do revendedor */}
+          {/* Rota protegida do parceiro */}
           <Route 
             path="/dashboard" 
             element={

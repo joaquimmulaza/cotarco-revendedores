@@ -54,7 +54,7 @@ const Register = () => {
         formData.append('alvara', data.alvara[0]);
       }
 
-      const response = await authService.registerRevendedor(formData);
+      const response = await authService.registerPartner(formData);
 
       console.log('Registro bem-sucedido:', response);
       navigate(config.ROUTES.EMAIL_VERIFICATION_PENDING);

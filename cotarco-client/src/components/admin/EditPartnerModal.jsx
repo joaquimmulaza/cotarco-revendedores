@@ -112,3 +112,4 @@ const EditPartnerModal = ({
 };
 
 export default EditPartnerModal;
+

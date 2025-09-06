@@ -209,9 +209,9 @@ class StockFileController extends Controller
     }
 
     /**
-     * Obter informações dos ficheiros para revendedor
+     * Obter informações dos ficheiros para parceiro
      */
-    public function getForRevendedor(): JsonResponse
+    public function getForPartner(): JsonResponse
     {
         $user = auth()->user();
         
@@ -237,9 +237,9 @@ class StockFileController extends Controller
     }
 
     /**
-     * Download do ficheiro para revendedor
+     * Download do ficheiro para parceiro
      */
-    public function downloadForRevendedor(): BinaryFileResponse|JsonResponse
+    public function downloadForPartner(): BinaryFileResponse|JsonResponse
     {
         $user = auth()->user();
         

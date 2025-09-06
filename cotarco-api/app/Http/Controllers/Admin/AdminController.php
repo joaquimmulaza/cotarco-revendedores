@@ -3,13 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\UpdatePartnerStatusRequest;
 use App\Models\User;
-use App\Mail\RevendedorApproved;
-use App\Mail\RevendedorRejected;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Storage;
 
 class AdminController extends Controller
 {
@@ -18,7 +13,7 @@ class AdminController extends Controller
      */
     public function __construct()
     {
-        $this->middleware(['auth:sanctum', 'admin'])->except(['downloadAlvara']);
+        $this->middleware(['auth:sanctum', 'admin']);
     }
 
     /**
@@ -99,12 +94,12 @@ class AdminController extends Controller
     }
 
     /**
-     * Listar todos os revendedores pendentes de aprovação
+     * Listar todos os parceiros pendentes de aprovação
      * @deprecated Use index() method instead
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function getPendingRevendedores()
+    public function getPendingPartners()
     {
         try {
             $pendingPartners = User::with('partnerProfile')
@@ -147,272 +142,9 @@ class AdminController extends Controller
         }
     }
 
-    /**
-     * Aprovar um revendedor
-     *
-     * @param  \App\Models\User  $user
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function approveRevendedor(User $user)
-    {
-        // Verificar se o usuário é revendedor
-        if ($user->role !== 'revendedor') {
-            return response()->json([
-                'message' => 'Este usuário não é um revendedor.',
-            ], 400);
-        }
 
-        // Verificar se está pendente de aprovação
-        if ($user->status !== 'pending_approval') {
-            return response()->json([
-                'message' => 'Este revendedor não está pendente de aprovação.',
-                'current_status' => $user->status,
-            ], 400);
-        }
 
-        // Alterar status para 'active'
-        $user->update(['status' => 'active']);
 
-        // Enviar email de aprovação
-        $loginUrl = env('FRONTEND_URL', 'http://localhost:5173') . '/login';
-        
-        try {
-            Mail::to($user->email)->send(new RevendedorApproved($user, $loginUrl));
-            
-            return response()->json([
-                'message' => 'Revendedor aprovado com sucesso. Email de notificação enviado.',
-                'user' => [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'role' => $user->role,
-                    'status' => $user->status,
-                ],
-            ], 200);
-            
-        } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Revendedor aprovado, mas houve erro no envio do email.',
-                'user' => [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'role' => $user->role,
-                    'status' => $user->status,
-                ],
-                'email_error' => $e->getMessage(),
-            ], 200);
-        }
-    }
-
-    /**
-     * Visualizar/baixar alvará de um revendedor
-     *
-     * @param  \App\Models\User  $user
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function downloadAlvara(User $user, Request $request)
-    {
-        // Verificar autenticação via token na query string
-        $token = $request->query('token');
-        if (!$token) {
-            return response()->json(['message' => 'Token não fornecido.'], 401);
-        }
-
-        // Buscar o token no banco de dados
-        $accessToken = \Laravel\Sanctum\PersonalAccessToken::findToken($token);
-        if (!$accessToken) {
-            return response()->json(['message' => 'Token inválido.'], 401);
-        }
-
-        // Verificar se o usuário é admin
-        $authUser = $accessToken->tokenable;
-        if (!$authUser || $authUser->role !== 'admin') {
-            return response()->json(['message' => 'Acesso negado. Apenas administradores podem acessar este recurso.'], 403);
-        }
-
-        // Verificar se o usuário é revendedor
-        if ($user->role !== 'revendedor') {
-            return response()->json([
-                'message' => 'Este usuário não é um revendedor.',
-            ], 400);
-        }
-
-        // Obter o perfil do revendedor
-        $profile = $user->partnerProfile;
-        if (!$profile || !$profile->alvara_path) {
-            return response()->json([
-                'message' => 'Alvará não encontrado para este revendedor.',
-            ], 404);
-        }
-
-        // Verificar se o arquivo existe
-        if (!Storage::disk('local')->exists($profile->alvara_path)) {
-            return response()->json([
-                'message' => 'Arquivo do alvará não encontrado no servidor.',
-            ], 404);
-        }
-
-        try {
-            // Obter informações do arquivo
-            $filePath = $profile->alvara_path;
-            $fileName = basename($filePath);
-            $mimeType = Storage::disk('local')->mimeType($filePath);
-            
-            // Retornar o arquivo
-            return response()->file(
-                Storage::disk('local')->path($filePath),
-                [
-                    'Content-Type' => $mimeType,
-                    'Content-Disposition' => 'inline; filename="' . $fileName . '"'
-                ]
-            );
-        } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Erro ao acessar o arquivo do alvará.',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
-    }
-
-    /**
-     * Rejeitar um revendedor
-     *
-     * @param  \App\Models\User  $user
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function rejectRevendedor(User $user)
-    {
-        // Verificar se o usuário é revendedor
-        if ($user->role !== 'revendedor') {
-            return response()->json([
-                'message' => 'Este usuário não é um revendedor.',
-            ], 400);
-        }
-
-        // Verificar se está pendente de aprovação
-        if ($user->status !== 'pending_approval') {
-            return response()->json([
-                'message' => 'Este revendedor não está pendente de aprovação.',
-                'current_status' => $user->status,
-            ], 400);
-        }
-
-        // Alterar status para 'rejected'
-        $user->update(['status' => 'rejected']);
-
-        // Enviar email de rejeição
-        try {
-            Mail::to($user->email)->send(new RevendedorRejected($user));
-            
-            return response()->json([
-                'message' => 'Revendedor rejeitado com sucesso. Email de notificação enviado.',
-                'user' => [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'role' => $user->role,
-                    'status' => $user->status,
-                ],
-            ], 200);
-            
-        } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Revendedor rejeitado, mas houve erro no envio do email.',
-                'user' => [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'role' => $user->role,
-                    'status' => $user->status,
-                ],
-                'email_error' => $e->getMessage(),
-            ], 200);
-        }
-    }
-
-    /**
-     * Atualizar status de um parceiro (revendedor ou distribuidor) de forma genérica
-     *
-     * @param  \App\Http\Requests\UpdatePartnerStatusRequest  $request
-     * @param  \App\Models\User  $user
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function updateStatus(UpdatePartnerStatusRequest $request, User $user)
-    {
-        // Verificar se o usuário é revendedor ou distribuidor
-        if (!in_array($user->role, ['revendedor', 'distribuidor'])) {
-            return response()->json([
-                'message' => 'Este usuário não é um parceiro válido (revendedor ou distribuidor).',
-            ], 400);
-        }
-
-        // O status já foi validado pelo Form Request
-        $validatedData = $request->validated();
-
-        $newStatus = $validatedData['status'];
-        $oldStatus = $user->status;
-
-        // Verificar se o status realmente mudou
-        if ($oldStatus === $newStatus) {
-            return response()->json([
-                'message' => 'O status do revendedor já é ' . $newStatus . '.',
-                'user' => [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'role' => $user->role,
-                    'status' => $user->status,
-                ],
-            ], 200);
-        }
-
-        // Atualizar o status
-        $user->update(['status' => $newStatus]);
-
-        // Enviar notificações por email baseadas no novo status
-        $emailSent = false;
-        $emailError = null;
-
-        try {
-            if ($newStatus === 'active') {
-                // Enviar email de aprovação
-                $loginUrl = env('FRONTEND_URL', 'http://localhost:5173') . '/login';
-                Mail::to($user->email)->send(new RevendedorApproved($user, $loginUrl));
-                $emailSent = true;
-            } elseif ($newStatus === 'rejected') {
-                // Enviar email de rejeição
-                Mail::to($user->email)->send(new RevendedorRejected($user));
-                $emailSent = true;
-            }
-        } catch (\Exception $e) {
-            $emailError = $e->getMessage();
-        }
-
-        // Preparar resposta
-        $response = [
-            'message' => 'Status do parceiro atualizado com sucesso.',
-            'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'role' => $user->role,
-                'status' => $user->status,
-                'previous_status' => $oldStatus,
-            ],
-        ];
-
-        // Adicionar informações sobre o email se aplicável
-        if ($emailSent && !$emailError) {
-            $response['message'] .= ' Email de notificação enviado.';
-        } elseif ($emailSent && $emailError) {
-            $response['message'] .= ' Porém, houve erro no envio do email.';
-            $response['email_error'] = $emailError;
-        }
-
-        return response()->json($response, 200);
-    }
 
     /**
      * Obter estatísticas do dashboard administrativo

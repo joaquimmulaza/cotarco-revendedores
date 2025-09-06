@@ -24,7 +24,7 @@ const Login = () => {
     setError('');
 
     try {
-      const response = await authService.loginRevendedor(formData);
+      const response = await authService.loginPartner(formData);
       console.log('Login bem-sucedido:', response);
       
       // Atualizar o estado de autenticação através do contexto

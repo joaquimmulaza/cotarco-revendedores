@@ -4,7 +4,7 @@ export const config = {
   API_BASE_URL: import.meta.env.VITE_API_URL || '/api',
   
   // Nome da aplicação
-  APP_NAME: 'Cotarco Revendedores',
+  APP_NAME: 'Cotarco Parceiros',
   
   // Configurações de autenticação
   AUTH: {
