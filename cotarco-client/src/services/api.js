@@ -345,6 +345,16 @@ export const adminService = {
     }
   },
 
+  // Obter todos os ficheiros de stock (admin)
+  async getStockFiles() {
+    try {
+      const response = await api.get('/admin/stock-files');
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: 'Erro ao obter ficheiros de stock' };
+    }
+  },
+
   // Upload ou substituir ficheiro de stock (admin)
   async uploadStockFile(formData) {
     try {
