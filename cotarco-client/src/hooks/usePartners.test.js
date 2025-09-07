@@ -63,7 +63,7 @@ describe('usePartners', () => {
     }
 
     const mockResponse = {
-      data: mockPartners,
+      partners: mockPartners,
       pagination: mockPagination
     }
 
@@ -116,7 +116,7 @@ describe('usePartners', () => {
   })
 
   it('deve chamar a API novamente quando os parâmetros mudarem', async () => {
-    const mockResponse = { data: [], pagination: null }
+    const mockResponse = { partners: [], pagination: null }
     adminService.getPartners.mockResolvedValue(mockResponse)
 
     const { rerender } = renderHook(
@@ -144,7 +144,7 @@ describe('usePartners', () => {
   })
 
   it('deve fornecer função refetch que chama a API novamente', async () => {
-    const mockResponse = { data: [], pagination: null }
+    const mockResponse = { partners: [], pagination: null }
     adminService.getPartners.mockResolvedValue(mockResponse)
 
     const { result } = renderHook(() => usePartners('pending_approval', 1, true, false))

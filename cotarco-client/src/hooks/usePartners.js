@@ -27,7 +27,7 @@ export const usePartners = (status, page, isAdmin, authLoading) => {
       setLoading(true);
       setError('');
       const response = await adminService.getPartners(status, page);
-      setPartners(response.data || []);
+      setPartners(response.partners || []);
       setPagination(response.pagination || null);
     } catch (error) {
       console.error('Erro ao carregar parceiros:', error);

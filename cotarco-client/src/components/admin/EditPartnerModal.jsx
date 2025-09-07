@@ -18,7 +18,7 @@ const EditPartnerModal = ({
     if (partner) {
       setFormData({
         role: partner.role || '',
-        business_model: partner.profile?.business_model || ''
+        business_model: partner.partner_profile?.business_model || ''
       });
     }
   }, [partner]);
