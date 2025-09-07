@@ -29,7 +29,7 @@ class PartnerRejected extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Registro Não Aprovado - Cotarco Revendedores',
+            subject: 'Registro Não Aprovado - Parceiros Cotarco',
         );
     }
 

@@ -30,7 +30,7 @@ class PartnerApproved extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Conta Aprovada - Cotarco Revendedores',
+            subject: 'Conta Aprovada - Parceiros Cotarco',
         );
     }
 
