@@ -22,7 +22,7 @@ const RenderActionButtons = ({
       </button>
 
       {/* Botão Ver Alvará */}
-      {partner.profile?.alvara_path ? (
+      {partner.partner_profile?.alvara_path ? (
         <button
           onClick={() => onViewAlvara(partner.id)}
           className="cursor-pointer bg-gray-100 my-text-gray my-text-red px-3 py-1.5 rounded-md  hover:bg-gray-300 transition-colors text-xs font-medium flex items-center justify-center"
@@ -164,10 +164,24 @@ const PartnerCard = ({
   onViewAlvara 
 }) => {
   const formatDate = (dateString) => {
+    console.log('Data recebida para formatação:', dateString);
     if (!dateString) return 'Data não disponível';
     try {
-      return new Date(dateString).toLocaleDateString('pt-PT');
-    } catch {
+      const date = new Date(dateString);
+      // Verificar se a data é válida
+      if (isNaN(date.getTime())) {
+        console.log('Data inválida detectada:', dateString);
+        return 'Data inválida';
+      }
+      const formatted = date.toLocaleDateString('pt-PT', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+      console.log('Data formatada:', formatted);
+      return formatted;
+    } catch (error) {
+      console.error('Erro ao formatar data:', error, 'Data original:', dateString);
       return 'Data inválida';
     }
   };
@@ -228,15 +242,15 @@ const PartnerCard = ({
             <div className="flex items-start space-x-3">
             
               <span className="font-medium text-gray-700 w-20 flex-shrink-0">Empresa:</span>
-              <span className="text-gray-600">{partner.profile?.company_name || 'N/A'}</span>
+              <span className="text-gray-600">{partner.partner_profile?.company_name || 'N/A'}</span>
             </div>
             <div className="flex items-start space-x-3">
               <span className="font-medium text-gray-700 w-20 flex-shrink-0">Telefone:</span>
-              <span className="text-gray-600">{partner.profile?.phone_number || 'N/A'}</span>
+              <span className="text-gray-600">{partner.partner_profile?.phone_number || 'N/A'}</span>
             </div>
             <div className="flex items-start space-x-3">
               <span className="font-medium text-gray-700 w-20 flex-shrink-0">Modelo:</span>
-              <span className="text-gray-600">{formatBusinessModel(partner.profile?.business_model)}</span>
+              <span className="text-gray-600">{formatBusinessModel(partner.partner_profile?.business_model)}</span>
             </div>
           </div>
           
