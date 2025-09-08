@@ -2,6 +2,7 @@
   "name": "cotarco-client",
   "private": true,
   "version": "0.0.0",
+  "homepage": "/distribuidores",
   "type": "module",
   "scripts": {
     "dev": "vite",
