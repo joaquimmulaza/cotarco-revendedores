@@ -3,7 +3,8 @@ import { adminService } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
-import ConfirmDialog from './ConfirmDialog';
+import { Dialog, Transition } from '@headlessui/react';
+import { ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 
 const StockFileManager = () => {
   const { loading: authLoading, isAdmin } = useAuth();
@@ -18,6 +19,15 @@ const StockFileManager = () => {
   const [displayName, setDisplayName] = useState('');
   const [targetRole, setTargetRole] = useState('');
   const [uploadLoading, setUploadLoading] = useState(false);
+  
+  // Estados para diálogos de confirmação
+  const [confirmDialog, setConfirmDialog] = useState({
+    isOpen: false,
+    type: '', // 'toggle' ou 'delete'
+    fileId: null,
+    fileName: '',
+    isActive: false
+  });
   
 
   // Carregar dados dos ficheiros
@@ -103,6 +113,38 @@ const StockFileManager = () => {
     } finally {
       setUploadLoading(false);
     }
+  };
+
+  // Abrir diálogo de confirmação
+  const openConfirmDialog = (type, fileId, fileName, isActive = false) => {
+    setConfirmDialog({
+      isOpen: true,
+      type,
+      fileId,
+      fileName,
+      isActive
+    });
+  };
+
+  // Fechar diálogo de confirmação
+  const closeConfirmDialog = () => {
+    setConfirmDialog({
+      isOpen: false,
+      type: '',
+      fileId: null,
+      fileName: '',
+      isActive: false
+    });
+  };
+
+  // Confirmar ação
+  const confirmAction = async () => {
+    if (confirmDialog.type === 'toggle') {
+      await handleToggleStatus(confirmDialog.fileId);
+    } else if (confirmDialog.type === 'delete') {
+      await handleDelete(confirmDialog.fileId);
+    }
+    closeConfirmDialog();
   };
 
   // Alterar status do ficheiro
@@ -371,7 +413,7 @@ const StockFileManager = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                           <button
-                            onClick={() => handleToggleStatus(file.id)}
+                            onClick={() => openConfirmDialog('toggle', file.id, file.display_name, file.is_active)}
                             disabled={actionLoading}
                             className={`px-3 py-1 rounded-md text-xs font-medium transition-colors flex items-center disabled:opacity-50 disabled:cursor-not-allowed ${
                               file.is_active
@@ -383,7 +425,7 @@ const StockFileManager = () => {
                           </button>
                           
                           <button
-                            onClick={() => handleDelete(file.id)}
+                            onClick={() => openConfirmDialog('delete', file.id, file.display_name)}
                             disabled={actionLoading}
                             className="text-red-600 hover:text-red-800 hover:bg-red-50 px-3 py-1 rounded-md text-xs font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                           >
@@ -474,6 +516,85 @@ const StockFileManager = () => {
           </div>
         )}
       </div>
+      
+      {/* Diálogo de Confirmação */}
+      <Transition appear show={confirmDialog.isOpen} as={React.Fragment}>
+        <Dialog as="div" className="relative z-10" onClose={closeConfirmDialog}>
+          <Transition.Child
+            as={React.Fragment}
+            enter="ease-out duration-300"
+            enterFrom="opacity-0"
+            enterTo="opacity-100"
+            leave="ease-in duration-200"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
+          >
+            <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
+          </Transition.Child>
+
+          <div className="fixed inset-0 overflow-y-auto">
+            <div className="flex min-h-full items-center justify-center p-4 text-center">
+              <Transition.Child
+                as={React.Fragment}
+                enter="ease-out duration-300"
+                enterFrom="opacity-0 scale-95"
+                enterTo="opacity-100 scale-100"
+                leave="ease-in duration-200"
+                leaveFrom="opacity-100 scale-100"
+                leaveTo="opacity-0 scale-95"
+              >
+                <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
+                  <div className="flex items-center">
+                    <div className="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                      <ExclamationTriangleIcon className="h-6 w-6 text-red-600" aria-hidden="true" />
+                    </div>
+                    <div className="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
+                      <Dialog.Title as="h3" className="text-lg font-medium leading-6 text-gray-900">
+                        {confirmDialog.type === 'delete' ? 'Confirmar Exclusão' : 'Confirmar Alteração de Status'}
+                      </Dialog.Title>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-4">
+                    <p className="text-sm text-gray-500">
+                      {confirmDialog.type === 'delete' 
+                        ? `Tem certeza que deseja apagar o ficheiro "${confirmDialog.fileName}"? Esta ação não pode ser desfeita.`
+                        : `Tem certeza que deseja ${confirmDialog.isActive ? 'desativar' : 'ativar'} o ficheiro "${confirmDialog.fileName}"?`
+                      }
+                    </p>
+                  </div>
+
+                  <div className="mt-6 sm:flex sm:flex-row-reverse">
+                    <button
+                      type="button"
+                      className="inline-flex w-full justify-center rounded-md border border-transparent bg-red-600 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                      onClick={confirmAction}
+                      disabled={actionLoading}
+                    >
+                      {actionLoading ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                          Processando...
+                        </>
+                      ) : (
+                        confirmDialog.type === 'delete' ? 'Apagar' : (confirmDialog.isActive ? 'Desativar' : 'Ativar')
+                      )}
+                    </button>
+                    <button
+                      type="button"
+                      className="mt-3 inline-flex w-full justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-base font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                      onClick={closeConfirmDialog}
+                      disabled={actionLoading}
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </Dialog.Panel>
+              </Transition.Child>
+            </div>
+          </div>
+        </Dialog>
+      </Transition>
       
     </div>
   );
