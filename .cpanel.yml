@@ -3,7 +3,7 @@ deployment:
   tasks:
     - export DEPLOYPATH=/home/cotarco/public_html/distribuidores/
     - export REPOPATH=/home/cotarco/cotarco_app/
-
+    - export NODE_OPTIONS=--max_old_space_size=1024
     # 1. Instalar dependências e otimizar Laravel
     - /usr/local/bin/composer install -C ${REPOPATH}cotarco-api/ --no-dev --optimize-autoloader
     - /usr/local/bin/php ${REPOPATH}cotarco-api/artisan migrate --force
