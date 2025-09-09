@@ -18,7 +18,7 @@ import { AuthProvider } from './contexts/AuthContext';
 
 function AppContent() {
   return (
-    <Router>
+    <Router basename="/distribuidores">
       <div className="App">
         <Routes>
           {/* Rotas públicas */}
