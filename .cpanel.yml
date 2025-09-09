@@ -4,17 +4,28 @@ deployment:
     - export DEPLOYPATH=/home/cotarco/public_html/distribuidores/
     - export REPOPATH=/home/cotarco/cotarco_app/
     - export NODE_OPTIONS=--max_old_space_size=1024
+
+    - echo "--- Início do Deploy ---"
+
     # 1. Instalar dependências e otimizar Laravel
+    - echo "Passo 1: A instalar dependências do Composer..."
     - /usr/local/bin/composer install -C ${REPOPATH}cotarco-api/ --no-dev --optimize-autoloader
+    - echo "Passo 2: A executar migrações do Laravel..."
     - /usr/local/bin/php ${REPOPATH}cotarco-api/artisan migrate --force
+    - echo "Passo 3: A limpar caches do Laravel..."
     - /usr/local/bin/php ${REPOPATH}cotarco-api/artisan config:cache
     - /usr/local/bin/php ${REPOPATH}cotarco-api/artisan route:cache
     - /usr/local/bin/php ${REPOPATH}cotarco-api/artisan view:cache
 
     # 2. Instalar e fazer Build do Frontend
+    - echo "Passo 4: A instalar dependências do NPM (isto pode demorar)..."
     - cd ${REPOPATH}cotarco-client/ && npm install
+    - echo "Passo 5: A fazer a build do React..."
     - cd ${REPOPATH}cotarco-client/ && npm run build
 
     # 3. Copiar ficheiros para a pasta pública
+    - echo "Passo 6: A copiar ficheiros para a pasta pública..."
     - /bin/cp -a ${REPOPATH}cotarco-api/public/. ${DEPLOYPATH}
     - /bin/cp -a ${REPOPATH}cotarco-client/build/. ${DEPLOYPATH}
+
+    - echo "--- Fim do Deploy ---"
