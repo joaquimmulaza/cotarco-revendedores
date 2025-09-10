@@ -17,8 +17,8 @@ class ProductResource extends JsonResource
         return [
             'id' => $this['id'],
             'name' => $this['name'],
-            'price' => $this->extractNumericPrice($this['price']),
-            'formatted_price' => $this->formatPrice($this->extractNumericPrice($this['price'])),
+            'price' => $this->extractNumericPrice($this['regular_price']),
+            'formatted_price' => $this->formatPrice($this->extractNumericPrice($this['regular_price'])),
             'stock_status' => $this['stock_status'],
             'image_url' => $this->getFirstImageUrl(),
         ];
