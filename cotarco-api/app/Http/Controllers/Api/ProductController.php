@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\ProductResource;
 use App\Services\WooCommerceService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -32,7 +33,7 @@ class ProductController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $result['products'],
+            'data' => ProductResource::collection($result['products']),
             'pagination' => $result['pagination'],
             'message' => 'Produtos obtidos com sucesso'
         ]);

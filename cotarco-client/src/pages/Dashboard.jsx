@@ -2,6 +2,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useState, useEffect } from 'react';
 import StockFileDownloader from '../components/StockFileDownloader';
 import Header from '../components/Header';
+import ProductCard from '../components/ProductCard';
 import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
 import { productService } from '../services/api';
@@ -291,33 +292,7 @@ const Dashboard = () => {
                   <>
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 mb-6">
                       {products.map((product) => (
-                        <div
-                          key={product.id}
-                          className="border border-gray-200 rounded-lg p-4 text-center hover:border-primary hover:shadow-md transition-all duration-200 cursor-pointer"
-                        >
-                          {product.images && product.images.length > 0 ? (
-                            <img
-                              src={product.images[0].src}
-                              alt={product.name}
-                              className="w-16 h-16 object-cover mx-auto mb-2 rounded"
-                            />
-                          ) : (
-                            <div className="w-16 h-16 bg-gray-200 rounded mx-auto mb-2 flex items-center justify-center">
-                              <svg className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                              </svg>
-                            </div>
-                          )}
-                          <h4 className="text-sm font-medium text-gray-900 mb-1 line-clamp-2">
-                            {product.name}
-                          </h4>
-                          <p className="text-xs text-gray-500 mb-2">
-                            {product.price_html || 'Preço não disponível'}
-                          </p>
-                          <span className="text-xs text-gray-400">
-                            {product.stock_status === 'instock' ? 'Em stock' : 'Fora de stock'}
-                          </span>
-                        </div>
+                        <ProductCard key={product.id} product={product} />
                       ))}
                     </div>
 
