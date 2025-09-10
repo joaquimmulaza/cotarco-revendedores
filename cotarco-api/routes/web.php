@@ -4,9 +4,11 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+// Esta rota "apanha-tudo" vai garantir que qualquer pedido que não seja de API
+// carregue a sua aplicação React, em vez da página de boas-vindas do Laravel.
+Route::get('/{any?}', function () {
+    return file_get_contents(public_path('index.html'));
+})->where('any', '.*');
 
 // Rotas de verificação de email
 Route::get('/email/verify', function () {

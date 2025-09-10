@@ -4,6 +4,7 @@ import { authService } from '../services/api';
 import { config } from '../config/config';
 import { useAuth } from '../contexts/AuthContext';
 import logoCotarco from '../assets/logo-cotarco.png';
+import loginImage from '../assets/login-cotarco-distributor.webp';
 
 const AdminLogin = () => {
   const navigate = useNavigate();
@@ -58,89 +59,110 @@ const AdminLogin = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        {/* Logo da Cotarco */}
-        <div className="text-center mb-6">
-          <img 
-            src={logoCotarco} 
-            alt="Cotarco - Tecnologias e Comércio Geral" 
-            className="h-16 w-auto mx-auto mb-4"
-          />
-        </div>
+    <div className="min-h-screen bg-gray-50 flex">
+      {/* Lado esquerdo com imagem de fundo - oculto em mobile */}
+      <div className="hidden lg:flex lg:flex-1 relative">
+        {/* Imagem de fundo */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{
+            backgroundImage: `url(${loginImage})`
+          }}
+        />
         
-        <div className="text-center">
-          
-          <h2 className="mt-6 text-center text-3xl font-bold text-gray-600">
-            Painel de Administração
-          </h2>
-          
+        {/* Título sobreposto */}
+        <div className="relative z-10 flex items-center justify-center w-full">
+          <h1 className="text-5xl font-bold text-white text-center leading-tight drop-shadow-lg">
+            Distribua<br />
+            <span className="my-text-red drop-shadow-lg">Qualidade</span><br />
+            e Inovação
+          </h1>
         </div>
       </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10 border-primary">
-          {error && (
-            <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-              {error}
-            </div>
-          )}
+      {/* Lado direito com formulário */}
+      <div className="flex-1 flex flex-col justify-center py-12 px-6 sm:px-6 lg:px-8">
+        <div className="sm:mx-auto sm:w-full sm:max-w-md">
+          {/* Logo da Cotarco */}
+          <div className="text-center mb-6">
+            <img 
+              src={logoCotarco} 
+              alt="Cotarco - Tecnologias e Comércio Geral" 
+              className="h-16 w-auto mx-auto mb-4"
+            />
+          </div>
           
-          <form className="space-y-6" onSubmit={handleSubmit}>
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Email do Administrador
-              </label>
-              <div className="mt-1">
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  required
-                  value={formData.email}
-                  onChange={handleChange}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary"
-                  placeholder="admin@cotarco.com"
-                />
+          <div className="text-center">
+            <h2 className="mt-6 text-center text-3xl font-bold text-gray-600">
+              Painel de Administração
+            </h2>
+          </div>
+        </div>
+
+        <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+          <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10 border-primary">
+            {error && (
+              <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+                {error}
               </div>
-            </div>
-
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                Palavra-passe
-              </label>
-              <div className="mt-1">
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  required
-                  value={formData.password}
-                  onChange={handleChange}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary"
-                />
+            )}
+            
+            <form className="space-y-6" onSubmit={handleSubmit}>
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                  Email do Administrador
+                </label>
+                <div className="mt-1">
+                  <input
+                    id="email"
+                    name="email"
+                    type="email"
+                    required
+                    value={formData.email}
+                    onChange={handleChange}
+                    className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary"
+                    placeholder="admin@cotarco.com"
+                  />
+                </div>
               </div>
-            </div>
 
-            <div>
-              <button
-                type="submit"
-                disabled={loading}
-                className="cursor-pointer w-full my-bg-red flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-700 hover: focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? 'A entrar...' : 'Entrar no Painel'}
-              </button>
-            </div>
-          </form>
+              <div>
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                  Palavra-passe
+                </label>
+                <div className="mt-1">
+                  <input
+                    id="password"
+                    name="password"
+                    type="password"
+                    required
+                    value={formData.password}
+                    onChange={handleChange}
+                    className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary"
+                  />
+                </div>
+              </div>
 
-          <div className="mt-6">
-            <div className="text-center">
-              <Link
-                to="/"
-                className="font-medium text-gray-600 hover:text-gray-800"
-              >
-                ← Voltar ao site principal
-              </Link>
+              <div>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="cursor-pointer w-full my-bg-red flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-700 hover: focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loading ? 'A entrar...' : 'Entrar no Painel'}
+                </button>
+              </div>
+            </form>
+
+            <div className="mt-6">
+              <div className="text-center">
+                <Link
+                  to="/"
+                  className="font-medium text-gray-600 hover:text-gray-800"
+                >
+                  ← Voltar ao site principal
+                </Link>
+              </div>
             </div>
           </div>
         </div>
@@ -150,4 +172,3 @@ const AdminLogin = () => {
 };
 
 export default AdminLogin;
-
