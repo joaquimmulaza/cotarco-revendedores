@@ -19,6 +19,10 @@ const Dashboard = () => {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [loadingProducts, setLoadingProducts] = useState(true);
+  const [categoriesError, setCategoriesError] = useState(null);
+  const [productsError, setProductsError] = useState(null);
+  const [noCategories, setNoCategories] = useState(false);
+  const [noProducts, setNoProducts] = useState(false);
   const [paginationInfo, setPaginationInfo] = useState({
     currentPage: 1,
     totalPages: 1
@@ -34,13 +38,21 @@ const Dashboard = () => {
   useEffect(() => {
     const loadCategories = async () => {
       try {
+        setCategoriesError(null);
+        setNoCategories(false);
         const response = await productService.getCategories();
-        if (response.success && response.data.length > 0) {
-          setCategories(response.data);
-          setSelectedCategory(response.data[0].id);
+        if (response.success) {
+          if (response.data.length > 0) {
+            setCategories(response.data);
+            setSelectedCategory(response.data[0].id);
+          } else {
+            setNoCategories(true);
+            setCategories([]);
+          }
         }
       } catch (error) {
         console.error('Erro ao carregar categorias:', error);
+        setCategoriesError('Não foi possível carregar as categorias. Tente novamente mais tarde.');
       } finally {
         setLoadingCategories(false);
       }
@@ -56,20 +68,28 @@ const Dashboard = () => {
     const loadProducts = async () => {
       setLoadingProducts(true);
       try {
+        setProductsError(null);
+        setNoProducts(false);
         const response = await productService.getProducts(
           selectedCategory,
           paginationInfo.currentPage,
           12
         );
         if (response.success) {
-          setProducts(response.data);
-          setPaginationInfo(prev => ({
-            ...prev,
-            totalPages: response.pagination.total_pages
-          }));
+          if (response.data.length > 0) {
+            setProducts(response.data);
+            setPaginationInfo(prev => ({
+              ...prev,
+              totalPages: response.pagination.total_pages
+            }));
+          } else {
+            setNoProducts(true);
+            setProducts([]);
+          }
         }
       } catch (error) {
         console.error('Erro ao carregar produtos:', error);
+        setProductsError('Não foi possível carregar os produtos. Tente novamente mais tarde.');
       } finally {
         setLoadingProducts(false);
       }
@@ -179,6 +199,38 @@ const Dashboard = () => {
                 <h3 className="text-lg font-medium text-gray-900 mb-4">Categorias</h3>
                 {loadingCategories ? (
                   <p className="text-gray-500">A carregar categorias...</p>
+                ) : categoriesError ? (
+                  <div className="bg-red-50 border border-red-200 rounded-md p-4">
+                    <div className="flex">
+                      <div className="flex-shrink-0">
+                        <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                      <div className="ml-3">
+                        <h3 className="text-sm font-medium text-red-800">Erro ao carregar categorias</h3>
+                        <div className="mt-2 text-sm text-red-700">
+                          <p>{categoriesError}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : noCategories ? (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
+                    <div className="flex">
+                      <div className="flex-shrink-0">
+                        <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                      <div className="ml-3">
+                        <h3 className="text-sm font-medium text-yellow-800">Nenhuma categoria encontrada</h3>
+                        <div className="mt-2 text-sm text-yellow-700">
+                          <p>Nenhum produto encontrado no momento.</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 ) : (
                   <div className="flex flex-wrap gap-2">
                     {categories.map((category) => (
@@ -203,6 +255,38 @@ const Dashboard = () => {
                 <h3 className="text-lg font-medium text-gray-900 mb-4">Produtos</h3>
                 {loadingProducts ? (
                   <p className="text-gray-500">A carregar produtos...</p>
+                ) : productsError ? (
+                  <div className="bg-red-50 border border-red-200 rounded-md p-4">
+                    <div className="flex">
+                      <div className="flex-shrink-0">
+                        <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                      <div className="ml-3">
+                        <h3 className="text-sm font-medium text-red-800">Erro ao carregar produtos</h3>
+                        <div className="mt-2 text-sm text-red-700">
+                          <p>{productsError}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : noProducts ? (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
+                    <div className="flex">
+                      <div className="flex-shrink-0">
+                        <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                      <div className="ml-3">
+                        <h3 className="text-sm font-medium text-yellow-800">Nenhum produto encontrado</h3>
+                        <div className="mt-2 text-sm text-yellow-700">
+                          <p>Nenhum produto encontrado no momento.</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 ) : (
                   <>
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 mb-6">
