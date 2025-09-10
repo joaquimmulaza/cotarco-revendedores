@@ -2,6 +2,7 @@
 .DS_Store
 .env.backup
 .env
+.env.example
 .env.production
 .cpanel.yml
 .phpactor.json
