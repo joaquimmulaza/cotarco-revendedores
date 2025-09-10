@@ -72,6 +72,12 @@ class ProductResource extends JsonResource
      */
     private function getFirstImageUrl(): string
     {
+        // Verificar se é uma variação com imagem individual
+        if (isset($this['image']) && is_array($this['image']) && !empty($this['image']['src'])) {
+            return $this['image']['src'];
+        }
+
+        // Verificar array de imagens (produto simples ou variação com múltiplas imagens)
         if (empty($this['images']) || !is_array($this['images']) || count($this['images']) === 0) {
             return '';
         }
