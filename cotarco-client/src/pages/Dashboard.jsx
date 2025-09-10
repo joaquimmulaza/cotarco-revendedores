@@ -4,6 +4,7 @@ import StockFileDownloader from '../components/StockFileDownloader';
 import Header from '../components/Header';
 import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
+import { productService } from '../services/api';
 
 const Dashboard = () => {
   const { user, logout } = useAuth();
@@ -12,11 +13,70 @@ const Dashboard = () => {
   const [showStockMap, setShowStockMap] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  // Estados para produtos e categorias
+  const [categories, setCategories] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [loadingCategories, setLoadingCategories] = useState(true);
+  const [loadingProducts, setLoadingProducts] = useState(true);
+  const [paginationInfo, setPaginationInfo] = useState({
+    currentPage: 1,
+    totalPages: 1
+  });
+
   // Simular loading inicial
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 1500);
     return () => clearTimeout(timer);
   }, []);
+
+  // Carregar categorias na primeira renderização
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const response = await productService.getCategories();
+        if (response.success && response.data.length > 0) {
+          setCategories(response.data);
+          setSelectedCategory(response.data[0].id);
+        }
+      } catch (error) {
+        console.error('Erro ao carregar categorias:', error);
+      } finally {
+        setLoadingCategories(false);
+      }
+    };
+
+    loadCategories();
+  }, []);
+
+  // Carregar produtos quando selectedCategory ou paginationInfo.currentPage mudar
+  useEffect(() => {
+    if (selectedCategory === null) return;
+
+    const loadProducts = async () => {
+      setLoadingProducts(true);
+      try {
+        const response = await productService.getProducts(
+          selectedCategory,
+          paginationInfo.currentPage,
+          12
+        );
+        if (response.success) {
+          setProducts(response.data);
+          setPaginationInfo(prev => ({
+            ...prev,
+            totalPages: response.pagination.total_pages
+          }));
+        }
+      } catch (error) {
+        console.error('Erro ao carregar produtos:', error);
+      } finally {
+        setLoadingProducts(false);
+      }
+    };
+
+    loadProducts();
+  }, [selectedCategory, paginationInfo.currentPage]);
 
   const handleStockMapClick = () => {
     setShowStockMap(true);
@@ -24,6 +84,24 @@ const Dashboard = () => {
 
   const handleLogoClick = () => {
     setShowStockMap(false);
+  };
+
+  // Funções para manipular categorias e paginação
+  const handleCategorySelect = (categoryId) => {
+    setSelectedCategory(categoryId);
+    setPaginationInfo(prev => ({ ...prev, currentPage: 1 }));
+  };
+
+  const handlePreviousPage = () => {
+    if (paginationInfo.currentPage > 1) {
+      setPaginationInfo(prev => ({ ...prev, currentPage: prev.currentPage - 1 }));
+    }
+  };
+
+  const handleNextPage = () => {
+    if (paginationInfo.currentPage < paginationInfo.totalPages) {
+      setPaginationInfo(prev => ({ ...prev, currentPage: prev.currentPage + 1 }));
+    }
   };
 
   return (
@@ -96,32 +174,93 @@ const Dashboard = () => {
                 </div>
               </div>
 
-              {/* Under Construction Section */}
-              <div 
-                className="bg-gradient-to-br from-blue-50  to-indigo-100 border border-red-subtle rounded-2xl p-12 text-center"
-              >
-                <div
-                  className="mb-6"
-                >
-                  <div className="inline-flex items-center justify-center w-20 h-20 my-bg-red-op rounded-full mb-4">
-                    <svg className="w-10 h-10 my-text-red" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
-                    </svg>
+              {/* Categories Section */}
+              <div className="bg-white shadow rounded-lg p-6">
+                <h3 className="text-lg font-medium text-gray-900 mb-4">Categorias</h3>
+                {loadingCategories ? (
+                  <p className="text-gray-500">A carregar categorias...</p>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {categories.map((category) => (
+                      <button
+                        key={category.id}
+                        onClick={() => handleCategorySelect(category.id)}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                          selectedCategory === category.id
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
+                      >
+                        {category.name}
+                      </button>
+                    ))}
                   </div>
-                </div>
-                
-                <h2 
-                  className="text-4xl font-bold text-gray-900 mb-4"
-                >
-                  Em Construção
-                </h2>
-                
-                <p 
-                  className="text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed"
-                >
-                  Estamos a trabalhar para trazer-lhe funcionalidades ainda mais poderosas. 
-                  Esta secção estará disponível em breve...
-                </p>
+                )}
+              </div>
+
+              {/* Products Section */}
+              <div className="bg-white shadow rounded-lg p-6">
+                <h3 className="text-lg font-medium text-gray-900 mb-4">Produtos</h3>
+                {loadingProducts ? (
+                  <p className="text-gray-500">A carregar produtos...</p>
+                ) : (
+                  <>
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 mb-6">
+                      {products.map((product) => (
+                        <div
+                          key={product.id}
+                          className="border border-gray-200 rounded-lg p-4 text-center hover:border-primary hover:shadow-md transition-all duration-200 cursor-pointer"
+                        >
+                          {product.images && product.images.length > 0 ? (
+                            <img
+                              src={product.images[0].src}
+                              alt={product.name}
+                              className="w-16 h-16 object-cover mx-auto mb-2 rounded"
+                            />
+                          ) : (
+                            <div className="w-16 h-16 bg-gray-200 rounded mx-auto mb-2 flex items-center justify-center">
+                              <svg className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                              </svg>
+                            </div>
+                          )}
+                          <h4 className="text-sm font-medium text-gray-900 mb-1 line-clamp-2">
+                            {product.name}
+                          </h4>
+                          <p className="text-xs text-gray-500 mb-2">
+                            {product.price_html || 'Preço não disponível'}
+                          </p>
+                          <span className="text-xs text-gray-400">
+                            {product.stock_status === 'instock' ? 'Em stock' : 'Fora de stock'}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Pagination Controls */}
+                    {paginationInfo.totalPages > 1 && (
+                      <div className="flex items-center justify-between">
+                        <button
+                          onClick={handlePreviousPage}
+                          disabled={paginationInfo.currentPage === 1}
+                          className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          Anterior
+                        </button>
+                        <span className="text-sm text-gray-700">
+                          Página {paginationInfo.currentPage} de {paginationInfo.totalPages}
+                        </span>
+                        <button
+                          onClick={handleNextPage}
+                          disabled={paginationInfo.currentPage === paginationInfo.totalPages}
+                          className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          Próximo
+                        </button>
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 hidden">
                 <div 

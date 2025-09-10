@@ -470,4 +470,31 @@ export const parceiroService = {
 // Serviços para revendedores (mantido para compatibilidade)
 export const revendedorService = parceiroService;
 
+// Serviços de produtos e categorias
+export const productService = {
+  // Obter categorias ativas
+  async getCategories() {
+    try {
+      const response = await api.get('/categories');
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: 'Erro ao obter categorias' };
+    }
+  },
+
+  // Obter produtos com paginação e filtro de categoria
+  async getProducts(categoryId = null, page = 1, perPage = 12) {
+    try {
+      let url = `/products?page=${page}&per_page=${perPage}`;
+      if (categoryId) {
+        url += `&category_id=${categoryId}`;
+      }
+      const response = await api.get(url);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: 'Erro ao obter produtos' };
+    }
+  }
+};
+
 export default api;
