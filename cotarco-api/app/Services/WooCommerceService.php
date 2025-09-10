@@ -33,6 +33,10 @@ class WooCommerceService
                 ]);
 
             if ($response->successful()) {
+                Log::info('Resposta da API WooCommerce (Categorias):', [
+                    'status' => $response->status(),
+                    'body' => $response->json()
+                ]);
                 return $response->json();
             }
 
@@ -46,6 +50,8 @@ class WooCommerceService
         } catch (\Exception $e) {
             Log::error('Exceção ao buscar categorias do WooCommerce', [
                 'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
                 'trace' => $e->getTraceAsString()
             ]);
 
