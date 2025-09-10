@@ -149,7 +149,7 @@ const Dashboard = () => {
 
               {/* Product Grid - Placeholder */}
               <div 
-                className="bg-white shadow rounded-lg p-6"
+                className="bg-white shadow rounded-lg p-6 hidden"
               >
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                   {loading ? (

@@ -29,7 +29,8 @@ class WooCommerceService
             $response = Http::withBasicAuth($this->consumerKey, $this->consumerSecret)
                 ->get($this->storeUrl . '/wp-json/wc/v3/products/categories', [
                     'hide_empty' => true,
-                    'per_page' => 100
+                    'per_page' => 100,
+                    'parent' => 0
                 ]);
 
             if ($response->successful()) {
