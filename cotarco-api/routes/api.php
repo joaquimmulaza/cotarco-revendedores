@@ -7,6 +7,8 @@ use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\PartnerController;
 use App\Http\Controllers\StockFileController;
+use App\Http\Controllers\Api\ProductController;
+use App\Http\Controllers\Api\CategoryController;
 
 /*
 |--------------------------------------------------------------------------
@@ -80,5 +82,11 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('/download', [StockFileController::class, 'downloadForPartner']);
             Route::get('/{file}/download', [StockFileController::class, 'downloadSpecificFile']);
         });
+    });
+
+    // Rotas de Produtos e Categorias (protegidas por auth:sanctum e parceiro)
+    Route::middleware('parceiro')->group(function () {
+        Route::get('/categories', [CategoryController::class, 'index']);
+        Route::get('/products', [ProductController::class, 'index']);
     });
 });
