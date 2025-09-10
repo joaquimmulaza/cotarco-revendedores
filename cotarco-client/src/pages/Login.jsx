@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+// eslint-disable-next-line no-unused-vars
+import { motion } from 'framer-motion';
 import { authService } from '../services/api';
 import { config } from '../config/config';
 import { useAuth } from '../contexts/AuthContext';
@@ -17,6 +19,53 @@ const Login = () => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // Variantes de animação para o painel da imagem
+  const imagePanelVariants = {
+    hidden: { 
+      opacity: 0, 
+      x: -50 
+    },
+    visible: { 
+      opacity: 1, 
+      x: 0,
+      transition: {
+        duration: 0.7,
+        ease: "easeOut"
+      }
+    }
+  };
+
+  // Variantes para o contentor do formulário
+  const formContainerVariants = {
+    hidden: { 
+      opacity: 0 
+    },
+    visible: { 
+      opacity: 1,
+      transition: {
+        duration: 0.5,
+        staggerChildren: 0.15,
+        delayChildren: 0.2
+      }
+    }
+  };
+
+  // Variantes para os elementos individuais do formulário
+  const formItemVariants = {
+    hidden: { 
+      opacity: 0, 
+      y: 20 
+    },
+    visible: { 
+      opacity: 1, 
+      y: 0,
+      transition: {
+        duration: 0.4,
+        ease: "easeOut"
+      }
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -63,7 +112,12 @@ const Login = () => {
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {/* Lado esquerdo com imagem de fundo - oculto em mobile */}
-      <div className="hidden lg:flex lg:flex-1 relative">
+      <motion.div 
+        className="hidden lg:flex lg:flex-1 relative"
+        variants={imagePanelVariants}
+        initial="hidden"
+        animate="visible"
+      >
         {/* Imagem de fundo */}
         <div 
           className="absolute  inset-0 bg-cover bg-center bg-no-repeat"
@@ -80,35 +134,54 @@ const Login = () => {
             e Inovação
           </h1>
         </div>
-      </div>
+      </motion.div>
 
       {/* Lado direito com formulário */}
-      <div className="flex-1 flex flex-col justify-center py-12 px-6 sm:px-6 lg:px-8">
+      <motion.div 
+        className="flex-1 flex flex-col justify-center py-12 px-6 sm:px-6 lg:px-8"
+        variants={formContainerVariants}
+        initial="hidden"
+        animate="visible"
+      >
         <div className="sm:mx-auto sm:w-full sm:max-w-md">
           {/* Logo da Cotarco */}
-          <div className="text-center mb-6">
+          <motion.div 
+            className="text-center mb-6"
+            variants={formItemVariants}
+          >
             <img 
               src={logoCotarco} 
               alt="Cotarco - Tecnologias e Comércio Geral" 
               className="h-16 w-auto mx-auto mb-4"
             />
-          </div>
+          </motion.div>
           
-          <h2 className="mt-6 text-center text-3xl font-bold text-gray-600">
+          <motion.h2 
+            className="mt-6 text-center text-3xl font-bold text-gray-600"
+            variants={formItemVariants}
+          >
             Iniciar sessão
-          </h2>
+          </motion.h2>
         </div>
 
-        <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+        <motion.div 
+          className="mt-8 sm:mx-auto sm:w-full sm:max-w-md"
+          variants={formItemVariants}
+        >
           <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
             {error && (
-              <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+              <motion.div 
+                className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.3 }}
+              >
                 {error}
-              </div>
+              </motion.div>
             )}
             
             <form className="space-y-6" onSubmit={handleSubmit}>
-              <div>
+              <motion.div variants={formItemVariants}>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                   Email
                 </label>
@@ -123,9 +196,9 @@ const Login = () => {
                     className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary"
                   />
                 </div>
-              </div>
+              </motion.div>
 
-              <div>
+              <motion.div variants={formItemVariants}>
                 <div className="flex justify-between">
                   <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                     Palavra-passe
@@ -148,9 +221,9 @@ const Login = () => {
                   >
                     Esqueci a senha
                   </Link>
-              </div>
+              </motion.div>
 
-              <div>
+              <motion.div variants={formItemVariants}>
                 <button
                   type="submit"
                   disabled={loading}
@@ -165,10 +238,13 @@ const Login = () => {
                     'Entrar'
                   )}
                 </button>
-              </div>
+              </motion.div>
             </form>
 
-            <div className="mt-6">
+            <motion.div 
+              className="mt-6"
+              variants={formItemVariants}
+            >
               <div className="text-center">
                 <Link
                   to="/register"
@@ -177,10 +253,10 @@ const Login = () => {
                   Não tem conta? Registe-se aqui
                 </Link>
               </div>
-            </div>
+            </motion.div>
           </div>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
     </div>
   );
 };
