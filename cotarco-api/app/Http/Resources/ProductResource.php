@@ -15,11 +15,11 @@ class ProductResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id' => $this->id,
-            'name' => $this->name,
-            'price' => $this->extractNumericPrice($this->price),
-            'formatted_price' => $this->formatPrice($this->extractNumericPrice($this->price)),
-            'stock_status' => $this->stock_status,
+            'id' => $this['id'],
+            'name' => $this['name'],
+            'price' => $this->extractNumericPrice($this['price']),
+            'formatted_price' => $this->formatPrice($this->extractNumericPrice($this['price'])),
+            'stock_status' => $this['stock_status'],
             'image_url' => $this->getFirstImageUrl(),
         ];
     }
@@ -72,11 +72,11 @@ class ProductResource extends JsonResource
      */
     private function getFirstImageUrl(): string
     {
-        if (empty($this->images) || !is_array($this->images) || count($this->images) === 0) {
+        if (empty($this['images']) || !is_array($this['images']) || count($this['images']) === 0) {
             return '';
         }
 
-        $firstImage = $this->images[0];
+        $firstImage = $this['images'][0];
         
         if (is_array($firstImage) && isset($firstImage['src'])) {
             return $firstImage['src'];
