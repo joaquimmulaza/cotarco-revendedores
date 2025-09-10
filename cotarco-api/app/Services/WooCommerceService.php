@@ -72,7 +72,8 @@ class WooCommerceService
         try {
             $params = [
                 'page' => $page,
-                'per_page' => $perPage
+                'per_page' => $perPage,
+                'status' => 'publish'
             ];
 
             if ($categoryId !== null) {
