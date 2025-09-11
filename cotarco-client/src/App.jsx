@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider, Routes, Route } from 'react-router-dom';
 
 // Import pages
 import Login from './pages/Login';
@@ -17,43 +17,67 @@ import ProtectedRoute from './components/ProtectedRoute';
 import { AuthProvider } from './contexts/AuthContext';
 
 function AppContent() {
+  const router = createBrowserRouter([
+    {
+      path: "/",
+      element: <Login />
+    },
+    {
+      path: "/login",
+      element: <Login />
+    },
+    {
+      path: "/register",
+      element: <Register />
+    },
+    {
+      path: "/email-verification-pending",
+      element: <EmailVerificationPending />
+    },
+    {
+      path: "/email-validated",
+      element: <EmailValidated />
+    },
+    {
+      path: "/api-test",
+      element: <ApiTestPage />
+    },
+    {
+      path: "/forgot-password",
+      element: <ForgotPassword />
+    },
+    {
+      path: "/reset-password",
+      element: <ResetPassword />
+    },
+    {
+      path: "/dashboard",
+      element: (
+        <ProtectedRoute>
+          <Dashboard />
+        </ProtectedRoute>
+      )
+    },
+    {
+      path: "/admin/login",
+      element: <AdminLogin />
+    },
+    {
+      path: "/admin/dashboard",
+      element: (
+        <ProtectedRoute adminOnly={true}>
+          <AdminDashboard />
+        </ProtectedRoute>
+      )
+    }
+  ], {
+    basename: import.meta.env.VITE_APP_BASE_URL || '/'
+  });
+
   return (
-    <Router basename="/distribuidores">
-      <div className="App">
-        <Routes>
-          {/* Rotas públicas */}
-          <Route path="/" element={<Login />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/email-verification-pending" element={<EmailVerificationPending />} />
-          <Route path="/email-validated" element={<EmailValidated />} />
-          <Route path="/api-test" element={<ApiTestPage />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
-          
-          {/* Rota protegida do parceiro */}
-          <Route 
-            path="/dashboard" 
-            element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            } 
-          />
-          
-          {/* Rotas do admin */}
-          <Route path="/admin/login" element={<AdminLogin />} />
-          <Route 
-            path="/admin/dashboard" 
-            element={
-              <ProtectedRoute adminOnly={true}>
-                <AdminDashboard />
-              </ProtectedRoute>
-            } 
-          />
-        </Routes>
-      </div>
-    </Router>
+    <div className="App">
+      <RouterProvider router={router} />
+    </div>
   );
 }
 

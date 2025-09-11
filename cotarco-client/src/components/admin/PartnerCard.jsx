@@ -215,15 +215,21 @@ const PartnerCard = ({
             </span>
             
             {/* Role Badge */}
-            <span className={`text-xs font-medium px-2 py-1 rounded-full ${
-              partner.role === 'revendedor' ? 'bg-tags' :
-              partner.role === 'distribuidor' ? 'bg-tags' :
-              'bg-gray-100 text-gray-800'
-            }`}>
-              {partner.role === 'revendedor' ? 'Revendedor' :
-               partner.role === 'distribuidor' ? 'Distribuidor' :
-               partner.role}
-            </span>
+            {partner.role ? (
+              <span className={`text-xs font-medium px-2 py-1 rounded-full ${
+                partner.role === 'revendedor' ? 'bg-tags' :
+                partner.role === 'distribuidor' ? 'bg-tags' :
+                'bg-gray-100 text-gray-800'
+              }`}>
+                {partner.role === 'revendedor' ? 'Revendedor' :
+                 partner.role === 'distribuidor' ? 'Distribuidor' :
+                 partner.role}
+              </span>
+            ) : (
+              <span className="bg-yellow-200 text-yellow-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded">
+                A classificar
+              </span>
+            )}
             
           </div>
           <span className="text-sm text-gray-500 ">

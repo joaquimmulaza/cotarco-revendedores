@@ -23,8 +23,6 @@ class RegisterController extends Controller
             'phone_number' => 'required|string|max:20',
             'company_name' => 'required|string|max:255',
             'password' => 'required|string|min:8|confirmed',
-            'role' => 'required|in:revendedor,distribuidor',
-            'business_model' => 'sometimes|in:B2B,B2C',
             'alvara' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048',
         ], [
             'alvara.required' => 'O arquivo do alvará é obrigatório.',
@@ -34,8 +32,6 @@ class RegisterController extends Controller
             'email.unique' => 'Este email já está registrado.',
             'password.confirmed' => 'A confirmação da palavra-passe não confere.',
             'password.min' => 'A palavra-passe deve ter pelo menos 8 caracteres.',
-            'role.required' => 'O tipo de parceiro é obrigatório.',
-            'role.in' => 'O tipo de parceiro deve ser revendedor ou distribuidor.',
         ]);
 
         try {
