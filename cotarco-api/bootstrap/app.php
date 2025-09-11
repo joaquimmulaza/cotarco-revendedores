@@ -8,14 +8,10 @@ use Illuminate\Support\Facades\Route;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
+        web: __DIR__.'/../routes/web.php',
         api: __DIR__.'/../routes/api.php',
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
-        then: function () {
-            Route::middleware('web')
-                ->prefix('distribuidores')
-                ->group(base_path('routes/web.php'));
-        },
     )
     ->withMiddleware(function (Middleware $middleware): void {
         // API sem middleware stateful do Sanctum, pois usamos Bearer tokens

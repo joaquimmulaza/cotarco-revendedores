@@ -155,19 +155,32 @@ class AdminController extends Controller
     {
         try {
             // Contar parceiros por status (excluindo pending_email_validation)
-            $pendingCount = User::whereIn('role', ['revendedor', 'distribuidor'])
+            // Incluir utilizadores com role null (não classificados) e role revendedor/distribuidor
+            $pendingCount = User::where(function($q) {
+                $q->whereIn('role', ['revendedor', 'distribuidor'])
+                  ->orWhereNull('role');
+            })
                 ->where('status', 'pending_approval')
                 ->count();
 
-            $activeCount = User::whereIn('role', ['revendedor', 'distribuidor'])
+            $activeCount = User::where(function($q) {
+                $q->whereIn('role', ['revendedor', 'distribuidor'])
+                  ->orWhereNull('role');
+            })
                 ->where('status', 'active')
                 ->count();
 
-            $rejectedCount = User::whereIn('role', ['revendedor', 'distribuidor'])
+            $rejectedCount = User::where(function($q) {
+                $q->whereIn('role', ['revendedor', 'distribuidor'])
+                  ->orWhereNull('role');
+            })
                 ->where('status', 'rejected')
                 ->count();
 
-            $inactiveCount = User::whereIn('role', ['revendedor', 'distribuidor'])
+            $inactiveCount = User::where(function($q) {
+                $q->whereIn('role', ['revendedor', 'distribuidor'])
+                  ->orWhereNull('role');
+            })
                 ->where('status', 'inactive')
                 ->count();
 
