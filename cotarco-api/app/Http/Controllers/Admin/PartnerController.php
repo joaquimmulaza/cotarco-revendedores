@@ -29,11 +29,16 @@ class PartnerController extends Controller
     public function index(Request $request): JsonResponse
     {
         $query = User::with('partnerProfile')
-            ->whereIn('role', ['revendedor', 'distribuidor']);
+            ->where(function($q) {
+                $q->whereIn('role', ['revendedor', 'distribuidor'])
+                  ->orWhereNull('role');
+            });
 
         // Filtros
         if ($request->has('role') && in_array($request->role, ['revendedor', 'distribuidor'])) {
             $query->where('role', $request->role);
+        } elseif ($request->has('role') && $request->role === 'null') {
+            $query->whereNull('role');
         }
         
         if ($request->has('status') && in_array($request->status, ['pending_approval', 'active', 'rejected', 'inactive', 'suspended'])) {
@@ -100,7 +105,7 @@ class PartnerController extends Controller
     {
         $partner->load('partnerProfile');
 
-        if (!in_array($partner->role, ['revendedor', 'distribuidor'])) {
+        if (!in_array($partner->role, ['revendedor', 'distribuidor']) && $partner->role !== null) {
             return response()->json(['message' => 'Utilizador não é um parceiro.'], 404);
         }
 
@@ -120,8 +125,8 @@ class PartnerController extends Controller
             'business_model' => 'required|in:B2B,B2C',
         ]);
 
-        // Verificar se o usuário é um parceiro
-        if (!in_array($user->role, ['revendedor', 'distribuidor'])) {
+        // Verificar se o usuário é um parceiro (revendedor, distribuidor ou null - não classificado)
+        if (!in_array($user->role, ['revendedor', 'distribuidor']) && $user->role !== null) {
             return response()->json(['message' => 'Utilizador não é um parceiro.'], 404);
         }
 
@@ -182,10 +187,10 @@ class PartnerController extends Controller
             'status' => 'required|in:active,suspended,pending_approval,rejected,inactive'
         ]);
     
-        // Verificar se o usuário é um parceiro (revendedor ou distribuidor)
-        if (!in_array($user->role, ['revendedor', 'distribuidor'])) {
+        // Verificar se o usuário é um parceiro (revendedor, distribuidor ou null - não classificado)
+        if (!in_array($user->role, ['revendedor', 'distribuidor']) && $user->role !== null) {
             return response()->json([
-                'message' => 'Este usuário não é um parceiro válido (revendedor ou distribuidor).',
+                'message' => 'Este usuário não é um parceiro válido.',
             ], 400);
         }
 
@@ -284,7 +289,7 @@ class PartnerController extends Controller
             'business_model' => 'sometimes|in:B2B,B2C',
         ]);
 
-        if (!in_array($partner->role, ['revendedor', 'distribuidor'])) {
+        if (!in_array($partner->role, ['revendedor', 'distribuidor']) && $partner->role !== null) {
             return response()->json(['message' => 'Utilizador não é um parceiro.'], 404);
         }
 
@@ -305,19 +310,27 @@ class PartnerController extends Controller
     {
         $stats = DB::table('users')
             ->selectRaw('
-                role,
+                COALESCE(role, "null") as role,
                 status,
                 COUNT(*) as count
             ')
-            ->whereIn('role', ['revendedor', 'distribuidor'])
+            ->where(function($q) {
+                $q->whereIn('role', ['revendedor', 'distribuidor'])
+                  ->orWhereNull('role');
+            })
             ->groupBy('role', 'status')
             ->get()
             ->groupBy('role');
 
-        $totalPartners = User::whereIn('role', ['revendedor', 'distribuidor'])->count();
-        $activePartners = User::whereIn('role', ['revendedor', 'distribuidor'])
-            ->where('status', 'active')
-            ->count();
+        $totalPartners = User::where(function($q) {
+            $q->whereIn('role', ['revendedor', 'distribuidor'])
+              ->orWhereNull('role');
+        })->count();
+        
+        $activePartners = User::where(function($q) {
+            $q->whereIn('role', ['revendedor', 'distribuidor'])
+              ->orWhereNull('role');
+        })->where('status', 'active')->count();
 
         return response()->json([
             'total_partners' => $totalPartners,
@@ -338,8 +351,8 @@ class PartnerController extends Controller
      */
     public function downloadAlvara(User $user, Request $request)
     {
-        // Verificar se o usuário é um parceiro (revendedor ou distribuidor)
-        if (!in_array($user->role, ['revendedor', 'distribuidor'])) {
+        // Verificar se o usuário é um parceiro (revendedor, distribuidor ou null - não classificado)
+        if (!in_array($user->role, ['revendedor', 'distribuidor']) && $user->role !== null) {
             return response()->json([
                 'message' => 'Este usuário não é um parceiro.',
             ], 400);
