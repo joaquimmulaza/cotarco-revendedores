@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Tab, TabGroup, TabList, TabPanel, TabPanels } from '@headlessui/react';
 import { useAuth } from '../../contexts/AuthContext';
 import { adminService } from '../../services/api';
@@ -33,6 +33,8 @@ const PartnerManager = () => {
   const tabStatusMap = ['pending_approval', 'active', 'rejected', 'inactive'];
   const currentStatus = tabStatusMap[selectedTabIndex];
   
+  console.log(`[PartnerManager] Current state - Tab: ${selectedTabIndex}, Status: ${currentStatus}, Page: ${currentPage}`);
+  
   // Usar o hook customizado para gerenciar dados dos parceiros
   const { partners, pagination, loading, error, refetch: fetchPartners } = usePartners(
     currentStatus, 
@@ -55,12 +57,12 @@ const PartnerManager = () => {
   });
   const [statsLoading, setStatsLoading] = useState(true);
 
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     try {
       setStatsLoading(true);
       const response = await adminService.getDashboardStats();
       if (response.data) {
-        setStats({
+        const newStats = {
           parceiros: {
             pending_approval: response.data.parceiros?.pending_approval || 0,
             active: response.data.parceiros?.active || 0,
@@ -74,7 +76,10 @@ const PartnerManager = () => {
           orders: {
             active_count: response.data.orders?.active_count || 0
           }
-        });
+        };
+        
+        console.log('[PartnerManager] Stats loaded:', newStats);
+        setStats(newStats);
       }
     } catch (error) {
       console.error('Erro ao carregar estatísticas:', error);
@@ -82,12 +87,12 @@ const PartnerManager = () => {
     } finally {
       setStatsLoading(false);
     }
-  };
+  }, []);
 
-
-  // Carregar estatísticas
+  // Carregar estatísticas iniciais
   useEffect(() => {
     if (!authLoading && isAdmin) {
+      console.log('[PartnerManager] Loading initial stats');
       fetchStats();
       
       const interval = setInterval(() => {
@@ -96,15 +101,7 @@ const PartnerManager = () => {
       
       return () => clearInterval(interval);
     }
-  }, [authLoading, isAdmin]);
-
-  // Atualizar estatísticas quando os parceiros mudarem
-  useEffect(() => {
-    if (!authLoading && isAdmin && partners.length >= 0) {
-      fetchStats();
-    }
-  }, [partners.length, authLoading, isAdmin]);
-
+  }, [authLoading, isAdmin, fetchStats]);
 
   const handleEditSubmit = async (partnerId, formData) => {
     try {
@@ -114,6 +111,7 @@ const PartnerManager = () => {
       
       closeEditModal();
       
+      // Atualizar dados
       await Promise.all([
         fetchPartners(),
         fetchStats()
@@ -129,17 +127,31 @@ const PartnerManager = () => {
     }
   };
 
-  const handleTabChange = async (index) => {
+  const handleTabChange = useCallback(async (index) => {
+    console.log(`[PartnerManager] Tab change requested from ${selectedTabIndex} to ${index}`);
+    
+    // Só fazer algo se a tab realmente mudou
+    if (index === selectedTabIndex) {
+      console.log('[PartnerManager] Tab unchanged, skipping');
+      return;
+    }
+    
     setSelectedTabIndex(index);
+    // IMPORTANTE: Resetar página para 1 quando mudar de tab
     setCurrentPage(1);
     
+    // Atualizar estatísticas para manter dados sincronizados
     if (!authLoading && isAdmin) {
-      // Atualizar estatísticas primeiro
       await fetchStats();
-      // Depois recarregar os parceiros
-      fetchPartners();
     }
-  };
+  }, [selectedTabIndex, authLoading, isAdmin, fetchStats]);
+
+  const handlePageChange = useCallback((newPage) => {
+    console.log(`[PartnerManager] Page change requested from ${currentPage} to ${newPage}`);
+    if (newPage !== currentPage) {
+      setCurrentPage(newPage);
+    }
+  }, [currentPage]);
 
   const handleViewAlvara = async (userId) => {
     try {
@@ -169,6 +181,7 @@ const PartnerManager = () => {
       
       await adminService.updatePartnerStatus(confirmPartner.id, confirmAction);
       
+      // Atualizar dados
       await Promise.all([
         fetchPartners(),
         fetchStats()
@@ -279,7 +292,7 @@ const PartnerManager = () => {
     return types[confirmAction] || 'warning';
   };
 
-  console.log(`[PartnerManager] A passar parceiros para a lista com status '${currentStatus}':`, partners);
+  console.log(`[PartnerManager] Rendering with ${partners.length} partners for status '${currentStatus}'`);
 
   return (
     <div className="bg-white shadow rounded-lg">
@@ -338,266 +351,74 @@ const PartnerManager = () => {
           </TabList>
           
           <TabPanels>
-            <TabPanel>
-              <div className="px-6 py-4">
-                {authLoading ? (
-                  <div className="space-y-4">
-                    {/* Skeleton para a lista de parceiros */}
+            {/* Todos os painéis renderizam o mesmo conteúdo, mas com status diferentes */}
+            {tabStatusMap.map((status, index) => (
+              <TabPanel key={status}>
+                <div className="px-6 py-4">
+                  {authLoading ? (
                     <div className="space-y-4">
-                      {Array.from({ length: 3 }).map((_, index) => (
-                        <div key={index} className="border border-gray-200 rounded-lg p-6">
-                          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
-                            <div className="flex-1">
-                              <div className="flex items-center justify-between mb-3">
-                                <div className="flex items-center space-x-3">
-                                  <Skeleton width={128} height={24} />
-                                  <Skeleton width={80} height={20} />
-                                  <Skeleton width={96} height={20} />
-                                </div>
-                                <Skeleton width={128} height={20} />
-                              </div>
-                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                                {Array.from({ length: 4 }).map((_, i) => (
-                                  <div key={i} className="flex items-center">
-                                    <Skeleton width={64} height={16} className="mr-2" />
-                                    <Skeleton width={96} height={16} />
+                      {/* Skeleton para a lista de parceiros */}
+                      <div className="space-y-4">
+                        {Array.from({ length: 3 }).map((_, index) => (
+                          <div key={index} className="border border-gray-200 rounded-lg p-6">
+                            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center justify-between mb-3">
+                                  <div className="flex items-center space-x-3">
+                                    <Skeleton width={128} height={24} />
+                                    <Skeleton width={80} height={20} />
+                                    <Skeleton width={96} height={20} />
                                   </div>
+                                  <Skeleton width={128} height={20} />
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                  {Array.from({ length: 4 }).map((_, i) => (
+                                    <div key={i} className="flex items-center">
+                                      <Skeleton width={64} height={16} className="mr-2" />
+                                      <Skeleton width={96} height={16} />
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                              <div className="flex flex-col sm:flex-row gap-2 mt-4 lg:mt-0 lg:ml-6">
+                                {Array.from({ length: 3 }).map((_, i) => (
+                                  <Skeleton key={i} width={80} height={32} />
                                 ))}
                               </div>
                             </div>
-                            <div className="flex flex-col sm:flex-row gap-2 mt-4 lg:mt-0 lg:ml-6">
-                              {Array.from({ length: 3 }).map((_, i) => (
-                                <Skeleton key={i} width={80} height={32} />
-                              ))}
-                            </div>
                           </div>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
+                      
+                      {/* Skeleton para paginação */}
+                      <div className="flex justify-center mt-6">
+                        <Skeleton height={40} width={200} />
+                      </div>
                     </div>
-                    
-                    {/* Skeleton para paginação */}
-                    <div className="flex justify-center mt-6">
-                      <Skeleton height={40} width={200} />
-                    </div>
-                  </div>
-                ) : (
-                  <>
-                    <PartnerList
-                      partners={partners}
-                      loading={loading}
-                      error={error}
-                      currentStatus={currentStatus}
-                      actionLoading={actionLoading}
-                      onUpdateStatus={handleStatusAction}
-                      onEdit={openEditModal}
-                      onViewAlvara={handleViewAlvara}
-                      onRetry={fetchPartners}
-                    />
-                    
-                    <Pagination
-                      pagination={pagination}
-                      currentPage={currentPage}
-                      onPageChange={setCurrentPage}
-                    />
-                  </>
-                )}
-              </div>
-            </TabPanel>
-            <TabPanel>
-              <div className="px-6 py-4">
-                {authLoading ? (
-                  <div className="space-y-4">
-                    {/* Skeleton para a lista de parceiros */}
-                    <div className="space-y-4">
-                      {Array.from({ length: 3 }).map((_, index) => (
-                        <div key={index} className="border border-gray-200 rounded-lg p-6">
-                          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
-                            <div className="flex-1">
-                              <div className="flex items-center justify-between mb-3">
-                                <div className="flex items-center space-x-3">
-                                  <Skeleton width={128} height={24} />
-                                  <Skeleton width={80} height={20} />
-                                  <Skeleton width={96} height={20} />
-                                </div>
-                                <Skeleton width={128} height={20} />
-                              </div>
-                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                                {Array.from({ length: 4 }).map((_, i) => (
-                                  <div key={i} className="flex items-center">
-                                    <Skeleton width={64} height={16} className="mr-2" />
-                                    <Skeleton width={96} height={16} />
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                            <div className="flex flex-col sm:flex-row gap-2 mt-4 lg:mt-0 lg:ml-6">
-                              {Array.from({ length: 3 }).map((_, i) => (
-                                <Skeleton key={i} width={80} height={32} />
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                    
-                    {/* Skeleton para paginação */}
-                    <div className="flex justify-center mt-6">
-                      <Skeleton height={40} width={200} />
-                    </div>
-                  </div>
-                ) : (
-                  <>
-                    <PartnerList
-                      partners={partners}
-                      loading={loading}
-                      error={error}
-                      currentStatus={currentStatus}
-                      actionLoading={actionLoading}
-                      onUpdateStatus={handleStatusAction}
-                      onEdit={openEditModal}
-                      onViewAlvara={handleViewAlvara}
-                      onRetry={fetchPartners}
-                    />
-                    
-                    <Pagination
-                      pagination={pagination}
-                      currentPage={currentPage}
-                      onPageChange={setCurrentPage}
-                    />
-                  </>
-                )}
-              </div>
-            </TabPanel>
-            <TabPanel>
-              <div className="px-6 py-4">
-                {authLoading ? (
-                  <div className="space-y-4">
-                    {/* Skeleton para a lista de parceiros */}
-                    <div className="space-y-4">
-                      {Array.from({ length: 3 }).map((_, index) => (
-                        <div key={index} className="border border-gray-200 rounded-lg p-6">
-                          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
-                            <div className="flex-1">
-                              <div className="flex items-center justify-between mb-3">
-                                <div className="flex items-center space-x-3">
-                                  <Skeleton width={128} height={24} />
-                                  <Skeleton width={80} height={20} />
-                                  <Skeleton width={96} height={20} />
-                                </div>
-                                <Skeleton width={128} height={20} />
-                              </div>
-                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                                {Array.from({ length: 4 }).map((_, i) => (
-                                  <div key={i} className="flex items-center">
-                                    <Skeleton width={64} height={16} className="mr-2" />
-                                    <Skeleton width={96} height={16} />
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                            <div className="flex flex-col sm:flex-row gap-2 mt-4 lg:mt-0 lg:ml-6">
-                              {Array.from({ length: 3 }).map((_, i) => (
-                                <Skeleton key={i} width={80} height={32} />
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                    
-                    {/* Skeleton para paginação */}
-                    <div className="flex justify-center mt-6">
-                      <Skeleton height={40} width={200} />
-                    </div>
-                  </div>
-                ) : (
-                  <>
-                    <PartnerList
-                      partners={partners}
-                      loading={loading}
-                      error={error}
-                      currentStatus={currentStatus}
-                      actionLoading={actionLoading}
-                      onUpdateStatus={handleStatusAction}
-                      onEdit={openEditModal}
-                      onViewAlvara={handleViewAlvara}
-                      onRetry={fetchPartners}
-                    />
-                    
-                    <Pagination
-                      pagination={pagination}
-                      currentPage={currentPage}
-                      onPageChange={setCurrentPage}
-                    />
-                  </>
-                )}
-              </div>
-            </TabPanel>
-            <TabPanel>
-              <div className="px-6 py-4">
-                {authLoading ? (
-                  <div className="space-y-4">
-                    {/* Skeleton para a lista de parceiros */}
-                    <div className="space-y-4">
-                      {Array.from({ length: 3 }).map((_, index) => (
-                        <div key={index} className="border border-gray-200 rounded-lg p-6">
-                          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
-                            <div className="flex-1">
-                              <div className="flex items-center justify-between mb-3">
-                                <div className="flex items-center space-x-3">
-                                  <Skeleton width={128} height={24} />
-                                  <Skeleton width={80} height={20} />
-                                  <Skeleton width={96} height={20} />
-                                </div>
-                                <Skeleton width={128} height={20} />
-                              </div>
-                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                                {Array.from({ length: 4 }).map((_, i) => (
-                                  <div key={i} className="flex items-center">
-                                    <Skeleton width={64} height={16} className="mr-2" />
-                                    <Skeleton width={96} height={16} />
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                            <div className="flex flex-col sm:flex-row gap-2 mt-4 lg:mt-0 lg:ml-6">
-                              {Array.from({ length: 3 }).map((_, i) => (
-                                <Skeleton key={i} width={80} height={32} />
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                    
-                    {/* Skeleton para paginação */}
-                    <div className="flex justify-center mt-6">
-                      <Skeleton height={40} width={200} />
-                    </div>
-                  </div>
-                ) : (
-                  <>
-                    <PartnerList
-                      partners={partners}
-                      loading={loading}
-                      error={error}
-                      currentStatus={currentStatus}
-                      actionLoading={actionLoading}
-                      onUpdateStatus={handleStatusAction}
-                      onEdit={openEditModal}
-                      onViewAlvara={handleViewAlvara}
-                      onRetry={fetchPartners}
-                    />
-                    
-                    <Pagination
-                      pagination={pagination}
-                      currentPage={currentPage}
-                      onPageChange={setCurrentPage}
-                    />
-                  </>
-                )}
-              </div>
-            </TabPanel>
+                  ) : (
+                    <>
+                      <PartnerList
+                        partners={partners}
+                        loading={loading}
+                        error={error}
+                        currentStatus={currentStatus}
+                        actionLoading={actionLoading}
+                        onUpdateStatus={handleStatusAction}
+                        onEdit={openEditModal}
+                        onViewAlvara={handleViewAlvara}
+                        onRetry={fetchPartners}
+                      />
+                      
+                      <Pagination
+                        pagination={pagination}
+                        currentPage={currentPage}
+                        onPageChange={handlePageChange}
+                      />
+                    </>
+                  )}
+                </div>
+              </TabPanel>
+            ))}
           </TabPanels>
         </TabGroup>
       </div>

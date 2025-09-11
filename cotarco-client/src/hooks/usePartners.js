@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { adminService } from '../services/api';
 import toast from 'react-hot-toast';
 
@@ -16,41 +16,108 @@ export const usePartners = (status, page, isAdmin, authLoading) => {
   const [error, setError] = useState('');
   const [partners, setPartners] = useState([]);
   const [pagination, setPagination] = useState(null);
+  
+  // Ref para cancelar requisições pendentes
+  const abortControllerRef = useRef(null);
+  
+  // Ref para track do último status/page requisitado
+  const lastRequestRef = useRef({ status: null, page: null });
 
-  // fetchPartners agora é uma função normal
-  const fetchPartners = async () => {
+  // fetchPartners usando useCallback para estabilizar a referência
+  const fetchPartners = useCallback(async () => {
     // Só buscar dados se o usuário for admin e não estiver carregando
     if (!isAdmin || authLoading) {
+      console.log(`[usePartners] Skipping fetch - isAdmin: ${isAdmin}, authLoading: ${authLoading}`);
       return;
     }
 
+    // Cancelar requisição anterior se existir
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    // Criar novo AbortController para esta requisição
+    abortControllerRef.current = new AbortController();
+    
     try {
       setLoading(true);
       setError('');
+      
+      console.log(`[usePartners] Fetching partners - Status: ${status}, Page: ${page}`);
+      
+      // Track da requisição atual
+      lastRequestRef.current = { status, page };
+      
       const response = await adminService.getPartners(status, page);
-      setPartners(response.partners || []);
-      console.log(`[usePartners] Dados recebidos da API para status '${status}':`, response.partners || []);
-      setPagination(response.pagination || null);
+      
+      // Verificar se esta ainda é a requisição mais recente
+      if (lastRequestRef.current.status === status && lastRequestRef.current.page === page) {
+        setPartners(response.partners || []);
+        setPagination(response.pagination || null);
+        console.log(`[usePartners] Successfully loaded ${(response.partners || []).length} partners for status '${status}', page ${page}`);
+      } else {
+        console.log(`[usePartners] Discarding stale response for status '${status}', page ${page}`);
+      }
+      
     } catch (error) {
+      // Ignorar erros de cancelamento
+      if (error.name === 'AbortError') {
+        console.log(`[usePartners] Request aborted for status '${status}', page ${page}`);
+        return;
+      }
+      
       console.error('Erro ao carregar parceiros:', error);
-      const errorMessage = error.message || 'Erro ao carregar dados';
-      setError(errorMessage);
-      toast.error(errorMessage);
+      
+      // Só mostrar erro se esta ainda é a requisição mais recente
+      if (lastRequestRef.current.status === status && lastRequestRef.current.page === page) {
+        const errorMessage = error.message || 'Erro ao carregar dados';
+        setError(errorMessage);
+        setPartners([]); // Limpar dados antigos em caso de erro
+        setPagination(null);
+        toast.error(errorMessage);
+      }
     } finally {
-      setLoading(false);
+      // Só parar loading se esta ainda é a requisição mais recente
+      if (lastRequestRef.current.status === status && lastRequestRef.current.page === page) {
+        setLoading(false);
+      }
     }
-  };
-
-  // Carregar parceiros quando os parâmetros mudarem
-  useEffect(() => {
-    fetchPartners();
   }, [status, page, isAdmin, authLoading]);
+
+  // Effect para carregar dados quando os parâmetros mudarem
+  useEffect(() => {
+    console.log(`[usePartners] useEffect triggered - Status: ${status}, Page: ${page}, IsAdmin: ${isAdmin}, AuthLoading: ${authLoading}`);
+    
+    // Reset estado quando mudar de status (nova tab)
+    if (lastRequestRef.current.status !== status) {
+      console.log(`[usePartners] Status changed from '${lastRequestRef.current.status}' to '${status}', resetting state`);
+      setPartners([]);
+      setPagination(null);
+      setError('');
+    }
+    
+    fetchPartners();
+
+    // Cleanup: cancelar requisição ao desmontar ou quando dependências mudarem
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+        abortControllerRef.current = null;
+      }
+    };
+  }, [fetchPartners]);
+
+  // Função refetch que mantém os parâmetros atuais
+  const refetch = useCallback(() => {
+    console.log(`[usePartners] Manual refetch requested for status '${status}', page ${page}`);
+    fetchPartners();
+  }, [fetchPartners]);
 
   return {
     partners,
     pagination,
     loading,
     error,
-    refetch: fetchPartners
+    refetch
   };
 };
