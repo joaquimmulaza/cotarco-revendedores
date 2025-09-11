@@ -26,7 +26,6 @@ const Register = () => {
       confirmPassword: '',
       phone: '',
       company: '',
-      role: '',
       alvara: null
     }
   });
@@ -49,7 +48,6 @@ const Register = () => {
       formData.append('password_confirmation', data.confirmPassword);
       formData.append('phone_number', data.phone);
       formData.append('company_name', data.company);
-      formData.append('role', data.role);
       if (data.alvara && data.alvara[0]) {
         formData.append('alvara', data.alvara[0]);
       }
@@ -190,28 +188,6 @@ const Register = () => {
               </div>
             </div>
 
-            <div>
-              <label htmlFor="role" className="block text-sm font-medium text-gray-700">
-                Tipo de Conta
-              </label>
-              <div className="mt-1">
-                <select
-                  id="role"
-                  {...register('role', { required: 'Tipo de conta é obrigatório' })}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary"
-                >
-                  <option value="">Selecione uma opção...</option>
-                  <option value="revendedor">Revendedor</option>
-                  <option value="distribuidor">Distribuidor</option>
-                </select>
-                {errors.role && (
-                  <p className="mt-1 text-sm text-red-600">{errors.role.message}</p>
-                )}
-                {fieldErrors.role && (
-                  <p className="mt-1 text-sm text-red-600">{fieldErrors.role[0]}</p>
-                )}
-              </div>
-            </div>
 
             <div>
               <label htmlFor="alvara" className="block text-sm font-medium text-gray-700">

@@ -33,7 +33,7 @@ class RegisterPartnerAction
                 'name' => $validatedData['name'],
                 'email' => $validatedData['email'],
                 'password' => Hash::make($validatedData['password']),
-                'role' => $validatedData['role'],
+                'role' => null,
                 'status' => 'pending_email_validation',
             ]);
 
@@ -55,7 +55,6 @@ class RegisterPartnerAction
                 'company_name' => $validatedData['company_name'],
                 'phone_number' => $validatedData['phone_number'],
                 'alvara_path' => $alvaraPath,
-                'business_model' => $validatedData['business_model'] ?? 'B2B', // Valor padrão
             ]);
 
             // 4. Disparar o evento Registered para envio de email de verificação
