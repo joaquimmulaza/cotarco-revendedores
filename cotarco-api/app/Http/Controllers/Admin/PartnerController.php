@@ -29,21 +29,41 @@ class PartnerController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
+        // Log da requisição recebida
+        Log::info('PartnerController::index - Requisição recebida', [
+            'params' => $request->all(),
+            'user_id' => auth()->id(),
+            'timestamp' => now()
+        ]);
+
         $query = User::with('partnerProfile')
             ->where(function($q) {
                 $q->whereIn('role', ['revendedor', 'distribuidor'])
                   ->orWhereNull('role');
             });
 
+        // Log da query base
+        Log::info('PartnerController::index - Query base construída', [
+            'base_sql' => $query->toSql(),
+            'base_bindings' => $query->getBindings()
+        ]);
+
         // Filtros
         if ($request->has('role') && in_array($request->role, ['revendedor', 'distribuidor'])) {
             $query->where('role', $request->role);
+            Log::info('PartnerController::index - Filtro role aplicado', [
+                'role' => $request->role
+            ]);
         } elseif ($request->has('role') && $request->role === 'null') {
             $query->whereNull('role');
+            Log::info('PartnerController::index - Filtro role null aplicado');
         }
         
         if ($request->has('status') && in_array($request->status, ['pending_approval', 'active', 'rejected', 'inactive', 'suspended'])) {
             $query->where('status', $request->status);
+            Log::info('PartnerController::index - Filtro status aplicado', [
+                'status' => $request->status
+            ]);
         }
 
         if ($request->has('search')) {
@@ -55,14 +75,44 @@ class PartnerController extends Controller
                       $profileQuery->where('company_name', 'like', "%{$search}%");
                   });
             });
+            Log::info('PartnerController::index - Filtro search aplicado', [
+                'search' => $search
+            ]);
         }
 
-        $partners = $query->paginate($request->get('per_page', 15));
+        // Log da query final antes da paginação
+        Log::info('PartnerController::index - Query final antes da paginação', [
+            'final_sql' => $query->toSql(),
+            'final_bindings' => $query->getBindings()
+        ]);
 
-        \Illuminate\Support\Facades\Log::info('Consulta de Parceiros:', [
-            'status_recebido' => $request->input('status'),
-            'sql_gerado' => $query->toSql(),
-            'bindings' => $query->getBindings()
+        $perPage = $request->get('per_page', 15);
+        $partners = $query->paginate($perPage);
+
+        // Log dos resultados
+        Log::info('PartnerController::index - Resultados obtidos', [
+            'status_filtro' => $request->input('status'),
+            'total_encontrados' => $partners->total(),
+            'pagina_atual' => $partners->currentPage(),
+            'por_pagina' => $partners->perPage(),
+            'total_paginas' => $partners->lastPage(),
+            'ids_retornados' => $partners->pluck('id')->toArray(),
+            'status_dos_usuarios' => $partners->pluck('status', 'id')->toArray()
+        ]);
+
+        // Verificar se há inconsistências
+        $statusCounts = DB::table('users')
+            ->selectRaw('status, COUNT(*) as count')
+            ->where(function($q) {
+                $q->whereIn('role', ['revendedor', 'distribuidor'])
+                  ->orWhereNull('role');
+            })
+            ->groupBy('status')
+            ->get()
+            ->keyBy('status');
+
+        Log::info('PartnerController::index - Contagem por status na base de dados', [
+            'counts' => $statusCounts->toArray()
         ]);
 
         // Mapear os dados para incluir user_id
@@ -89,20 +139,38 @@ class PartnerController extends Controller
                 ];
             }
             
-
-            
             return $transformed;
         });
 
-        return response()->json([
+        $response = [
             'partners' => $partners->items(),
             'pagination' => [
                 'current_page' => $partners->currentPage(),
                 'last_page' => $partners->lastPage(),
                 'per_page' => $partners->perPage(),
                 'total' => $partners->total(),
+                'from' => $partners->firstItem(),
+                'to' => $partners->lastItem(),
+            ],
+            // Adicionar dados de debug na resposta
+            'debug' => [
+                'requested_status' => $request->input('status'),
+                'requested_page' => $request->input('page', 1),
+                'query_executed' => $query->toSql(),
+                'total_by_status' => $statusCounts->toArray(),
+                'timestamp' => now()->toISOString()
+            ]
+        ];
+
+        Log::info('PartnerController::index - Resposta final', [
+            'response_summary' => [
+                'partners_count' => count($response['partners']),
+                'pagination' => $response['pagination'],
+                'requested_status' => $request->input('status')
             ]
         ]);
+
+        return response()->json($response);
     }
 
     /**
@@ -193,6 +261,13 @@ class PartnerController extends Controller
         $validated = $request->validate([
             'status' => 'required|in:active,suspended,pending_approval,rejected,inactive'
         ]);
+
+        Log::info('PartnerController::updateStatus - Início', [
+            'user_id' => $user->id,
+            'current_status' => $user->status,
+            'new_status' => $validated['status'],
+            'user_role' => $user->role
+        ]);
     
         // Verificar se o usuário é um parceiro (revendedor, distribuidor ou null - não classificado)
         if (!in_array($user->role, ['revendedor', 'distribuidor']) && $user->role !== null) {
@@ -235,6 +310,12 @@ class PartnerController extends Controller
     
         // Atualizar o status
         $user->update(['status' => $newStatus]);
+
+        Log::info('PartnerController::updateStatus - Status atualizado', [
+            'user_id' => $user->id,
+            'old_status' => $oldStatus,
+            'new_status' => $newStatus
+        ]);
     
         // Lógica de notificação por email (absorvida dos métodos antigos)
         $emailSent = false;
@@ -259,6 +340,10 @@ class PartnerController extends Controller
             }
         } catch (\Exception $e) {
             $emailError = $e->getMessage();
+            Log::error('PartnerController::updateStatus - Erro ao enviar email', [
+                'user_id' => $user->id,
+                'error' => $emailError
+            ]);
         }
 
         // Preparar resposta
@@ -281,6 +366,13 @@ class PartnerController extends Controller
             $response['message'] .= ' Porém, houve erro no envio do email.';
             $response['email_error'] = $emailError;
         }
+
+        Log::info('PartnerController::updateStatus - Concluído com sucesso', [
+            'user_id' => $user->id,
+            'final_status' => $user->status,
+            'email_sent' => $emailSent,
+            'email_error' => $emailError
+        ]);
     
         return response()->json($response, 200);
     }
