@@ -14,6 +14,8 @@ const PartnerList = ({
   onViewAlvara,
   onRetry
 }) => {
+  console.log(`[PartnerList] Recebeu a prop 'partners' com status '${currentStatus}':`, partners);
+
   if (loading) {
     return (
       <div className="space-y-4">
