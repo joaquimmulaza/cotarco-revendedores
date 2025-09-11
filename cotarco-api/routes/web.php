@@ -54,7 +54,7 @@ Route::get('/email/verify/{id}/{hash}', function ($id, $hash, Request $request) 
     }
     
     abort(403);
-})->middleware('signed')->name('verification.verify');
+})->name('verification.verify');
 
 Route::post('/email/verification-notification', function (Request $request) {
     $request->user()->sendEmailVerificationNotification();
