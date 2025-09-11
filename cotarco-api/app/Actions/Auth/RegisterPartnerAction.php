@@ -24,6 +24,8 @@ class RegisterPartnerAction
      */
     public function execute(array $validatedData, Request $request): array
     {
+        \Illuminate\Support\Facades\Log::info('APP_URL a ser usado:', ['url' => config('app.url')]);
+        
         // Iniciar transação de base de dados
         DB::beginTransaction();
 
