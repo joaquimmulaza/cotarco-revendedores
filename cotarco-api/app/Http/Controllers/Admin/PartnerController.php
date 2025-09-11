@@ -10,6 +10,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 use App\Mail\PartnerApproved;
 use App\Mail\PartnerRejected;
 
@@ -57,6 +58,12 @@ class PartnerController extends Controller
         }
 
         $partners = $query->paginate($request->get('per_page', 15));
+
+        \Illuminate\Support\Facades\Log::info('Consulta de Parceiros:', [
+            'status_recebido' => $request->input('status'),
+            'sql_gerado' => $query->toSql(),
+            'bindings' => $query->getBindings()
+        ]);
 
         // Mapear os dados para incluir user_id
         $partners->getCollection()->transform(function ($user) {

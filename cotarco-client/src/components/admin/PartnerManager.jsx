@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Tab, TabGroup, TabList, TabPanel, TabPanels } from '@headlessui/react';
 import { useAuth } from '../../contexts/AuthContext';
 import { adminService } from '../../services/api';
@@ -278,6 +278,8 @@ const PartnerManager = () => {
     
     return types[confirmAction] || 'warning';
   };
+
+  console.log(`[PartnerManager] A passar parceiros para a lista com status '${currentStatus}':`, partners);
 
   return (
     <div className="bg-white shadow rounded-lg">

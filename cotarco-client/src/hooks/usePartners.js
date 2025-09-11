@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { adminService } from '../services/api';
 import toast from 'react-hot-toast';
 
@@ -17,7 +17,8 @@ export const usePartners = (status, page, isAdmin, authLoading) => {
   const [partners, setPartners] = useState([]);
   const [pagination, setPagination] = useState(null);
 
-  const fetchPartners = useCallback(async () => {
+  // fetchPartners agora é uma função normal
+  const fetchPartners = async () => {
     // Só buscar dados se o usuário for admin e não estiver carregando
     if (!isAdmin || authLoading) {
       return;
@@ -28,6 +29,7 @@ export const usePartners = (status, page, isAdmin, authLoading) => {
       setError('');
       const response = await adminService.getPartners(status, page);
       setPartners(response.partners || []);
+      console.log(`[usePartners] Dados recebidos da API para status '${status}':`, response.partners || []);
       setPagination(response.pagination || null);
     } catch (error) {
       console.error('Erro ao carregar parceiros:', error);
@@ -37,12 +39,12 @@ export const usePartners = (status, page, isAdmin, authLoading) => {
     } finally {
       setLoading(false);
     }
-  }, [status, page, isAdmin, authLoading]);
+  };
 
   // Carregar parceiros quando os parâmetros mudarem
   useEffect(() => {
     fetchPartners();
-  }, [fetchPartners]);
+  }, [status, page, isAdmin, authLoading]);
 
   return {
     partners,
