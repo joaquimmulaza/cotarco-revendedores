@@ -27,7 +27,7 @@ class ProductController extends Controller
     {
         $categoryId = $request->query('category_id');
         $page = (int) $request->query('page', 1);
-        $perPage = (int) $request->query('per_page', 12);
+        $perPage = (int) $request->query('per_page', 10);
 
         $result = $this->wooCommerceService->getProducts($categoryId, $page, $perPage);
 
