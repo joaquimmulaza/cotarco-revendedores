@@ -68,7 +68,7 @@ class WooCommerceService
      * @param int $perPage
      * @return array
      */
-    public function getProducts(int $categoryId = null, int $page = 1, int $perPage = 12)
+    public function getProducts(int $categoryId = null, int $page = 1, int $perPage = 10)
     {
         try {
             $params = [

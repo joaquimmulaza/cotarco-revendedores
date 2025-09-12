@@ -74,7 +74,7 @@ const Dashboard = () => {
         const response = await productService.getProducts(
           selectedCategory,
           paginationInfo.currentPage,
-          12
+          10
         );
         if (response.success) {
           if (response.data.length > 0) {
@@ -147,59 +147,18 @@ const Dashboard = () => {
               {/* Stats Cards */}
               
 
-              {/* Product Grid - Placeholder */}
-              <div 
-                className="bg-white shadow rounded-lg p-6 hidden"
-              >
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                  {loading ? (
-                    // Skeleton Loading para produtos
-                    Array.from({ length: 15 }, (_, index) => (
-                      <div
-                        key={index}
-                        className="border border-gray-200 rounded-lg p-4 text-center h-24 flex items-center justify-center"
-                      >
-                        <Skeleton width={32} height={32} className="mx-auto mb-2" />
-                        <Skeleton width={60} height={16} />
-                      </div>
-                    ))
-                  ) : (
-                    // Produtos reais
-                    [
-                      "Acessórios",
-                      "Acessórios Maquinas de Lavar", 
-                      "Suportes Tv",
-                      "Aspiradores",
-                      "Ar condicionado",
-                      "Equipamentos de Som",
-                      "Frigoríficos",
-                      "Maquinas De Lavar",
-                      "Micro ondas",
-                      "Monitores",
-                      "Telemóveis",
-                      "TVs",
-                      "Acessórios",
-                      "Aspiradores",
-                      
-                    ].map((productName, index) => (
-                      <div
-                        key={index}
-                        className="border border-gray-200 rounded-lg p-4 text-center hover:border-primary hover:shadow-md transition-all duration-200 cursor-pointer h-24 flex items-center justify-center"
-                      >
-                        <span className="text-sm font-medium text-gray-600 leading-tight break-words hyphens-auto">
-                          {productName}
-                        </span>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
+              
+             
 
               {/* Categories Section */}
               <div className="bg-white shadow rounded-lg p-6">
                 <h3 className="text-lg font-medium text-gray-900 mb-4">Categorias</h3>
                 {loadingCategories ? (
-                  <p className="text-gray-500">A carregar categorias...</p>
+                  <div className="flex flex-wrap gap-2">
+                    {Array.from({ length: 6 }, (_, index) => (
+                      <Skeleton key={index} height={36} width={120} className="rounded-lg" />
+                    ))}
+                  </div>
                 ) : categoriesError ? (
                   <div className="bg-red-50 border border-red-200 rounded-md p-4">
                     <div className="flex">
@@ -240,7 +199,7 @@ const Dashboard = () => {
                         onClick={() => handleCategorySelect(category.id)}
                         className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                           selectedCategory === category.id
-                            ? 'bg-blue-600 text-white'
+                            ? 'my-bg-red text-white'
                             : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                         }`}
                       >
@@ -255,7 +214,16 @@ const Dashboard = () => {
               <div className="bg-white shadow rounded-lg p-6">
                 <h3 className="text-lg font-medium text-gray-900 mb-4">Produtos</h3>
                 {loadingProducts ? (
-                  <p className="text-gray-500">A carregar produtos...</p>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                    {Array.from({ length: 10 }, (_, index) => (
+                      <div key={index} className="border border-gray-200 rounded-lg p-4">
+                        <Skeleton height={120} className="mb-3 rounded" />
+                        <Skeleton height={16} className="mb-2" />
+                        <Skeleton height={14} width="60%" className="mb-2" />
+                        <Skeleton height={20} width="40%" />
+                      </div>
+                    ))}
+                  </div>
                 ) : productsError ? (
                   <div className="bg-red-50 border border-red-200 rounded-md p-4">
                     <div className="flex">

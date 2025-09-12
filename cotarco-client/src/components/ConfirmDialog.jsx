@@ -25,17 +25,17 @@ const ConfirmDialog = ({
       case 'info':
         return {
           icon: ExclamationTriangleIcon,
-          iconColor: 'text-blue-600',
-          iconBg: 'bg-blue-100',
-          confirmButton: 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-500',
-          confirmText: 'text-white'
+          iconColor: 'text-gray-600',
+          iconBg: 'bg-gray-100',
+          confirmButton: 'bg-gray-300 hover:bg-gray-400 focus:ring-gray-300',
+          confirmText: 'text-gray-600'
         };
       default: // warning
         return {
           icon: ExclamationTriangleIcon,
-          iconColor: 'text-yellow-600',
-          iconBg: 'bg-yellow-100',
-          confirmButton: 'bg-yellow-600 hover:bg-yellow-700 focus:ring-yellow-500',
+          iconColor: 'my-text-red',
+          iconBg: 'bg-red-100',
+          confirmButton: 'my-bg-red',
           confirmText: 'text-white'
         };
     }
