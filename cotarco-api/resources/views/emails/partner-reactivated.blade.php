@@ -1,19 +1,19 @@
 <x-mail::message>
-# A sua Conta foi Reativada!
+# Conta Reativada!
 
-Bem-vindo de volta, **{{ $user->name }}**!
+Prezado(a) **{{ $user->name }}**!
 
-Temos o prazer de informar que a sua conta de parceiro na plataforma Cotarco foi reativada. Já pode aceder ao seu painel e a todos os recursos disponíveis.
+Informamos que a sua conta na rede de parceiros da Cotarco foi devidamente reativada.
+A partir deste momento, o acesso ao painel está restabelecido, permitindo-lhe utilizar todos os recursos e funcionalidades disponíveis.
+Caso necessite de esclarecimentos adicionais ou apoio técnico, a nossa equipa de suporte está à disposição.
 
 <x-mail::button :url="$loginUrl">
 Aceder ao Painel
 </x-mail::button>
 
-Se tiver alguma questão, não hesite em contactar-nos.
-
-Obrigado,
+Atenciosamente,
 <br>
-Equipa Cotarco
+Cotarco Tecnologias, Lda.
 </x-mail::message>
 
 

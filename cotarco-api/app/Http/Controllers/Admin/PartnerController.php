@@ -385,8 +385,27 @@ class PartnerController extends Controller
             $filePath = $profile->alvara_path;
             $fileName = basename($filePath);
             
-            // Retornar o arquivo como download
-            return Storage::disk('local')->download($filePath, $fileName);
+            // Detectar o tipo MIME baseado na extensão do arquivo
+            $extension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+            $mimeType = match($extension) {
+                'pdf' => 'application/pdf',
+                'jpg', 'jpeg' => 'image/jpeg',
+                'png' => 'image/png',
+                'gif' => 'image/gif',
+                'bmp' => 'image/bmp',
+                'webp' => 'image/webp',
+                default => 'application/octet-stream'
+            };
+            
+            // Obter o conteúdo do arquivo
+            $fileContent = Storage::disk('local')->get($filePath);
+            
+            // Retornar o arquivo com o Content-Type correto
+            return response($fileContent, 200, [
+                'Content-Type' => $mimeType,
+                'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
+                'Content-Length' => strlen($fileContent)
+            ]);
             
         } catch (\Exception $e) {
             \Log::error('Erro ao baixar alvará: ' . $e->getMessage(), [

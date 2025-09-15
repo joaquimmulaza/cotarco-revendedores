@@ -9,7 +9,7 @@
         .container { max-width: 600px; margin: 0 auto; padding: 20px; }
         .header { background-color: #f22f1d; color: white; padding: 20px; text-align: center; }
         .content { padding: 20px; background-color: #f9f9f9; }
-        .button { display: inline-block; padding: 12px 24px; background-color: #f22f1d; color: white; text-decoration: none; border-radius: 5px; margin: 15px 0; }
+        .button { display: inline-block; padding: 12px 24px; background-color: #f22f1d; color: #fff !important; text-decoration: none; border-radius: 5px; margin: 15px 0; }
         .footer { text-align: center; color: #666; font-size: 12px; padding: 20px; }
         .partner-info { background-color: #e5e7eb; padding: 15px; border-radius: 5px; margin: 15px 0; }
         .partner-info h3 { margin-top: 0; color: #1f2937; }
@@ -20,24 +20,21 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🔔 Novo Parceiro Registado</h1>
+            <h1>Novo Membro Registrado</h1>
         </div>
         
         <div class="content">
             <p>Olá,</p>
             
-            <p>Um novo parceiro completou o registro e confirmou o seu email. A conta está agora <strong>pendente de aprovação</strong> e aguarda a sua análise.</p>
+            <p>Um novo membro concluiu o processo de registro e aguarda a sua aprovação.</p>
             
             <div class="partner-info">
-                <h3>📋 Dados do Parceiro</h3>
+                <h3>Dados do membro:</h3>
                 <div class="info-item">
                     <span class="info-label">Nome:</span> {{ $partner->name }}
                 </div>
                 <div class="info-item">
                     <span class="info-label">Email:</span> {{ $partner->email }}
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Tipo:</span> {{ ucfirst($partner->role) }}
                 </div>
                 @if($partner->partnerProfile)
                 <div class="info-item">
@@ -52,7 +49,7 @@
                 </div>
             </div>
             
-            <p>Para analisar e aprovar/rejeitar este parceiro, acesse o painel administrativo:</p>
+            <p>Para gerir esta solicitação, acesse o painel administrativo:</p>
             
             <p style="text-align: center;">
                 <a href="{{ $dashboardUrl }}" class="button">Acessar Painel Admin</a>
@@ -60,15 +57,12 @@
             
             <p><strong>Ações necessárias:</strong></p>
             <ul>
-                <li>Verificar os dados fornecidos pelo parceiro</li>
+                <li>Verificar os dados fornecidos pelo membro.</li>
                 <li>Analisar o documento de alvará enviado</li>
                 <li>Aprovar ou rejeitar a solicitação</li>
             </ul>
             
-            <p>O parceiro será notificado automaticamente após a sua decisão.</p>
-            
-            <p>Atenciosamente,<br>
-            <strong>Sistema Cotarco</strong></p>
+            <p>O membro será notificado automaticamente após a sua decisão.</p>
         </div>
         
         <div class="footer">

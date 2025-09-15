@@ -22,6 +22,7 @@ export const config = {
     DASHBOARD: '/dashboard',
     EMAIL_VERIFICATION_PENDING: '/email-verification-pending',
     EMAIL_VALIDATED: '/email-validated',
+    EMAIL_VERIFICATION_ERROR: '/email-verification-error',
     API_TEST: '/api-test',
   },
 };

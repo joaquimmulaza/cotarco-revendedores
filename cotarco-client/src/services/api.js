@@ -295,7 +295,7 @@ export const adminService = {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
-          'Accept': 'application/pdf, application/json', // Aceita PDF ou JSON para erros
+          'Accept': 'application/pdf, image/jpeg, image/png, image/gif, image/bmp, image/webp, application/json', // Aceita diferentes tipos de arquivo
         },
       });
 
@@ -311,6 +311,22 @@ export const adminService = {
         const filenameMatch = contentDisposition.match(/filename="([^"]+)"/);
         if (filenameMatch && filenameMatch[1]) {
           filename = filenameMatch[1];
+        }
+      } else {
+        // Se não houver Content-Disposition, tentar detectar pela extensão do Content-Type
+        const contentType = response.headers.get('content-type');
+        if (contentType) {
+          if (contentType.includes('image/jpeg')) {
+            filename = 'alvara.jpg';
+          } else if (contentType.includes('image/png')) {
+            filename = 'alvara.png';
+          } else if (contentType.includes('image/gif')) {
+            filename = 'alvara.gif';
+          } else if (contentType.includes('image/bmp')) {
+            filename = 'alvara.bmp';
+          } else if (contentType.includes('image/webp')) {
+            filename = 'alvara.webp';
+          }
         }
       }
 

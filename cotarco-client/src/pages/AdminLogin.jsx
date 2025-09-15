@@ -34,6 +34,51 @@ const AdminLogin = () => {
     }
   };
 
+  // Variantes para a imagem de fundo
+  const backgroundImageVariants = {
+    hidden: { 
+      opacity: 0 
+    },
+    visible: { 
+      opacity: 1,
+      transition: {
+        duration: 0.8,
+        ease: "easeOut"
+      }
+    }
+  };
+
+  // Variantes para o título com animação palavra por palavra
+  const titleVariants = {
+    hidden: { 
+      opacity: 0 
+    },
+    visible: { 
+      opacity: 1,
+      transition: {
+        duration: 0.1,
+        staggerChildren: 0.2,
+        delayChildren: 0.5
+      }
+    }
+  };
+
+  // Variantes para cada palavra do título
+  const wordVariants = {
+    hidden: { 
+      opacity: 0, 
+      x: -200 
+    },
+    visible: { 
+      opacity: 1, 
+      x: 0,
+      transition: {
+        duration: 0.8,
+        ease: "easeOut"
+      }
+    }
+  };
+
   // Variantes para o contentor do formulário
   const formContainerVariants = {
     hidden: { 
@@ -117,21 +162,42 @@ const AdminLogin = () => {
         animate="visible"
       >
         {/* Imagem de fundo */}
-        <div 
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        <motion.div 
+          className="absolute inset-0 bg-cover bg-no-repeat"
           style={{
             backgroundImage: `url(${loginImage})`
           }}
+          variants={backgroundImageVariants}
+          initial="hidden"
+          animate="visible"
         />
         
         {/* Título sobreposto */}
-        <div className="relative z-10 flex items-center justify-center w-full">
-          <h1 className="text-5xl font-bold text-white text-center leading-tight drop-shadow-lg">
-            Distribua<br />
-            <span className="my-text-red drop-shadow-lg">Qualidade</span><br />
+        <motion.div 
+          className="relative z-10 flex flex-col items-center justify-center w-full"
+          variants={titleVariants}
+          initial="hidden"
+          animate="visible"
+        >
+          <motion.div 
+            className="text-5xl font-bold text-white text-center leading-tight drop-shadow-lg"
+            variants={wordVariants}
+          >
+            Distribua
+          </motion.div>
+          <motion.div 
+            className="text-5xl font-bold text-white text-center leading-tight drop-shadow-lg my-text-red"
+            variants={wordVariants}
+          >
+            Qualidade
+          </motion.div>
+          <motion.div 
+            className="text-5xl font-bold text-white text-center leading-tight drop-shadow-lg"
+            variants={wordVariants}
+          >
             e Inovação
-          </h1>
-        </div>
+          </motion.div>
+        </motion.div>
       </motion.div>
 
       {/* Lado direito com formulário */}
@@ -183,7 +249,7 @@ const AdminLogin = () => {
             <form className="space-y-6" onSubmit={handleSubmit}>
               <motion.div variants={formItemVariants}>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                  Email do Administrador
+                  Email
                 </label>
                 <div className="mt-1">
                   <input

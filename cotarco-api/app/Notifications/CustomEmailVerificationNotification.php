@@ -40,11 +40,11 @@ class CustomEmailVerificationNotification extends Notification
         $verificationUrl = $this->verificationUrl($notifiable);
 
         return (new MailMessage)
-            ->subject('Verificar Endereço de Email - Cotarco')
+            ->subject('Verificar Endereço de Email')
             ->greeting('Olá!')
             ->line('Por favor, clique no botão abaixo para verificar o seu endereço de email.')
             ->action('Verificar Endereço de Email', $verificationUrl)
-            ->line('Se não criou uma conta, não é necessária nenhuma ação adicional.')
+            ->line('Se este e-mail é engano, por favor, ignore!')
             ->salutation('Atenciosamente, Cotarco')
             ->line('Se está com problemas ao clicar no botão "Verificar Endereço de Email", copie e cole o URL abaixo no seu navegador web:')
             ->line($verificationUrl);

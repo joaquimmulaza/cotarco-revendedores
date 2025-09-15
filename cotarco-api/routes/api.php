@@ -28,6 +28,124 @@ Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('
 // Rota de teste
 Route::get('/test', fn() => response()->json(['message' => 'API funcionando!']));
 
+// Rotas de verificação de email
+Route::get('/email/verify/{id}/{hash}', function ($id, $hash, Request $request) {
+    \Illuminate\Support\Facades\Log::info('=== VERIFICAÇÃO DE EMAIL INICIADA ===', [
+        'id' => $id,
+        'hash' => $hash,
+        'url' => $request->fullUrl(),
+        'user_agent' => $request->userAgent(),
+        'ip' => $request->ip(),
+        'timestamp' => now()->toDateTimeString()
+    ]);
+    
+    try {
+        // Buscar o usuário pelo ID
+        $user = \App\Models\User::findOrFail($id);
+        \Illuminate\Support\Facades\Log::info('Usuário encontrado', [
+            'user_id' => $user->id, 
+            'email' => $user->email,
+            'current_status' => $user->status,
+            'email_verified_at' => $user->email_verified_at
+        ]);
+        
+        // Verificar se o hash está correto
+        $expectedHash = sha1($user->getEmailForVerification());
+        \Illuminate\Support\Facades\Log::info('Verificação de hash', [
+            'expected' => $expectedHash,
+            'received' => $hash,
+            'hash_match' => hash_equals((string) $hash, $expectedHash)
+        ]);
+        
+        if (!hash_equals((string) $hash, $expectedHash)) {
+            \Illuminate\Support\Facades\Log::error('Hash inválido', [
+                'expected' => $expectedHash,
+                'received' => $hash
+            ]);
+            
+            // Redirecionar para página de erro amigável no frontend
+            $frontendUrl = env('FRONTEND_URL', 'https://cotarco.com/distribuidores');
+            return redirect($frontendUrl . '/email-verification-error?reason=invalid');
+        }
+        
+        // Verificar se o link não expirou
+        $signatureValid = $request->hasValidSignature();
+        \Illuminate\Support\Facades\Log::info('Verificação de assinatura', [
+            'signature_valid' => $signatureValid,
+            'expires' => $request->query('expires'),
+            'signature' => $request->query('signature')
+        ]);
+        
+        if (!$signatureValid) {
+            \Illuminate\Support\Facades\Log::error('Assinatura inválida ou expirada');
+            
+            // Redirecionar para página de erro amigável no frontend
+            $frontendUrl = env('FRONTEND_URL', 'https://cotarco.com/distribuidores');
+            return redirect($frontendUrl . '/email-verification-error?reason=expired');
+        }
+        
+        // ✅ MARCAR EMAIL COMO VERIFICADO
+        $wasVerified = $user->hasVerifiedEmail();
+        if (!$wasVerified) {
+            $user->markEmailAsVerified();
+            \Illuminate\Support\Facades\Log::info('Email marcado como verificado', [
+                'user_id' => $user->id,
+                'email_verified_at' => $user->fresh()->email_verified_at
+            ]);
+        } else {
+            \Illuminate\Support\Facades\Log::info('Email já estava verificado', [
+                'user_id' => $user->id,
+                'email_verified_at' => $user->email_verified_at
+            ]);
+        }
+        
+        // ✅ ATUALIZAR STATUS PARA PENDING_APPROVAL
+        $oldStatus = $user->status;
+        $user->update(['status' => 'pending_approval']);
+        \Illuminate\Support\Facades\Log::info('Status atualizado', [
+            'user_id' => $user->id,
+            'old_status' => $oldStatus,
+            'new_status' => $user->fresh()->status
+        ]);
+        
+        // Enviar notificação para admin
+        try {
+            $adminUser = \App\Models\User::where('role', 'admin')->first();
+            if ($adminUser && filter_var($adminUser->email, FILTER_VALIDATE_EMAIL)) {
+                $dashboardUrl = env('FRONTEND_URL', 'https://cotarco.com/distribuidores') . '/admin/login';
+                \Illuminate\Support\Facades\Mail::to($adminUser->email)
+                    ->send(new \App\Mail\AdminNewPartnerNotification($user, $dashboardUrl));
+                
+                \Illuminate\Support\Facades\Log::info('Email de notificação enviado para admin', ['admin_email' => $adminUser->email]);
+            }
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Erro ao enviar email para admin', ['error' => $e->getMessage()]);
+        }
+        
+        // ✅ REDIRECIONAR PARA O FRONTEND REACT
+        $frontendUrl = env('FRONTEND_URL', 'https://cotarco.com/distribuidores');
+        \Illuminate\Support\Facades\Log::info('=== VERIFICAÇÃO DE EMAIL CONCLUÍDA COM SUCESSO ===', [
+            'user_id' => $user->id,
+            'redirect_url' => $frontendUrl . '/email-validated'
+        ]);
+        
+        return redirect($frontendUrl . '/email-validated');
+        
+    } catch (\Exception $e) {
+        \Illuminate\Support\Facades\Log::error('=== ERRO NA VERIFICAÇÃO DE EMAIL ===', [
+            'error' => $e->getMessage(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
+            'trace' => $e->getTraceAsString()
+        ]);
+        
+        // Redirecionar para página de erro amigável no frontend
+        $frontendUrl = env('FRONTEND_URL', 'https://cotarco.com/distribuidores');
+        return redirect($frontendUrl . '/email-verification-error?reason=error');
+    }
+    
+})->name('verification.verify');
+
 
 // Rotas Protegidas (requerem autenticação)
 Route::middleware('auth:sanctum')->group(function () {

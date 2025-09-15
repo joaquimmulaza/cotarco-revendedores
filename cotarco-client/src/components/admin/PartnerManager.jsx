@@ -354,7 +354,7 @@ const PartnerManager = () => {
             {/* Todos os painéis renderizam o mesmo conteúdo, mas com status diferentes */}
             {tabStatusMap.map((status, index) => (
               <TabPanel key={status}>
-                <div className="px-6 py-4">
+                <div className=" py-4">
                   {authLoading ? (
                     <div className="space-y-4">
                       {/* Skeleton para a lista de parceiros */}

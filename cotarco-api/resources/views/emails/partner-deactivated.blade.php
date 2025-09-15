@@ -3,13 +3,14 @@
 
 Olá, **{{ $user->name }}**.
 
-Informamos que a sua conta de parceiro na plataforma Cotarco foi temporariamente desativada.
+Informamos que a sua conta na Rede de Parceiros da Cotarco foi temporariamente desativada.
+Durante este período, o acesso ao seu painel estará suspenso.
+Caso tenha alguma dúvida ou necessite de esclarecimentos, entre em contacto com a nossa equipa de suporte.
+Agradecemos a sua compreensão.
 
-Enquanto a sua conta estiver neste estado, não conseguirá aceder ao seu painel. Se tiver alguma questão, por favor, entre em contacto com o nosso suporte.
-
-Obrigado,
+Atenciosamente,
 <br>
-Equipa Cotarco
+Cotarco Tecnologias, Lda.
 </x-mail::message>
 
 

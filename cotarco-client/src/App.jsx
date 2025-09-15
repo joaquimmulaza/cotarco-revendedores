@@ -5,6 +5,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import EmailVerificationPending from './pages/EmailVerificationPending';
 import EmailValidated from './pages/EmailValidated';
+import EmailVerificationError from './pages/EmailVerificationError';
 import Dashboard from './pages/Dashboard';
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
@@ -39,6 +40,10 @@ function AppContent() {
       element: <EmailValidated />
     },
     {
+      path: "/email-verification-error",
+      element: <EmailVerificationError />
+    },
+    {
       path: "/api-test",
       element: <ApiTestPage />
     },
@@ -49,6 +54,11 @@ function AppContent() {
     {
       path: "/reset-password",
       element: <ResetPassword />
+    },
+    // 🔥 ADICIONADA: Rota para verificação de email
+    {
+      path: "/email/verify/:id/:hash",
+      element: <EmailValidated />
     },
     {
       path: "/dashboard",
@@ -71,7 +81,8 @@ function AppContent() {
       )
     }
   ], {
-    basename: import.meta.env.VITE_APP_BASE_URL || '/'
+    // 🔥 CORRIGIDO: Usar basename fixo em vez de variável de ambiente
+    basename: '/distribuidores'
   });
 
   return (

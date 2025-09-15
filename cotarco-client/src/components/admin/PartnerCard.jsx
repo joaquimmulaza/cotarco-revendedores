@@ -48,7 +48,7 @@ const RenderActionButtons = ({
           <button
             onClick={() => onUpdateStatus(partner, 'active')}
             disabled={actionLoading[partner.id]}
-            className="bg-green-600 text-white px-3 py-1.5 rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-xs font-medium flex items-center justify-center"
+            className="cursor-pointer bg-green-600 text-white px-3 py-1.5 rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-xs font-medium flex items-center justify-center"
           >
             {actionLoading[partner.id] === 'updating-active' ? (
               <>
@@ -201,7 +201,7 @@ const PartnerCard = ({
             </h4>
             {/* Status Badge */}
             <span className={`text-xs font-medium px-2 py-1 rounded-full ${
-              partner.status === 'pending_approval' ? 'bg-yellow-100 text-yellow-800' :
+              partner.status === 'pending_approval' ? 'bg-gray-100 text-gray-500' :
               partner.status === 'active' ? 'bg-green-50 text-green-800' :
               partner.status === 'rejected' ? 'bg-red-100 text-red-800' :
               partner.status === 'inactive' ? 'bg-gray-100 text-gray-800' :
@@ -226,7 +226,7 @@ const PartnerCard = ({
                  partner.role}
               </span>
             ) : (
-              <span className="bg-yellow-200 text-yellow-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded">
+              <span className="hidden bg-yellow-200 text-yellow-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded">
                 A classificar
               </span>
             )}

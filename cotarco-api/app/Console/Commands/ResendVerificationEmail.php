@@ -4,7 +4,7 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use App\Models\User;
-use Illuminate\Auth\Events\Registered;
+use App\Notifications\CustomEmailVerificationResendNotification;
 
 class ResendVerificationEmail extends Command
 {
@@ -44,7 +44,7 @@ class ResendVerificationEmail extends Command
             }
 
             $this->info("Reenviando email de verificação para: {$user->name} ({$user->email})");
-            event(new Registered($user));
+            $user->notify(new CustomEmailVerificationResendNotification());
             $this->info("Email de verificação reenviado com sucesso!");
             
         } else {
@@ -67,7 +67,7 @@ class ResendVerificationEmail extends Command
                 $bar->start();
 
                 foreach ($pendingUsers as $user) {
-                    event(new Registered($user));
+                    $user->notify(new CustomEmailVerificationResendNotification());
                     $bar->advance();
                 }
 

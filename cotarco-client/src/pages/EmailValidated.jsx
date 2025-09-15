@@ -13,9 +13,6 @@ const EmailValidated = () => {
           <h2 className="mt-6 text-3xl font-bold text-gray-900">
             Email validado com sucesso!
           </h2>
-          <p className="mt-2 text-sm text-secondary">
-            O seu registo está quase completo
-          </p>
         </div>
       </div>
 
@@ -28,16 +25,13 @@ const EmailValidated = () => {
                   <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                 </svg>
               </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
-                Aguarde aprovação
-              </h3>
+              
               <p className="text-gray-600 mb-4">
-                O seu email foi validado com sucesso. Agora a sua conta está pendente 
-                de aprovação pelos nossos administradores.
+              A sua conta está agora em fase de aprovação pela nossa equipa de suporte. Este processo é rápido e em breve receberá a confirmação por e-mail.
+              Assim que a sua conta for aprovada, terá acesso total à nossa rede de parceiros e a todas as vantagens exclusivas.
               </p>
               <p className="text-sm text-secondary">
-                Será notificado por email assim que a sua conta for aprovada e poderá 
-                aceder ao painel de revendedor.
+              Agradecemos a sua compreensão e colaboração.
               </p>
             </div>
             

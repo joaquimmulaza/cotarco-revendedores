@@ -22,7 +22,7 @@
         <div class="content">
             <p>Olá <strong>{{ $user->name }}</strong>,</p>
             
-            <p>Agradecemos o seu interesse em se tornar um parceiro Cotarco.</p>
+            <p>Agradecemos o seu interesse em poder fazer parte da nossa rede de parceiro.</p>
             
             <p>Após uma análise cuidadosa da sua solicitação, informamos que <strong>não foi possível aprovar</strong> seu registro como parceiro neste momento.</p>
             
@@ -33,17 +33,8 @@
                 <li>Outras questões específicas do processo de aprovação</li>
             </ul>
             
-            <div class="contact-info">
-                <p><strong>📞 Precisa de esclarecimentos?</strong></p>
-                <p>Se você acredita que houve algum equívoco ou gostaria de entender melhor os motivos da não aprovação, entre em contato conosco:</p>
-                <p><strong>Email:</strong> suporte@cotarco.com<br>
-                <strong>Telefone:</strong> (11) 9999-9999</p>
-            </div>
-            
-            <p>Agradecemos mais uma vez o seu interesse e esperamos poder colaborar em futuras oportunidades.</p>
-            
             <p>Atenciosamente,<br>
-            <strong>Equipe Cotarco</strong></p>
+            <strong>Cotarco Tecnologias, Lda.</strong></p>
         </div>
         
         <div class="footer">
