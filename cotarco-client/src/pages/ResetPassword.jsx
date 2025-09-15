@@ -118,8 +118,8 @@ const ResetPassword = () => {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div>
-          <div className="mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-blue-100">
-            <svg className="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-red-100">
+            <svg className="h-6 w-6 my-text-red" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
             </svg>
           </div>
@@ -184,7 +184,7 @@ const ResetPassword = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white my-bg-red hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {isLoading ? (
                 <div className="flex items-center">
@@ -203,7 +203,7 @@ const ResetPassword = () => {
           <div className="text-center">
             <Link
               to="/login"
-              className="text-sm text-blue-600 hover:text-blue-500 transition-colors"
+              className="text-sm text-gray-600 "
             >
               Voltar ao Login
             </Link>
