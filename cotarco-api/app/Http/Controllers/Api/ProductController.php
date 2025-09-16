@@ -44,7 +44,7 @@ class ProductController extends Controller
         // 4. Obter o role do usuário autenticado
         $userRole = auth()->user()->role;
 
-        // 5. Iterar sobre os produtos e atualizar preços
+        // 5. Iterar sobre os produtos e adicionar preços locais
         foreach ($products as &$product) {
             $sku = $product['sku'] ?? null;
             
@@ -53,25 +53,15 @@ class ProductController extends Controller
                 
                 // Determinar qual coluna de preço usar baseado no role
                 if ($userRole === 'revendedor') {
-                    $localPrice = $priceData->price_revendedor;
+                    $product['local_price'] = $priceData->price_revendedor;
                 } elseif ($userRole === 'distribuidor') {
-                    $localPrice = $priceData->price_distribuidor;
+                    $product['local_price'] = $priceData->price_distribuidor;
                 } else {
-                    $localPrice = null;
-                }
-
-                // Substituir o preço do produto
-                if ($localPrice !== null) {
-                    $product['price'] = (string) $localPrice;
-                    $product['price_formatted'] = '€' . number_format($localPrice, 2, ',', '.');
-                } else {
-                    $product['price'] = null;
-                    $product['price_formatted'] = 'Sob consulta';
+                    $product['local_price'] = null;
                 }
             } else {
-                // Se não houver preço local, definir como "Sob consulta"
-                $product['price'] = null;
-                $product['price_formatted'] = 'Sob consulta';
+                // Se não houver preço local, definir como null
+                $product['local_price'] = null;
             }
         }
 

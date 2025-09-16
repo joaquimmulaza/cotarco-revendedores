@@ -17,49 +17,37 @@ class ProductResource extends JsonResource
         return [
             'id' => $this['id'],
             'name' => $this['name'],
-            'price' => $this->extractNumericPrice($this['regular_price']),
-            'formatted_price' => $this->formatPrice($this->extractNumericPrice($this['regular_price'])),
+            'price' => $this->getLocalPrice(),
+            'formatted_price' => $this->formatPrice($this->getLocalPrice()),
             'stock_status' => $this['stock_status'],
             'image_url' => $this->getFirstImageUrl(),
         ];
     }
 
     /**
-     * Extrai o valor numérico do preço
+     * Obtém o preço local do produto
      *
-     * @param string|null $price
-     * @return float
+     * @return float|null
      */
-    private function extractNumericPrice($price): float
+    private function getLocalPrice(): ?float
     {
-        if (empty($price)) {
-            return 0.0;
+        if (isset($this['local_price']) && $this['local_price'] !== null) {
+            return (float) $this['local_price'];
         }
 
-        // Remove caracteres não numéricos exceto ponto e vírgula
-        $numericPrice = preg_replace('/[^0-9.,]/', '', $price);
-        
-        // Se estiver vazio após limpeza, retorna 0
-        if (empty($numericPrice)) {
-            return 0.0;
-        }
-
-        // Converte vírgula para ponto se necessário (formato português)
-        $numericPrice = str_replace(',', '.', $numericPrice);
-        
-        return (float) $numericPrice;
+        return null;
     }
 
     /**
      * Formata o preço com o símbolo da moeda Kz
      *
-     * @param float $price
+     * @param float|null $price
      * @return string
      */
-    private function formatPrice(float $price): string
+    private function formatPrice(?float $price): string
     {
-        if ($price == 0) {
-            return '0,00Kz';
+        if ($price === null || $price == 0) {
+            return 'Sob consulta';
         }
 
         return number_format($price, 2, ',', '.') . 'Kz';
