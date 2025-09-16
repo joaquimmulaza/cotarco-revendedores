@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\ProcessStockFileJob;
 use App\Models\StockFile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -80,8 +81,11 @@ class StockFileController extends Controller
                 ]
             );
 
+            // Disparar o Job para processar o arquivo em segundo plano
+            ProcessStockFileJob::dispatch($filePath);
+
             return response()->json([
-                'message' => 'Ficheiro de stock carregado com sucesso.',
+                'message' => 'Ficheiro recebido. A importação dos preços foi iniciada em segundo plano.',
                 'file' => [
                     'id' => $stockFile->id,
                     'display_name' => $stockFile->display_name,
