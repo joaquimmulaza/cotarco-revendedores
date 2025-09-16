@@ -65,6 +65,11 @@ class ProductResource extends JsonResource
             return $this['image']['src'];
         }
 
+        // Verificar se é uma variação com imagem individual (formato direto)
+        if (isset($this['image']['src'])) {
+            return $this['image']['src'];
+        }
+
         // Verificar array de imagens (produto simples ou variação com múltiplas imagens)
         if (empty($this['images']) || !is_array($this['images']) || count($this['images']) === 0) {
             return '';

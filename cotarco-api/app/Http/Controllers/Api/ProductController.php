@@ -31,20 +31,27 @@ class ProductController extends Controller
         $page = (int) $request->query('page', 1);
         $perPage = (int) $request->query('per_page', 10);
 
-        // 1. Obter produtos do WooCommerce
+        // 1. Obter produtos do WooCommerce (já processados com variações separadas)
         $result = $this->wooCommerceService->getProducts($categoryId, $page, $perPage);
         $products = $result['products'];
 
-        // 2. Extrair todos os SKUs dos produtos
-        $skus = collect($products)->pluck('sku')->filter()->toArray();
+        // 2. Criar array para guardar todos os SKUs
+        $allSkus = [];
 
-        // 3. Buscar preços locais para todos os SKUs
-        $localPrices = ProductPrice::whereIn('product_sku', $skus)->get()->keyBy('product_sku');
+        // 3. Percorrer a lista de produtos para recolher todos os SKUs
+        foreach ($products as $product) {
+            if (isset($product['sku']) && !empty($product['sku'])) {
+                $allSkus[] = $product['sku'];
+            }
+        }
 
-        // 4. Obter o role do usuário autenticado
+        // 4. Buscar preços locais para todos os SKUs
+        $localPrices = ProductPrice::whereIn('product_sku', $allSkus)->get()->keyBy('product_sku');
+
+        // 5. Obter o role do usuário autenticado
         $userRole = auth()->user()->role;
 
-        // 5. Iterar sobre os produtos e adicionar preços locais
+        // 6. Percorrer novamente a lista de produtos e anexar preços locais
         foreach ($products as &$product) {
             $sku = $product['sku'] ?? null;
             

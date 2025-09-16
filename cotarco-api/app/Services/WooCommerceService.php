@@ -212,9 +212,11 @@ class WooCommerceService
         return [
             'id' => $variation['id'],
             'name' => $variationName,
+            'sku' => $variation['sku'] ?? null,
             'regular_price' => $variation['regular_price'] ?? $parentProduct['regular_price'],
             'stock_status' => $variation['stock_status'] ?? $parentProduct['stock_status'],
             'images' => $image ? [$image] : ($parentProduct['images'] ?? []),
+            'image' => $image, // Adicionar imagem individual da variação
             'type' => 'variation',
             'parent_id' => $parentProduct['id']
         ];
