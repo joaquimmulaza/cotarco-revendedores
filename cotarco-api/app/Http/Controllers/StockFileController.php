@@ -62,12 +62,17 @@ class StockFileController extends Controller
             $filePath = $file->storeAs('stock_files', $fileName, 'local');
 
             // 4. Usar updateOrCreate para atualizar ou criar o registo
+            // Se o display_name for diferente do nome original, usar o display_name como original_filename
+            $originalFilename = $request->input('display_name') !== $file->getClientOriginalName() 
+                ? $request->input('display_name') 
+                : $file->getClientOriginalName();
+
             $stockFile = StockFile::updateOrCreate(
                 ['target_role' => $request->input('target_role')], // Condição de procura
                 [
                     'display_name' => $request->input('display_name'),
                     'file_path' => $filePath,
-                    'original_filename' => $file->getClientOriginalName(),
+                    'original_filename' => $originalFilename,
                     'mime_type' => $file->getMimeType(),
                     'size' => $file->getSize(),
                     'is_active' => true,
