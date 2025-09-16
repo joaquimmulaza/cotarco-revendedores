@@ -48,22 +48,32 @@ class StockFileController extends Controller
         }
 
         try {
-            // Guardar novo ficheiro
+            // 1. Procurar StockFile existente com base no target_role
+            $existingStockFile = StockFile::where('target_role', $request->input('target_role'))->first();
+
+            // 2. Se um StockFile antigo for encontrado, apagar o ficheiro físico
+            if ($existingStockFile && Storage::exists($existingStockFile->file_path)) {
+                Storage::delete($existingStockFile->file_path);
+            }
+
+            // 3. Guardar novo ficheiro no armazenamento
             $file = $request->file('file');
             $fileName = time() . '_' . hash('sha256', $file->getClientOriginalName()) . '.' . $file->getClientOriginalExtension();
             $filePath = $file->storeAs('stock_files', $fileName, 'local');
 
-            // Criar novo registo na BD
-            $stockFile = StockFile::create([
-                'display_name' => $request->input('display_name'),
-                'file_path' => $filePath,
-                'original_filename' => $file->getClientOriginalName(),
-                'mime_type' => $file->getMimeType(),
-                'size' => $file->getSize(),
-                'is_active' => true,
-                'uploaded_by_user_id' => auth()->id(),
-                'target_role' => $request->input('target_role'),
-            ]);
+            // 4. Usar updateOrCreate para atualizar ou criar o registo
+            $stockFile = StockFile::updateOrCreate(
+                ['target_role' => $request->input('target_role')], // Condição de procura
+                [
+                    'display_name' => $request->input('display_name'),
+                    'file_path' => $filePath,
+                    'original_filename' => $file->getClientOriginalName(),
+                    'mime_type' => $file->getMimeType(),
+                    'size' => $file->getSize(),
+                    'is_active' => true,
+                    'uploaded_by_user_id' => auth()->id(),
+                ]
+            );
 
             return response()->json([
                 'message' => 'Ficheiro de stock carregado com sucesso.',
