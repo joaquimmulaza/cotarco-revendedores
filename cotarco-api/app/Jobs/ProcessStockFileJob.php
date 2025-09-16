@@ -6,6 +6,7 @@ use App\Models\ProductPrice;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
 use Maatwebsite\Excel\Concerns\ToArray;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
@@ -32,11 +33,14 @@ class ProcessStockFileJob implements ShouldQueue
         try {
             Log::info('ProcessStockFileJob iniciado', ['file_path' => $this->filePath]);
 
-            // Verificar se o arquivo existe
-            if (!file_exists($this->filePath)) {
+            // Verificar se o arquivo existe usando Storage Facade
+            if (!Storage::disk('local')->exists($this->filePath)) {
                 Log::error('Arquivo não encontrado', ['file_path' => $this->filePath]);
                 throw new \Exception("Arquivo não encontrado: {$this->filePath}");
             }
+
+            // Obter o caminho absoluto do arquivo
+            $absolutePath = Storage::disk('local')->path($this->filePath);
 
             // Importar dados do Excel usando maatwebsite/excel
             $data = Excel::toArray(new class implements ToArray, WithHeadingRow {
@@ -44,10 +48,10 @@ class ProcessStockFileJob implements ShouldQueue
                 {
                     return $array;
                 }
-            }, $this->filePath);
+            }, $absolutePath);
 
             if (empty($data) || empty($data[0])) {
-                Log::warning('Arquivo Excel vazio ou sem dados', ['file_path' => $this->filePath]);
+                Log::warning('Arquivo Excel vazio ou sem dados', ['file_path' => $absolutePath]);
                 return;
             }
 
@@ -60,46 +64,56 @@ class ProcessStockFileJob implements ShouldQueue
             // Iterar sobre cada linha do Excel
             foreach ($rows as $index => $row) {
                 try {
-                    // Verificar se as colunas necessárias existem
-                    if (!isset($row['SKU']) || empty($row['SKU'])) {
+                    // Converter todas as chaves para minúsculas para ignorar maiúsculas/minúsculas
+                    $rowData = array_change_key_case($row, CASE_LOWER);
+
+                    // Extrair dados usando chaves em minúsculas
+                    $sku = $rowData['sku'] ?? null;
+                    $priceRevendedor = $rowData['preco_revendedor'] ?? null;
+                    $priceDistribuidor = $rowData['preco_distribuidor'] ?? null;
+
+                    // Verificar se o SKU é válido
+                    if (!$sku || empty(trim($sku))) {
                         Log::error('Linha sem SKU válido', [
                             'row_number' => $index + 1,
-                            'row_data' => $row
+                            'row_data' => $rowData
                         ]);
                         $errorCount++;
                         continue;
                     }
 
-                    $sku = trim($row['SKU']);
+                    $sku = trim($sku);
                     
                     // Processar preço do revendedor
-                    $priceRevendedor = null;
-                    if (isset($row['Preco_Revendedor']) && !empty($row['Preco_Revendedor'])) {
-                        $priceRevendedor = $this->parsePrice($row['Preco_Revendedor']);
+                    if ($priceRevendedor && !empty(trim($priceRevendedor))) {
+                        $priceRevendedor = $this->parsePrice($priceRevendedor);
                         if ($priceRevendedor === false) {
                             Log::error('Preço do revendedor inválido', [
                                 'row_number' => $index + 1,
                                 'sku' => $sku,
-                                'price_value' => $row['Preco_Revendedor']
+                                'price_value' => $priceRevendedor
                             ]);
                             $errorCount++;
                             continue;
                         }
+                    } else {
+                        $priceRevendedor = null;
                     }
 
                     // Processar preço do distribuidor
-                    $priceDistribuidor = null;
-                    if (isset($row['Preco_Distribuidor']) && !empty($row['Preco_Distribuidor'])) {
-                        $priceDistribuidor = $this->parsePrice($row['Preco_Distribuidor']);
+                    if ($priceDistribuidor && !empty(trim($priceDistribuidor))) {
+                        $priceDistribuidor = $this->parsePrice($priceDistribuidor);
                         if ($priceDistribuidor === false) {
                             Log::error('Preço do distribuidor inválido', [
                                 'row_number' => $index + 1,
                                 'sku' => $sku,
-                                'price_value' => $row['Preco_Distribuidor']
+                                'price_value' => $priceDistribuidor
                             ]);
                             $errorCount++;
                             continue;
                         }
+                    } else {
+                        $priceDistribuidor = null;
                     }
 
                     // Usar updateOrCreate no modelo ProductPrice
@@ -125,7 +139,7 @@ class ProcessStockFileJob implements ShouldQueue
             }
 
             Log::info('ProcessStockFileJob concluído', [
-                'file_path' => $this->filePath,
+                'file_path' => $absolutePath,
                 'total_rows' => count($rows),
                 'processed_count' => $processedCount,
                 'error_count' => $errorCount
@@ -133,7 +147,7 @@ class ProcessStockFileJob implements ShouldQueue
 
         } catch (\Exception $e) {
             Log::error('Erro fatal no ProcessStockFileJob', [
-                'file_path' => $this->filePath,
+                'file_path' => $absolutePath ?? $this->filePath,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);

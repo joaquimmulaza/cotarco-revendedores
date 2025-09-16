@@ -62,7 +62,7 @@ const ProductCard = ({ product }) => {
 
         {/* Preço */}
         <div className="mb-3">
-          <span className="text-lg font-semibold text-gray-900 hidden">
+          <span className="text-lg font-semibold text-gray-900">
             {product.formatted_price}
           </span>
         </div>
