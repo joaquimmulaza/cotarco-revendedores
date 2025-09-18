@@ -50,8 +50,6 @@ class ProductResource extends JsonResource
             return 'Sob consulta';
         }
 
-        $price = $price / 100;
-
         return number_format($price, 2, ',', '.') . 'Kz';
     }
 

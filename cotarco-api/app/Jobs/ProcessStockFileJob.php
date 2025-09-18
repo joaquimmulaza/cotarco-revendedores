@@ -67,78 +67,79 @@ class ProcessStockFileJob implements ShouldQueue
             // Iterar sobre cada linha do Excel
             foreach ($rows as $index => $row) {
                 try {
-                    // Converter todas as chaves para minúsculas para ignorar maiúsculas/minúsculas
                     $rowData = array_change_key_case($row, CASE_LOWER);
+                    $sku = $rowData['sku'] ?? null;
 
-                    Log::debug('Dados brutos da linha do Excel', [
-                        'row_number' => $index + 1,
-                        'preco_revendedor_raw' => $rowData['preco_revendedor'] ?? 'NAO ENCONTRADO',
-                        'preco_distribuidor_raw' => $rowData['preco_distribuidor'] ?? 'NAO ENCONTRADO',
-                        'type_rev' => gettype($rowData['preco_revendedor'] ?? null),
-                        'type_dist' => gettype($rowData['preco_distribuidor'] ?? null),
-                    ]);
-
-                    // Encontrar a coluna de preços na primeira iteração
-                    if ($index === 0 && $priceColumnKey === null) {
+                    // Na primeira linha, descobre qual é a coluna de preços
+                    if ($priceColumnKey === null) {
                         foreach (array_keys($rowData) as $key) {
-                            if (strpos($key, 'precos') !== false || strpos($key, 'price') !== false) {
+                            $lowerKey = function_exists('mb_strtolower') ? mb_strtolower($key) : strtolower($key);
+                            $normalizedKey = strtr($lowerKey, [
+                                'ç' => 'c', 'é' => 'e', 'ê' => 'e', 'è' => 'e', 'ë' => 'e',
+                                'á' => 'a', 'à' => 'a', 'â' => 'a', 'ã' => 'a', 'ä' => 'a',
+                                'í' => 'i', 'ì' => 'i', 'î' => 'i', 'ï' => 'i',
+                                'ó' => 'o', 'ò' => 'o', 'ô' => 'o', 'õ' => 'o', 'ö' => 'o',
+                                'ú' => 'u', 'ù' => 'u', 'û' => 'u', 'ü' => 'u'
+                            ]);
+                            if (strpos($normalizedKey, 'preco') !== false || strpos($normalizedKey, 'price') !== false) {
                                 $priceColumnKey = $key;
                                 break;
                             }
                         }
+                        if ($priceColumnKey === null) {
+                            Log::error('Coluna de preço não encontrada na linha', ['row_number' => $index + 1, 'headers' => array_keys($rowData)]);
+                            $errorCount++;
+                            continue;
+                        }
                     }
 
-                    // Extrair dados usando chaves em minúsculas
-                    $sku = $rowData['sku'] ?? null;
-
-                    // Extrair e parsear o preço a partir da coluna identificada
+                    // Extrai e limpa o valor do preço
                     $priceValue = $priceColumnKey ? ($rowData[$priceColumnKey] ?? null) : null;
                     $parsedPrice = $this->parsePrice($priceValue);
 
-                    // Verificar se o SKU é válido
-                    if (!$sku || empty(trim($sku))) {
-                        Log::error('Linha sem SKU válido', [
+                    // Validações
+                    if (empty(trim($sku))) {
+                        Log::error('Linha sem SKU válido', ['row_number' => $index + 1, 'data' => $rowData]);
+                        $errorCount++;
+                        continue;
+                    }
+
+                    if (!is_numeric($parsedPrice)) {
+                        Log::error('Preço inválido ou não encontrado para o SKU', [
                             'row_number' => $index + 1,
-                            'row_data' => $rowData
+                            'sku' => $sku,
+                            'price_key' => $priceColumnKey,
+                            'price_value' => $priceValue
                         ]);
                         $errorCount++;
                         continue;
                     }
 
-                    $sku = trim($sku);
-
-                    // Validar preço ausente ou inválido
-                    if ($parsedPrice === null || !is_numeric($parsedPrice)) {
-                        Log::error('Linha com preço inválido ou ausente', ['row_number' => $index + 1, 'row_data' => $rowData]);
-                        $errorCount++;
-                        continue;
-                    }
-
-                    // Definir dados a atualizar conforme targetRole
+                    // Prepara os dados para o update com base no target_role
+                    $dataToUpdate = [];
                     if ($this->targetRole === 'revendedor') {
-                        $dataToUpdate = ['price_revendedor' => $parsedPrice];
+                        $dataToUpdate['price_revendedor'] = $parsedPrice;
                     } elseif ($this->targetRole === 'distribuidor') {
-                        $dataToUpdate = ['price_distribuidor' => $parsedPrice];
+                        $dataToUpdate['price_distribuidor'] = $parsedPrice;
                     } else {
-                        Log::error('targetRole inválido ao processar linha', ['target_role' => $this->targetRole, 'row_number' => $index + 1]);
+                        Log::error('Target Role inválido', ['role' => $this->targetRole]);
                         $errorCount++;
                         continue;
                     }
 
-                    // Usar updateOrCreate no modelo ProductPrice
+                    // Atualiza ou cria o registo
                     ProductPrice::updateOrCreate(
-                        ['product_sku' => $sku],
+                        ['product_sku' => trim($sku)],
                         $dataToUpdate
                     );
 
                     $processedCount++;
 
                 } catch (\Exception $e) {
-                    Log::error('Erro ao processar linha', [
+                    Log::error('Erro inesperado ao processar linha', [
                         'row_number' => $index + 1,
-                        'sku' => $row['SKU'] ?? 'N/A',
                         'error' => $e->getMessage(),
-                        'row_data' => $row
+                        'data' => $row
                     ]);
                     $errorCount++;
                 }
