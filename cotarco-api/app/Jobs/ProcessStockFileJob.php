@@ -69,8 +69,8 @@ class ProcessStockFileJob implements ShouldQueue
 
                     // Extrair dados usando chaves em minúsculas
                     $sku = $rowData['sku'] ?? null;
-                    $priceRevendedor = $rowData['preco_revendedor'] ?? null;
-                    $priceDistribuidor = $rowData['preco_distribuidor'] ?? null;
+                    $priceRevendedor = $this->parsePrice($rowData['preco_revendedor'] ?? null);
+                    $priceDistribuidor = $this->parsePrice($rowData['preco_distribuidor'] ?? null);
 
                     // Verificar se o SKU é válido
                     if (!$sku || empty(trim($sku))) {
@@ -83,37 +83,19 @@ class ProcessStockFileJob implements ShouldQueue
                     }
 
                     $sku = trim($sku);
-                    
-                    // Processar preço do revendedor
-                    if ($priceRevendedor && !empty(trim($priceRevendedor))) {
-                        $priceRevendedor = $this->parsePrice($priceRevendedor);
-                        if ($priceRevendedor === false) {
-                            Log::error('Preço do revendedor inválido', [
-                                'row_number' => $index + 1,
-                                'sku' => $sku,
-                                'price_value' => $priceRevendedor
-                            ]);
-                            $errorCount++;
-                            continue;
-                        }
-                    } else {
-                        $priceRevendedor = null;
+
+                    // Validar preços ausentes
+                    if ($priceRevendedor === null || $priceDistribuidor === null) {
+                        Log::error('Linha com preço de revendedor ou distribuidor ausente', ['row_number' => $index, 'row_data' => $row]);
+                        $errorCount++;
+                        continue;
                     }
 
-                    // Processar preço do distribuidor
-                    if ($priceDistribuidor && !empty(trim($priceDistribuidor))) {
-                        $priceDistribuidor = $this->parsePrice($priceDistribuidor);
-                        if ($priceDistribuidor === false) {
-                            Log::error('Preço do distribuidor inválido', [
-                                'row_number' => $index + 1,
-                                'sku' => $sku,
-                                'price_value' => $priceDistribuidor
-                            ]);
-                            $errorCount++;
-                            continue;
-                        }
-                    } else {
-                        $priceDistribuidor = null;
+                    // Validar preços numéricos
+                    if (!is_numeric($priceRevendedor) || !is_numeric($priceDistribuidor)) {
+                        Log::error('Linha com preço de revendedor ou distribuidor inválido', ['row_number' => $index, 'row_data' => $row]);
+                        $errorCount++;
+                        continue;
                     }
 
                     // Usar updateOrCreate no modelo ProductPrice
@@ -157,21 +139,21 @@ class ProcessStockFileJob implements ShouldQueue
     }
 
     /**
-     * Parse price value from Excel cell
+     * Converte strings de preço potencialmente formatadas em float
      */
-    private function parsePrice($value)
+    private function parsePrice($priceString)
     {
-        if (is_numeric($value)) {
-            return (float) $value;
+        if (empty($priceString)) {
+            return null;
         }
-
-        // Remove espaços e converte vírgula para ponto
-        $cleanValue = str_replace([' ', ','], ['', '.'], trim($value));
-        
-        if (is_numeric($cleanValue)) {
-            return (float) $cleanValue;
+        // Remove todos os separadores de milhares (pontos ou vírgulas)
+        $cleanedString = str_replace(['.', ','], ['', '.'], $priceString);
+        // Garante que apenas o último ponto é mantido como separador decimal
+        if (substr_count($cleanedString, '.') > 1) {
+            $parts = explode('.', $cleanedString);
+            $last = array_pop($parts);
+            $cleanedString = implode('', $parts) . '.' . $last;
         }
-
-        return false;
+        return (float) $cleanedString;
     }
 }
