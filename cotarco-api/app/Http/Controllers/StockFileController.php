@@ -38,7 +38,7 @@ class StockFileController extends Controller
         $validator = Validator::make($request->all(), [
             'file' => 'required|file|mimes:xlsx,xls|max:10240', // 10MB
             'display_name' => 'required|string|max:255',
-            'target_role' => 'required|string|in:revendedor,distribuidor',
+            'target_business_model' => 'required|string|in:B2B,B2C',
         ]);
 
         if ($validator->fails()) {
@@ -49,8 +49,8 @@ class StockFileController extends Controller
         }
 
         try {
-            // 1. Procurar StockFile existente com base no target_role
-            $existingStockFile = StockFile::where('target_role', $request->input('target_role'))->first();
+            // 1. Procurar StockFile existente com base no target_business_model
+            $existingStockFile = StockFile::where('target_business_model', $request->input('target_business_model'))->first();
 
             // 2. Se um StockFile antigo for encontrado, apagar o ficheiro físico
             if ($existingStockFile && Storage::exists($existingStockFile->file_path)) {
@@ -69,7 +69,7 @@ class StockFileController extends Controller
                 : $file->getClientOriginalName();
 
             $stockFile = StockFile::updateOrCreate(
-                ['target_role' => $request->input('target_role')], // Condição de procura
+                ['target_business_model' => $request->input('target_business_model')], // Condição de procura
                 [
                     'display_name' => $request->input('display_name'),
                     'file_path' => $filePath,
@@ -82,7 +82,7 @@ class StockFileController extends Controller
             );
 
             // Disparar o Job para processar o arquivo em segundo plano
-            ProcessStockFileJob::dispatch($filePath, $request->input('target_role'));
+            ProcessStockFileJob::dispatch($filePath, $request->input('target_business_model'));
 
             return response()->json([
                 'message' => 'Ficheiro recebido. A importação dos preços foi iniciada em segundo plano.',
@@ -92,7 +92,7 @@ class StockFileController extends Controller
                     'original_filename' => $stockFile->original_filename,
                     'size' => $stockFile->size,
                     'is_active' => $stockFile->is_active,
-                    'target_role' => $stockFile->target_role,
+                    'target_business_model' => $stockFile->target_business_model,
                     'uploaded_at' => $stockFile->created_at,
                 ],
             ], 201);

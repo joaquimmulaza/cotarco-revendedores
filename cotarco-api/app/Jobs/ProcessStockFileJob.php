@@ -16,15 +16,15 @@ class ProcessStockFileJob implements ShouldQueue
     use Queueable;
 
     protected $filePath;
-    protected $targetRole;
+    protected $targetBusinessModel;
 
     /**
      * Create a new job instance.
      */
-    public function __construct(string $filePath, string $targetRole)
+    public function __construct(string $filePath, string $targetBusinessModel)
     {
         $this->filePath = $filePath;
-        $this->targetRole = $targetRole;
+        $this->targetBusinessModel = $targetBusinessModel;
     }
 
     /**
@@ -33,7 +33,7 @@ class ProcessStockFileJob implements ShouldQueue
     public function handle(): void
     {
         try {
-            Log::info('ProcessStockFileJob iniciado', ['file_path' => $this->filePath, 'target_role' => $this->targetRole]);
+            Log::info('ProcessStockFileJob iniciado', ['file_path' => $this->filePath, 'target_business_model' => $this->targetBusinessModel]);
 
             // Verificar se o arquivo existe usando Storage Facade
             if (!Storage::disk('local')->exists($this->filePath)) {
@@ -115,14 +115,14 @@ class ProcessStockFileJob implements ShouldQueue
                         continue;
                     }
 
-                    // Prepara os dados para o update com base no target_role
+            // Prepara os dados para o update com base no target_business_model
                     $dataToUpdate = [];
-                    if ($this->targetRole === 'revendedor') {
-                        $dataToUpdate['price_revendedor'] = $parsedPrice;
-                    } elseif ($this->targetRole === 'distribuidor') {
-                        $dataToUpdate['price_distribuidor'] = $parsedPrice;
+            if ($this->targetBusinessModel === 'B2C') {
+                $dataToUpdate['price_b2c'] = $parsedPrice;
+            } elseif ($this->targetBusinessModel === 'B2B') {
+                $dataToUpdate['price_b2b'] = $parsedPrice;
                     } else {
-                        Log::error('Target Role inválido', ['role' => $this->targetRole]);
+                Log::error('Target Business Model inválido', ['target_business_model' => $this->targetBusinessModel]);
                         $errorCount++;
                         continue;
                     }
