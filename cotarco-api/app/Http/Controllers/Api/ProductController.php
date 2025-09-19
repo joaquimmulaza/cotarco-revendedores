@@ -48,8 +48,8 @@ class ProductController extends Controller
         // 4. Buscar preços locais para todos os SKUs
         $localPrices = ProductPrice::whereIn('product_sku', $allSkus)->get()->keyBy('product_sku');
 
-        // 5. Obter o role do usuário autenticado
-        $userRole = auth()->user()->role;
+        // 5. Obter o business model do utilizador autenticado (via partnerProfile)
+        $businessModel = auth()->user()->partnerProfile->business_model ?? null;
 
         // 6. Percorrer novamente a lista de produtos e anexar preços locais
         foreach ($products as &$product) {
@@ -58,14 +58,12 @@ class ProductController extends Controller
             if ($sku && $localPrices->has($sku)) {
                 $priceData = $localPrices[$sku];
                 
-                // Determinar qual coluna de preço usar baseado no role
-                if ($userRole === 'revendedor') {
-                    $product['local_price'] = $priceData->price_revendedor;
-                } elseif ($userRole === 'distribuidor') {
-                    $product['local_price'] = $priceData->price_distribuidor;
-                } else {
-                    $product['local_price'] = null;
-                }
+                // Determinar qual coluna de preço usar baseado no business_model
+                $product['local_price'] = match ($businessModel) {
+                    'B2C' => $priceData->price_b2c,
+                    'B2B' => $priceData->price_b2b,
+                    default => null,
+                };
             } else {
                 // Se não houver preço local, definir como null
                 $product['local_price'] = null;

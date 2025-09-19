@@ -141,6 +141,7 @@ class StockFileController extends Controller
     public function getStockFiles(): JsonResponse
     {
         $user = auth()->user();
+        $businessModel = $user->partnerProfile->business_model ?? null;
         
         if ($user->role === 'admin') {
             // Admin vê todos os ficheiros
@@ -148,9 +149,9 @@ class StockFileController extends Controller
                 ->orderBy('created_at', 'desc')
                 ->get();
         } else {
-            // Outros utilizadores veem apenas ficheiros do seu target_role
+            // Outros utilizadores veem apenas ficheiros do seu target_business_model
             $stockFiles = StockFile::with('uploadedByUser:id,name,email')
-                ->where('target_role', $user->role)
+                ->where('target_business_model', $businessModel)
                 ->orderBy('created_at', 'desc')
                 ->get();
         }
@@ -164,7 +165,7 @@ class StockFileController extends Controller
                     'mime_type' => $file->mime_type,
                     'size' => $file->size,
                     'is_active' => $file->is_active,
-                    'target_role' => $file->target_role,
+                    'target_business_model' => $file->target_business_model,
                     'uploaded_by' => $file->uploadedByUser,
                     'created_at' => $file->created_at,
                     'updated_at' => $file->updated_at,
@@ -233,9 +234,10 @@ class StockFileController extends Controller
     public function getForPartner(): JsonResponse
     {
         $user = auth()->user();
+        $businessModel = $user->partnerProfile->business_model ?? null;
         
         $stockFiles = StockFile::where('is_active', true)
-            ->where('target_role', $user->role)
+            ->where('target_business_model', $businessModel)
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -246,7 +248,7 @@ class StockFileController extends Controller
                     'display_name' => $file->display_name,
                     'original_filename' => $file->original_filename,
                     'size' => $file->size,
-                    'target_role' => $file->target_role,
+                    'target_business_model' => $file->target_business_model,
                     'is_active' => $file->is_active,
                     'created_at' => $file->created_at,
                     'updated_at' => $file->updated_at,
@@ -261,9 +263,10 @@ class StockFileController extends Controller
     public function downloadForPartner(): BinaryFileResponse|JsonResponse
     {
         $user = auth()->user();
+        $businessModel = $user->partnerProfile->business_model ?? null;
         
         $stockFile = StockFile::where('is_active', true)
-            ->where('target_role', $user->role)
+            ->where('target_business_model', $businessModel)
             ->latest()
             ->first();
 
@@ -307,9 +310,10 @@ class StockFileController extends Controller
     public function downloadSpecificFile(StockFile $file): BinaryFileResponse|JsonResponse
     {
         $user = auth()->user();
-        
-        // Verificar se o ficheiro pertence ao utilizador (baseado no target_role)
-        if ($file->target_role !== $user->role) {
+        $businessModel = $user->partnerProfile->business_model ?? null;
+
+        // Verificar se o ficheiro pertence ao utilizador (baseado no target_business_model)
+        if ($file->target_business_model !== $businessModel) {
             return response()->json([
                 'message' => 'Ficheiro não disponível para o seu tipo de utilizador.',
             ], 403);
