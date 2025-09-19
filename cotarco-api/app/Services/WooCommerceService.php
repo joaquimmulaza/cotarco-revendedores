@@ -34,10 +34,6 @@ class WooCommerceService
                 ]);
 
             if ($response->successful()) {
-                info('Resposta da API WooCommerce (Categorias):', [
-                    'status' => $response->status(),
-                    'body' => $response->json()
-                ]);
                 return $response->json();
             }
 

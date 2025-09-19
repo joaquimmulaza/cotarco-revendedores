@@ -18,7 +18,7 @@ const StockFileManager = () => {
   // Estados para upload
   const [selectedFile, setSelectedFile] = useState(null);
   const [displayName, setDisplayName] = useState('');
-  const [targetRole, setTargetRole] = useState('');
+  const [targetBusinessModel, setTargetBusinessModel] = useState('');
   const [uploadLoading, setUploadLoading] = useState(false);
   
   // Estados para diálogos de confirmação
@@ -80,7 +80,7 @@ const StockFileManager = () => {
   const handleUpload = async (e) => {
     e.preventDefault();
     
-    if (!selectedFile || !displayName.trim() || !targetRole) {
+    if (!selectedFile || !displayName.trim() || !targetBusinessModel) {
       setError('Por favor, preencha todos os campos obrigatórios.');
       return;
     }
@@ -92,14 +92,14 @@ const StockFileManager = () => {
       const formData = new FormData();
       formData.append('file', selectedFile);
       formData.append('display_name', displayName.trim());
-      formData.append('target_role', targetRole);
+      formData.append('target_business_model', targetBusinessModel);
       
       await adminService.uploadStockFile(formData);
       
       setSuccessMessage('Ficheiro de stock carregado com sucesso!');
       setSelectedFile(null);
       setDisplayName('');
-      setTargetRole('');
+      setTargetBusinessModel('');
       
       // Limpar o input de ficheiro
       const fileInput = document.getElementById('stock-file-input');
@@ -310,25 +310,25 @@ const StockFileManager = () => {
               </div>
               
               <div>
-                <label htmlFor="target-role" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="target-business-model" className="block text-sm font-medium text-gray-700 mb-2">
                   Destinatário <span className="text-red-500">*</span>
                 </label>
                 <select
-                  id="target-role"
-                  value={targetRole}
-                  onChange={(e) => setTargetRole(e.target.value)}
+                  id="target-business-model"
+                  value={targetBusinessModel}
+                  onChange={(e) => setTargetBusinessModel(e.target.value)}
                   className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                   required
                 >
                   <option value="">Selecione o destinatário</option>
-                  <option value="revendedor">Revendedor</option>
-                  <option value="distribuidor">Distribuidor</option>
+                  <option value="B2C">B2C</option>
+                  <option value="B2B">B2B</option>
                 </select>
               </div>
               
               <button
                 type="submit"
-                disabled={uploadLoading || !selectedFile || !displayName.trim() || !targetRole}
+                disabled={uploadLoading || !selectedFile || !displayName.trim() || !targetBusinessModel}
                 className="cursor-pointer w-full bg-gray-200 text-gray-600 px-4 py-2 rounded-md hover:bg-gray-300 disabled:opacity-60 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
               >
                 {uploadLoading ? (
@@ -393,8 +393,8 @@ const StockFileManager = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className="text-sm text-gray-900">
-                            {file.target_role === 'revendedor' ? 'Revendedor' : 
-                             file.target_role === 'distribuidor' ? 'Distribuidor' : 
+                            {file.target_business_model === 'B2C' ? 'B2C' : 
+                             file.target_business_model === 'B2B' ? 'B2B' : 
                              'Não especificado'}
                           </span>
                         </td>
@@ -474,26 +474,26 @@ const StockFileManager = () => {
                   </div>
                   
                   <div>
-                    <label htmlFor="replace-target-role" className="block text-sm font-medium text-gray-700 mb-2">
+                    <label htmlFor="replace-target-business-model" className="block text-sm font-medium text-gray-700 mb-2">
                       Destinatário <span className="text-red-500">*</span>
                     </label>
                     <select
-                      id="replace-target-role"
-                      value={targetRole}
-                      onChange={(e) => setTargetRole(e.target.value)}
+                      id="replace-target-business-model"
+                      value={targetBusinessModel}
+                      onChange={(e) => setTargetBusinessModel(e.target.value)}
                       className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                       required
                     >
                       <option value="">Selecione o destinatário</option>
-                      <option value="revendedor">Revendedor</option>
-                      <option value="distribuidor">Distribuidor</option>
+                      <option value="B2C">B2C</option>
+                      <option value="B2B">B2B</option>
                     </select>
                   </div>
                 </div>
                 
                 <button
                   type="submit"
-                  disabled={uploadLoading || !selectedFile || !displayName.trim() || !targetRole}
+                  disabled={uploadLoading || !selectedFile || !displayName.trim() || !targetBusinessModel}
                   className="cursor-pointer bg-gray-200 text-gray-600 px-6 py-2 rounded-md hover:bg-gray-300 disabled:opacity-60 disabled:cursor-not-allowed transition-colors flex items-center"
                 >
                   {uploadLoading ? (
