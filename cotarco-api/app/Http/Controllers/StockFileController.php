@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Jobs\ProcessStockFileJob;
 use App\Models\StockFile;
+use App\Models\ProductPrice;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
@@ -207,6 +208,13 @@ class StockFileController extends Controller
      */
     public function destroy(StockFile $file): JsonResponse
     {
+        // Limpar preços na tabela product_prices baseando-se no business model deste ficheiro
+        $businessModel = $file->target_business_model ?? null;
+        if (in_array($businessModel, ['B2B', 'B2C'], true)) {
+            $priceColumn = $businessModel === 'B2B' ? 'price_b2b' : 'price_b2c';
+            ProductPrice::query()->update([$priceColumn => null]);
+        }
+
         try {
             // Apagar ficheiro físico
             if (Storage::exists($file->file_path)) {

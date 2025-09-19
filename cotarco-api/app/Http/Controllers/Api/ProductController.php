@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ProductResource;
 use App\Models\ProductPrice;
+use App\Models\StockFile;
 use App\Services\WooCommerceService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -45,29 +46,30 @@ class ProductController extends Controller
             }
         }
 
-        // 4. Buscar preços locais para todos os SKUs
-        $localPrices = ProductPrice::whereIn('product_sku', $allSkus)->get()->keyBy('product_sku');
-
-        // 5. Obter o business model do utilizador autenticado (via partnerProfile)
+        // 4. Obter o business model do utilizador autenticado (via partnerProfile)
         $businessModel = auth()->user()->partnerProfile->business_model ?? null;
 
-        // 6. Percorrer novamente a lista de produtos e anexar preços locais
-        foreach ($products as &$product) {
-            $sku = $product['sku'] ?? null;
-            
-            if ($sku && $localPrices->has($sku)) {
-                $priceData = $localPrices[$sku];
-                
-                // Determinar qual coluna de preço usar baseado no business_model
-                $product['local_price'] = match ($businessModel) {
-                    'B2C' => $priceData->price_b2c,
-                    'B2B' => $priceData->price_b2b,
-                    default => null,
-                };
-            } else {
-                // Se não houver preço local, definir como null
-                $product['local_price'] = null;
+        // 5. Verificar se existe mapa de stock ativo para este business model
+        $stockFileIsActive = $businessModel
+            ? StockFile::where('target_business_model', $businessModel)->where('is_active', true)->exists()
+            : false;
+
+        // 6. Apenas anexar preços locais se houver mapa ativo para o business model
+        if ($businessModel && $stockFileIsActive) {
+            $localPrices = ProductPrice::whereIn('product_sku', $allSkus)->get()->keyBy('product_sku');
+
+            foreach ($products as &$product) {
+                $sku = $product['sku'] ?? null;
+                if ($sku && $localPrices->has($sku)) {
+                    $priceData = $localPrices[$sku];
+                    $product['local_price'] = match ($businessModel) {
+                        'B2C' => $priceData->price_b2c,
+                        'B2B' => $priceData->price_b2b,
+                        default => null,
+                    };
+                }
             }
+            unset($product);
         }
 
         return response()->json([
