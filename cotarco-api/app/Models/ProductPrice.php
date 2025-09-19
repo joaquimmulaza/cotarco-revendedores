@@ -8,12 +8,12 @@ class ProductPrice extends Model
 {
     protected $fillable = [
         'product_sku',
-        'price_revendedor',
-        'price_distribuidor',
+        'price_b2c',
+        'price_b2b',
     ];
 
     protected $casts = [
-        'price_revendedor' => 'decimal:2',
-        'price_distribuidor' => 'decimal:2',
+        'price_b2c' => 'decimal:2',
+        'price_b2b' => 'decimal:2',
     ];
 }

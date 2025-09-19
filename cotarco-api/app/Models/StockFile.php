@@ -20,7 +20,7 @@ class StockFile extends Model
         'size',
         'is_active',
         'uploaded_by_user_id',
-        'target_role',
+        'target_business_model',
     ];
 
     /**
