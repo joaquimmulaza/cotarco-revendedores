@@ -43,16 +43,38 @@ const Header = ({ user, onLogout, isAdmin = false, showStockMap = false, onStock
             
             {/* Botão Mapa de Stock - apenas para revendedores */}
             {!isAdmin && (
-              <button
-                onClick={handleStockMapClick}
-                className={`cursor-pointer px-6 py-2 text-sm font-medium rounded-lg transition-all duration-200 focus:outline-none ${
-                  showStockMap
-                    ? 'px-6 py-2  bg-gray-200 text-gray-900 hover: my-text-hover  '
-                    : 'px-6 py-2  bg-gray-100 text-gray-700 hover: my-text-hover'
-                }`}
-              >
-                Mapa de Stock
-              </button>
+              <div className="relative ml-6">
+                <button
+                  onClick={handleStockMapClick}
+                  className={`cursor-pointer px-6 py-2 text-sm font-medium rounded-lg transition-all duration-200 focus:outline-none relative z-10 ${
+                    showStockMap
+                      ? 'bg-[#F23C13] text-white hover:bg-[#E0350F]'
+                      : 'bg-[#F23C13] text-white hover:bg-[#E0350F]'
+                  }`}
+                >
+                  Mapa de Stock
+                </button>
+                {/* Efeito sonar pulsante */}
+                <div 
+                  className="absolute inset-x-1 -inset-y-1 rounded-lg bg-[#F23C13] opacity-25" 
+                  style={{
+                    animation: 'customPing 1s cubic-bezier(0, 0, 0.2, 1) infinite',
+                    transformOrigin: 'center'
+                  }}
+                ></div>
+                <style jsx>{`
+                  @keyframes customPing {
+                    0% {
+                      transform: scale(1);
+                      opacity: 0.5;
+                    }
+                    75%, 100% {
+                      transform: scale(1.3);
+                      opacity: 0;
+                    }
+                  }
+                `}</style>
+              </div>
             )}
           </div>
 

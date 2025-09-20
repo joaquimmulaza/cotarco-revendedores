@@ -9,7 +9,6 @@ const EditPartnerModal = ({
   loading = false 
 }) => {
   const [formData, setFormData] = useState({
-    role: '',
     business_model: ''
   });
 
@@ -17,7 +16,6 @@ const EditPartnerModal = ({
   useEffect(() => {
     if (partner) {
       setFormData({
-        role: partner.role || '',
         business_model: partner.partner_profile?.business_model || ''
       });
     }
@@ -31,7 +29,7 @@ const EditPartnerModal = ({
   };
 
   const handleClose = () => {
-    setFormData({ role: '', business_model: '' });
+    setFormData({ business_model: '' });
     onClose();
   };
 
@@ -54,23 +52,6 @@ const EditPartnerModal = ({
           </div>
 
           <form onSubmit={handleSubmit} className="px-6 py-4 space-y-4">
-            <div>
-              <label htmlFor="edit-role" className="block text-sm font-medium text-gray-700 mb-2">
-                Tipo de Conta
-              </label>
-              <select
-                id="edit-role"
-                value={formData.role}
-                onChange={(e) => setFormData(prev => ({ ...prev, role: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                required
-              >
-                <option value="">Selecione uma opção...</option>
-                <option value="revendedor">Revendedor</option>
-                <option value="distribuidor">Distribuidor</option>
-              </select>
-            </div>
-
             <div>
               <label htmlFor="edit-business-model" className="block text-sm font-medium text-gray-700 mb-2">
                 Modelo de Negócio

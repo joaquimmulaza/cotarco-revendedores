@@ -9,7 +9,6 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
 use Maatwebsite\Excel\Concerns\ToArray;
-use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
 class ProcessStockFileJob implements ShouldQueue
 {
@@ -45,7 +44,7 @@ class ProcessStockFileJob implements ShouldQueue
             $absolutePath = Storage::disk('local')->path($this->filePath);
 
             // Importar dados do Excel usando maatwebsite/excel
-            $data = Excel::toArray(new class implements ToArray, WithHeadingRow {
+            $data = Excel::toArray(new class implements ToArray {
                 public function array(array $array): array
                 {
                     return $array;
@@ -57,97 +56,90 @@ class ProcessStockFileJob implements ShouldQueue
                 return;
             }
 
-            $rows = $data[0];
+            $sheetData = $data[0];
+            $headerRowIndex = -1;
+            $skuColumnIndex = -1;
+            $priceColumnIndex = -1;
+            $headers = [];
+
+            // 1. Encontrar a linha do cabeçalho (procurando nas primeiras 20 linhas)
+            foreach (array_slice($sheetData, 0, 20) as $rowIndex => $row) {
+                $normalizedRow = array_map('strtolower', array_filter($row)); // Normaliza para minúsculas
+                $foundSku = false;
+                $foundPrice = false;
+
+                foreach ($normalizedRow as $cellIndex => $cellValue) {
+                    if (str_contains($cellValue, 'referencia') || str_contains($cellValue, 'sku')) {
+                        $foundSku = true;
+                        $skuColumnIndex = $cellIndex;
+                    }
+                    if (str_contains($cellValue, 'preço') || str_contains($cellValue, 'preco')) {
+                        $foundPrice = true;
+                        $priceColumnIndex = $cellIndex;
+                    }
+                }
+
+                if ($foundSku && $foundPrice) {
+                    $headerRowIndex = $rowIndex;
+                    $headers = array_map('strtolower', $row);
+                    break; // Encontrámos o cabeçalho, podemos parar
+                }
+            }
+
+            // 2. Se não encontrámos o cabeçalho, o ficheiro é inválido
+            if ($headerRowIndex === -1) {
+                Log::error('Linha de cabeçalho com colunas de Referencia e Preço não encontrada no ficheiro.');
+                throw new \Exception('Ficheiro Excel num formato irreconhecível.');
+            }
+
+            Log::info('Cabeçalho encontrado na linha ' . ($headerRowIndex + 1), [
+                'sku_column_index' => $skuColumnIndex,
+                'price_column_index' => $priceColumnIndex
+            ]);
+
+            // 3. Processar as linhas de dados (a partir da linha a seguir ao cabeçalho)
+            $dataRows = array_slice($sheetData, $headerRowIndex + 1);
             $processedCount = 0;
             $errorCount = 0;
-            $priceColumnKey = null;
 
-            Log::info('Iniciando processamento das linhas', ['total_rows' => count($rows)]);
-
-            // Iterar sobre cada linha do Excel
-            foreach ($rows as $index => $row) {
+            foreach ($dataRows as $index => $row) {
                 try {
-                    $rowData = array_change_key_case($row, CASE_LOWER);
-                    $sku = $rowData['sku'] ?? null;
-
-                    // Na primeira linha, descobre qual é a coluna de preços
-                    if ($priceColumnKey === null) {
-                        foreach (array_keys($rowData) as $key) {
-                            $lowerKey = function_exists('mb_strtolower') ? mb_strtolower($key) : strtolower($key);
-                            $normalizedKey = strtr($lowerKey, [
-                                'ç' => 'c', 'é' => 'e', 'ê' => 'e', 'è' => 'e', 'ë' => 'e',
-                                'á' => 'a', 'à' => 'a', 'â' => 'a', 'ã' => 'a', 'ä' => 'a',
-                                'í' => 'i', 'ì' => 'i', 'î' => 'i', 'ï' => 'i',
-                                'ó' => 'o', 'ò' => 'o', 'ô' => 'o', 'õ' => 'o', 'ö' => 'o',
-                                'ú' => 'u', 'ù' => 'u', 'û' => 'u', 'ü' => 'u'
-                            ]);
-                            if (strpos($normalizedKey, 'preco') !== false || strpos($normalizedKey, 'price') !== false) {
-                                $priceColumnKey = $key;
-                                break;
-                            }
-                        }
-                        if ($priceColumnKey === null) {
-                            Log::error('Coluna de preço não encontrada na linha', ['row_number' => $index + 1, 'headers' => array_keys($rowData)]);
-                            $errorCount++;
-                            continue;
-                        }
-                    }
-
-                    // Extrai e limpa o valor do preço
-                    $priceValue = $priceColumnKey ? ($rowData[$priceColumnKey] ?? null) : null;
+                    $sku = $row[$skuColumnIndex] ?? null;
+                    $priceValue = $row[$priceColumnIndex] ?? null;
                     $parsedPrice = $this->parsePrice($priceValue);
 
-                    // Validações
-                    if (empty(trim($sku))) {
-                        Log::error('Linha sem SKU válido', ['row_number' => $index + 1, 'data' => $rowData]);
-                        $errorCount++;
-                        continue;
+                    if (empty(trim((string)$sku))) {
+                        continue; // Ignora linhas sem SKU
                     }
-
                     if (!is_numeric($parsedPrice)) {
-                        Log::error('Preço inválido ou não encontrado para o SKU', [
-                            'row_number' => $index + 1,
-                            'sku' => $sku,
-                            'price_key' => $priceColumnKey,
-                            'price_value' => $priceValue
-                        ]);
                         $errorCount++;
-                        continue;
+                        continue; // Ignora linhas com preço inválido
                     }
 
-            // Prepara os dados para o update com base no target_business_model
+                    // Lógica para guardar na BD (mantém-se igual)
                     $dataToUpdate = [];
-            if ($this->targetBusinessModel === 'B2C') {
-                $dataToUpdate['price_b2c'] = $parsedPrice;
-            } elseif ($this->targetBusinessModel === 'B2B') {
-                $dataToUpdate['price_b2b'] = $parsedPrice;
-                    } else {
-                Log::error('Target Business Model inválido', ['target_business_model' => $this->targetBusinessModel]);
-                        $errorCount++;
-                        continue;
+                    if ($this->targetBusinessModel === 'B2C') {
+                        $dataToUpdate['price_b2c'] = $parsedPrice;
+                    } elseif ($this->targetBusinessModel === 'B2B') {
+                        $dataToUpdate['price_b2b'] = $parsedPrice;
                     }
 
-                    // Atualiza ou cria o registo
-                    ProductPrice::updateOrCreate(
-                        ['product_sku' => trim($sku)],
-                        $dataToUpdate
-                    );
-
-                    $processedCount++;
-
+                    if (!empty($dataToUpdate)) {
+                        ProductPrice::updateOrCreate(
+                            ['product_sku' => trim((string)$sku)],
+                            $dataToUpdate
+                        );
+                        $processedCount++;
+                    }
                 } catch (\Exception $e) {
-                    Log::error('Erro inesperado ao processar linha', [
-                        'row_number' => $index + 1,
-                        'error' => $e->getMessage(),
-                        'data' => $row
-                    ]);
                     $errorCount++;
+                    Log::error('Erro ao processar linha de dados', ['row_index' => $headerRowIndex + $index + 2, 'error' => $e->getMessage()]);
                 }
             }
 
             Log::info('ProcessStockFileJob concluído', [
                 'file_path' => $absolutePath,
-                'total_rows' => count($rows),
+                'total_rows' => count($dataRows),
                 'processed_count' => $processedCount,
                 'error_count' => $errorCount
             ]);

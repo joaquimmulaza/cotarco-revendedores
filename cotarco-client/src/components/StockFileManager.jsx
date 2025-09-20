@@ -275,7 +275,7 @@ const StockFileManager = () => {
                 Nenhum mapa de stock carregado
               </h3>
               <p className="text-gray-600">
-                Carregue um ficheiro Excel (.xlsx ou .xls) para disponibilizar aos revendedores.
+                Carregue um ficheiro Excel (.xlsx ou .xls) para disponibilizar aos parceiros.
               </p>
             </div>
             

@@ -35,7 +35,7 @@ class RegisterPartnerAction
                 'name' => $validatedData['name'],
                 'email' => $validatedData['email'],
                 'password' => Hash::make($validatedData['password']),
-                'role' => null,
+                'role' => 'distribuidor',
                 'status' => 'pending_email_validation',
             ]);
 

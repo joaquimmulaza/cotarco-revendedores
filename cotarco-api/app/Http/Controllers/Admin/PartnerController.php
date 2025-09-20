@@ -128,8 +128,7 @@ class PartnerController extends Controller
     {
         // Validar os campos recebidos
         $validated = $request->validate([
-            'role' => 'required|in:revendedor,distribuidor',
-            'business_model' => 'required|in:B2B,B2C',
+            'business_model' => 'sometimes|string|in:B2B,B2C',
         ]);
 
         // Verificar se o usuário é um parceiro (revendedor, distribuidor ou null - não classificado)
@@ -141,19 +140,10 @@ class PartnerController extends Controller
         DB::beginTransaction();
 
         try {
-            // Atualizar o role do usuário
-            $user->update(['role' => $validated['role']]);
-
-            // Atualizar o business_model no perfil associado
-            if ($user->partnerProfile) {
-                $user->partnerProfile->update(['business_model' => $validated['business_model']]);
-            } else {
-                // Se não existir perfil, criar um básico
-                PartnerProfile::create([
-                    'user_id' => $user->id,
-                    'business_model' => $validated['business_model'],
-                    'company_name' => $user->name, // Valor padrão
-                    'phone_number' => '', // Valor padrão
+            // Atualizar o business_model no perfil associado se fornecido
+            if ($request->has('business_model')) {
+                $user->partnerProfile()->update([
+                    'business_model' => $request->input('business_model')
                 ]);
             }
 
