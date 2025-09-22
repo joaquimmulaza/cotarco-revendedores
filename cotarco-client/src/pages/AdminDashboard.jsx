@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { Tab, TabGroup, TabList, TabPanel, TabPanels } from '@headlessui/react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion as Motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import StockFileManager from '../components/StockFileManager';
 import Header from '../components/Header';
 import PartnerManager from '../components/admin/PartnerManager';
-import { UserGroupIcon, DocumentDuplicateIcon } from '@heroicons/react/24/outline';
+import { UserGroupIcon, DocumentDuplicateIcon, CubeIcon } from '@heroicons/react/24/outline';
+import ProductListViewer from '../components/admin/ProductListViewer';
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(' ');
@@ -18,6 +19,7 @@ const AdminDashboard = () => {
   const navigationTabs = [
     { name: 'Gestão de Parceiros', icon: UserGroupIcon },
     { name: 'Mapa de Stock', icon: DocumentDuplicateIcon },
+    { name: 'Gestão de Produtos', icon: CubeIcon },
   ];
 
   return (
@@ -66,7 +68,7 @@ const AdminDashboard = () => {
           {/* Painéis de Conteúdo com Animação */}
           <TabPanels>
             <AnimatePresence mode="wait">
-              <motion.div
+              <Motion.div
                 key={selectedIndex}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -79,7 +81,10 @@ const AdminDashboard = () => {
                 <TabPanel>
                   <StockFileManager />
                 </TabPanel>
-              </motion.div>
+                <TabPanel>
+                  <ProductListViewer />
+                </TabPanel>
+              </Motion.div>
             </AnimatePresence>
           </TabPanels>
         </TabGroup>
