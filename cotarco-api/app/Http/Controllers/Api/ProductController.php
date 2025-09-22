@@ -79,4 +79,55 @@ class ProductController extends Controller
             'message' => 'Produtos obtidos com sucesso'
         ]);
     }
+
+    /**
+     * Retorna a lista de produtos para administradores, incluindo preços B2B e B2C
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function indexForAdmin(Request $request): JsonResponse
+    {
+        $categoryId = $request->query('category_id');
+        $page = (int) $request->query('page', 1);
+        $perPage = (int) $request->query('per_page', 10);
+
+        // 1. Obter produtos do WooCommerce (já processados com variações separadas)
+        $result = $this->wooCommerceService->getProducts($categoryId, $page, $perPage);
+        $products = $result['products'];
+
+        // 2. Recolher todos os SKUs não vazios
+        $allSkus = [];
+        foreach ($products as $product) {
+            if (isset($product['sku']) && !empty($product['sku'])) {
+                $allSkus[] = $product['sku'];
+            }
+        }
+
+        // 3. Buscar preços locais para os SKUs
+        $localPrices = empty($allSkus)
+            ? collect([])
+            : ProductPrice::whereIn('product_sku', $allSkus)->get()->keyBy('product_sku');
+
+        // 4. Anexar ambos os preços para cada produto
+        foreach ($products as &$product) {
+            $sku = $product['sku'] ?? null;
+            if ($sku && $localPrices->has($sku)) {
+                $priceData = $localPrices[$sku];
+                $product['price_b2b'] = $priceData->price_b2b ?? null;
+                $product['price_b2c'] = $priceData->price_b2c ?? null;
+            } else {
+                $product['price_b2b'] = null;
+                $product['price_b2c'] = null;
+            }
+        }
+        unset($product);
+
+        return response()->json([
+            'success' => true,
+            'data' => $products,
+            'pagination' => $result['pagination'],
+            'message' => 'Produtos (admin) obtidos com sucesso'
+        ]);
+    }
 }

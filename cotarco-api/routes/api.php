@@ -164,6 +164,9 @@ Route::middleware('auth:sanctum')->group(function () {
         // Dashboard
         Route::get('/dashboard-stats', [AdminController::class, 'getDashboardStats']);
 
+        // Produtos (listagem para admin com preços B2B e B2C)
+        Route::get('/products', [ProductController::class, 'indexForAdmin']);
+
         // Gestão de Parceiros (nova estrutura)
         Route::prefix('partners')->group(function () {
             Route::get('/', [PartnerController::class, 'index']);
