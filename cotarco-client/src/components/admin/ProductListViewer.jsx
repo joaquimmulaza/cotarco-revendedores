@@ -68,72 +68,50 @@ function deriveImageUrl(product) {
 
 export default function ProductListViewer() {
   const [data, setData] = useState([]);
-  const [pagination, setPagination] = useState({
-    current_page: 1,
-    per_page: 10,
-    total_pages: 0,
-    total_items: 0,
-    has_next_page: false,
-    has_prev_page: false,
-  });
+  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
+  const [pageCount, setPageCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
   const table = useReactTable({
     data,
     columns,
-    state: {
-      pagination: {
-        pageIndex: (pagination.current_page || 1) - 1,
-        pageSize: pagination.per_page || 10,
-      },
-    },
-    manualPagination: true,
-    pageCount: pagination.total_pages || -1,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    onPaginationChange: (updater) => {
-      const next = typeof updater === 'function' ? updater({
-        pageIndex: (pagination.current_page || 1) - 1,
-        pageSize: pagination.per_page || 10,
-      }) : updater;
-      // Carregar nova página do backend
-      const nextPage = (next.pageIndex ?? 0) + 1;
-      fetchProducts(nextPage, next.pageSize ?? pagination.per_page);
-    },
+    manualPagination: true,
+    pageCount: pageCount,
+    onPaginationChange: setPagination,
+    state: { pagination },
   });
 
-  const fetchProducts = async (page = 1, perPage = 10) => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const response = await api.get('/admin/products', {
-        params: { page, per_page: perPage },
-      });
-      const payload = response.data || {};
-      const items = Array.isArray(payload.data) ? payload.data : [];
-      // Derivar image_url se não vier do backend
-      const normalized = items.map((p) => ({
-        ...p,
-        image_url: p.image_url ?? deriveImageUrl(p),
-      }));
-      setData(normalized);
-      if (payload.pagination) {
-        setPagination(payload.pagination);
-      } else {
-        setPagination((prev) => ({ ...prev, current_page: page, per_page: perPage }));
-      }
-    } catch (err) {
-      setError(err?.response?.data?.message || 'Erro ao carregar produtos');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchProducts(1, pagination.per_page);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    const fetchProducts = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const response = await api.get('/admin/products', {
+          params: { page: pagination.pageIndex + 1, per_page: pagination.pageSize },
+        });
+
+        // Extrai apenas o array de produtos para a tabela
+        const items = Array.isArray(response?.data?.data) ? response.data.data : [];
+        const normalized = items.map((p) => ({
+          ...p,
+          image_url: p.image_url ?? deriveImageUrl(p),
+        }));
+        setData(normalized);
+
+        // Guarda os metadados da paginação (compatível com meta.last_page ou pagination.total_pages)
+        const lastPage = response?.data?.meta?.last_page ?? response?.data?.pagination?.total_pages ?? 0;
+        setPageCount(Number(lastPage) || 0);
+      } catch (err) {
+        setError(err?.response?.data?.message || 'Erro ao carregar produtos');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchProducts();
+  }, [pagination.pageIndex, pagination.pageSize]);
 
   const headers = useMemo(() => table.getHeaderGroups(), [table]);
   const rows = useMemo(() => table.getRowModel().rows, [table]);
@@ -187,20 +165,20 @@ export default function ProductListViewer() {
 
       <div className="mt-4 flex items-center justify-between">
         <div className="text-sm text-gray-600">
-          Página {pagination.current_page} de {pagination.total_pages || 1}
+          Página {pagination.pageIndex + 1} de {pageCount || 1}
         </div>
         <div className="space-x-2">
           <button
             className="px-3 py-2 rounded border text-sm disabled:opacity-50"
             onClick={() => table.previousPage()}
-            disabled={!pagination.has_prev_page}
+            disabled={!table.getCanPreviousPage()}
           >
             Anterior
           </button>
           <button
             className="px-3 py-2 rounded border text-sm disabled:opacity-50"
             onClick={() => table.nextPage()}
-            disabled={!pagination.has_next_page}
+            disabled={!table.getCanNextPage()}
           >
             Próxima
           </button>
