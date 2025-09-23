@@ -9,6 +9,7 @@ use App\Models\StockFile;
 use App\Services\WooCommerceService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class ProductController extends Controller
 {
@@ -123,11 +124,18 @@ class ProductController extends Controller
         }
         unset($product);
 
-        return response()->json([
-            'success' => true,
-            'data' => $products,
-            'pagination' => $result['pagination'],
-            'message' => 'Produtos (admin) obtidos com sucesso'
-        ]);
+        $totalItems = (int)($result['pagination']['total_items'] ?? count($products));
+        $paginatedProducts = new LengthAwarePaginator(
+            $products,
+            $totalItems,
+            $perPage,
+            $page,
+            [
+                'path' => $request->url(),
+                'query' => $request->query(),
+            ]
+        );
+
+        return response()->json($paginatedProducts);
     }
 }

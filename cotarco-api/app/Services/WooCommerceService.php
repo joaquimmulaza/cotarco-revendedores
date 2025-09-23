@@ -208,7 +208,8 @@ class WooCommerceService
         return [
             'id' => $variation['id'],
             'name' => $variationName,
-            'sku' => $variation['sku'] ?? null,
+            // Herdar SKU do pai quando a variação não tem SKU definido
+            'sku' => ($variation['sku'] ?? null) ?: ($parentProduct['sku'] ?? null),
             'regular_price' => $variation['regular_price'] ?? $parentProduct['regular_price'],
             'stock_status' => $variation['stock_status'] ?? $parentProduct['stock_status'],
             'images' => $image ? [$image] : ($parentProduct['images'] ?? []),

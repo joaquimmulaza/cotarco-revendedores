@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   useReactTable,
   getCoreRowModel,
@@ -31,24 +31,24 @@ const columns = [
   {
     header: 'Preço B2C',
     accessorKey: 'price_b2c',
-    cell: ({ getValue }) =>
-      getValue()
-        ? `${(getValue() / 100).toLocaleString('pt-AO', {
-            style: 'currency',
-            currency: 'AOA',
-          })}`
-        : 'N/D',
+    cell: ({ getValue }) => {
+      const value = getValue();
+      if (value === null || value === undefined) return 'N/D';
+      const num = Number(value);
+      if (Number.isNaN(num)) return 'N/D';
+      return num.toLocaleString('pt-AO', { style: 'currency', currency: 'AOA' });
+    },
   },
   {
     header: 'Preço B2B',
     accessorKey: 'price_b2b',
-    cell: ({ getValue }) =>
-      getValue()
-        ? `${(getValue() / 100).toLocaleString('pt-AO', {
-            style: 'currency',
-            currency: 'AOA',
-          })}`
-        : 'N/D',
+    cell: ({ getValue }) => {
+      const value = getValue();
+      if (value === null || value === undefined) return 'N/D';
+      const num = Number(value);
+      if (Number.isNaN(num)) return 'N/D';
+      return num.toLocaleString('pt-AO', { style: 'currency', currency: 'AOA' });
+    },
   },
   {
     header: 'Stock',
@@ -101,8 +101,12 @@ export default function ProductListViewer() {
         }));
         setData(normalized);
 
-        // Guarda os metadados da paginação (compatível com meta.last_page ou pagination.total_pages)
-        const lastPage = response?.data?.meta?.last_page ?? response?.data?.pagination?.total_pages ?? 0;
+        // Guarda os metadados da paginação (compatível com paginator do Laravel e fallback antigo)
+        const lastPage =
+          response?.data?.meta?.last_page ??
+          response?.data?.pagination?.total_pages ??
+          response?.data?.last_page ??
+          0;
         setPageCount(Number(lastPage) || 0);
       } catch (err) {
         setError(err?.response?.data?.message || 'Erro ao carregar produtos');
@@ -113,8 +117,8 @@ export default function ProductListViewer() {
     fetchProducts();
   }, [pagination.pageIndex, pagination.pageSize]);
 
-  const headers = useMemo(() => table.getHeaderGroups(), [table]);
-  const rows = useMemo(() => table.getRowModel().rows, [table]);
+  const headers = table.getHeaderGroups();
+  const rows = table.getRowModel().rows;
 
   return (
     <div className="w-full">
