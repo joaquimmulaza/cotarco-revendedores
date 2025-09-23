@@ -10,6 +10,7 @@ use App\Services\WooCommerceService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Cache;
 
 class ProductController extends Controller
 {
@@ -93,48 +94,59 @@ class ProductController extends Controller
         $page = (int) $request->query('page', 1);
         $perPage = (int) $request->query('per_page', 10);
 
-        // 1. Obter produtos do WooCommerce (já processados com variações separadas)
-        $result = $this->wooCommerceService->getProducts($categoryId, $page, $perPage);
-        $products = $result['products'];
-
-        // 2. Recolher todos os SKUs não vazios
-        $allSkus = [];
-        foreach ($products as $product) {
-            if (isset($product['sku']) && !empty($product['sku'])) {
-                $allSkus[] = $product['sku'];
-            }
-        }
-
-        // 3. Buscar preços locais para os SKUs
-        $localPrices = empty($allSkus)
-            ? collect([])
-            : ProductPrice::whereIn('product_sku', $allSkus)->get()->keyBy('product_sku');
-
-        // 4. Anexar ambos os preços para cada produto
-        foreach ($products as &$product) {
-            $sku = $product['sku'] ?? null;
-            if ($sku && $localPrices->has($sku)) {
-                $priceData = $localPrices[$sku];
-                $product['price_b2b'] = $priceData->price_b2b ?? null;
-                $product['price_b2c'] = $priceData->price_b2c ?? null;
-            } else {
-                $product['price_b2b'] = null;
-                $product['price_b2c'] = null;
-            }
-        }
-        unset($product);
-
-        $totalItems = (int)($result['pagination']['total_items'] ?? count($products));
-        $paginatedProducts = new LengthAwarePaginator(
-            $products,
-            $totalItems,
-            $perPage,
+        $cacheKey = sprintf(
+            'products_admin_page_%d_per_%d_cat_%s',
             $page,
-            [
-                'path' => $request->url(),
-                'query' => $request->query(),
-            ]
+            $perPage,
+            $categoryId !== null ? (string) $categoryId : 'all'
         );
+
+        $paginatedProducts = Cache::remember($cacheKey, now()->addMinutes(15), function () use ($categoryId, $page, $perPage, $request) {
+            // 1. Obter produtos do WooCommerce (já processados com variações separadas)
+            $result = $this->wooCommerceService->getProducts($categoryId, $page, $perPage);
+            $products = $result['products'];
+
+            // 2. Recolher todos os SKUs não vazios
+            $allSkus = [];
+            foreach ($products as $product) {
+                if (isset($product['sku']) && !empty($product['sku'])) {
+                    $allSkus[] = $product['sku'];
+                }
+            }
+
+            // 3. Buscar preços locais para os SKUs
+            $localPrices = empty($allSkus)
+                ? collect([])
+                : ProductPrice::whereIn('product_sku', $allSkus)->get()->keyBy('product_sku');
+
+            // 4. Anexar ambos os preços para cada produto
+            foreach ($products as &$product) {
+                $sku = $product['sku'] ?? null;
+                if ($sku && $localPrices->has($sku)) {
+                    $priceData = $localPrices[$sku];
+                    $product['price_b2b'] = $priceData->price_b2b ?? null;
+                    $product['price_b2c'] = $priceData->price_b2c ?? null;
+                } else {
+                    $product['price_b2b'] = null;
+                    $product['price_b2c'] = null;
+                }
+            }
+            unset($product);
+
+            $totalItems = (int)($result['pagination']['total_items'] ?? count($products));
+            $paginated = new LengthAwarePaginator(
+                $products,
+                $totalItems,
+                $perPage,
+                $page,
+                [
+                    'path' => $request->url(),
+                    'query' => $request->query(),
+                ]
+            );
+
+            return $paginated;
+        });
 
         return response()->json($paginatedProducts);
     }

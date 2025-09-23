@@ -71,6 +71,7 @@ export default function ProductListViewer() {
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
   const [pageCount, setPageCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [isFetching, setIsFetching] = useState(false);
   const [error, setError] = useState(null);
 
   const table = useReactTable({
@@ -84,38 +85,87 @@ export default function ProductListViewer() {
     state: { pagination },
   });
 
-  useEffect(() => {
-    const fetchProducts = async () => {
+  const fetchProducts = async (pageIndex, pageSize, { initial = false } = {}) => {
+    if (initial) {
       setIsLoading(true);
-      setError(null);
-      try {
-        const response = await api.get('/admin/products', {
-          params: { page: pagination.pageIndex + 1, per_page: pagination.pageSize },
-        });
+    } else {
+      setIsFetching(true);
+    }
+    setError(null);
+    try {
+      const response = await api.get('/admin/products', {
+        params: { page: pageIndex + 1, per_page: pageSize },
+      });
 
-        // Extrai apenas o array de produtos para a tabela
-        const items = Array.isArray(response?.data?.data) ? response.data.data : [];
-        const normalized = items.map((p) => ({
-          ...p,
-          image_url: p.image_url ?? deriveImageUrl(p),
-        }));
-        setData(normalized);
+      // Extrai apenas o array de produtos para a tabela
+      const items = Array.isArray(response?.data?.data) ? response.data.data : [];
+      const normalized = items.map((p) => ({
+        ...p,
+        image_url: p.image_url ?? deriveImageUrl(p),
+      }));
+      setData(normalized);
 
-        // Guarda os metadados da paginação (compatível com paginator do Laravel e fallback antigo)
-        const lastPage =
-          response?.data?.meta?.last_page ??
-          response?.data?.pagination?.total_pages ??
-          response?.data?.last_page ??
-          0;
-        setPageCount(Number(lastPage) || 0);
-      } catch (err) {
-        setError(err?.response?.data?.message || 'Erro ao carregar produtos');
-      } finally {
-        setIsLoading(false);
+      // Guarda os metadados da paginação (compatível com paginator do Laravel e fallback antigo)
+      const lastPage =
+        response?.data?.meta?.last_page ??
+        response?.data?.pagination?.total_pages ??
+        response?.data?.last_page ??
+        0;
+      const parsedLastPage = Number(lastPage);
+      if (!Number.isNaN(parsedLastPage) && parsedLastPage > 0) {
+        setPageCount(parsedLastPage);
       }
-    };
-    fetchProducts();
+    } catch (err) {
+      setError(err?.response?.data?.message || 'Erro ao carregar produtos');
+    } finally {
+      if (initial) {
+        setIsLoading(false);
+      } else {
+        setIsFetching(false);
+      }
+    }
+  };
+
+  useEffect(() => {
+    // Carregamento inicial
+    fetchProducts(pagination.pageIndex, pagination.pageSize, { initial: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    // Paginação e mudanças de pageSize
+    if (!(pagination.pageIndex === 0 && pagination.pageSize === 10 && data.length === 0)) {
+      fetchProducts(pagination.pageIndex, pagination.pageSize, { initial: false });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pagination.pageIndex, pagination.pageSize]);
+
+  const TableSkeleton = () => (
+    <div className="overflow-x-auto border rounded-md">
+      <table className="min-w-full divide-y divide-gray-200">
+        <thead className="bg-gray-50">
+          <tr>
+            {columns.map((col) => (
+              <th key={col.header} className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                {col.header}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody className="bg-white divide-y divide-gray-100">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <tr key={i}>
+              {columns.map((_, j) => (
+                <td key={j} className="px-4 py-3">
+                  <div className="h-8 bg-gray-200 rounded animate-pulse"></div>
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
 
   const headers = table.getHeaderGroups();
   const rows = table.getRowModel().rows;
@@ -128,44 +178,48 @@ export default function ProductListViewer() {
         {error && <p className="text-sm text-red-600">{error}</p>}
       </div>
 
-      <div className="overflow-x-auto border rounded-md">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            {headers.map((headerGroup) => (
-              <tr key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <th
-                    key={header.id}
-                    className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(header.column.columnDef.header, header.getContext())}
-                  </th>
-                ))}
-              </tr>
-            ))}
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-100">
-            {rows.map((row) => (
-              <tr key={row.id} className="hover:bg-gray-50">
-                {row.getVisibleCells().map((cell) => (
-                  <td key={cell.id} className="px-4 py-3 text-sm text-gray-700">
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </td>)
-                )}
-              </tr>
-            ))}
-            {rows.length === 0 && !isLoading && (
-              <tr>
-                <td className="px-4 py-6 text-center text-sm text-gray-500" colSpan={columns.length}>
-                  Sem produtos para mostrar.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+      {isLoading || isFetching ? (
+        <TableSkeleton />
+      ) : (
+        <div className="relative overflow-x-auto border rounded-md">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              {headers.map((headerGroup) => (
+                <tr key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => (
+                    <th
+                      key={header.id}
+                      className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(header.column.columnDef.header, header.getContext())}
+                    </th>
+                  ))}
+                </tr>
+              ))}
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-100">
+              {rows.map((row) => (
+                <tr key={row.id} className="hover:bg-gray-50">
+                  {row.getVisibleCells().map((cell) => (
+                    <td key={cell.id} className="px-4 py-3 text-sm text-gray-700">
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </td>)
+                  )}
+                </tr>
+              ))}
+              {rows.length === 0 && (
+                <tr>
+                  <td className="px-4 py-6 text-center text-sm text-gray-500" colSpan={columns.length}>
+                    Sem produtos para mostrar.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       <div className="mt-4 flex items-center justify-between">
         <div className="text-sm text-gray-600">
