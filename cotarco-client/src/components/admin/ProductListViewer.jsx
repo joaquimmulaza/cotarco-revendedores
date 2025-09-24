@@ -73,6 +73,10 @@ export default function ProductListViewer() {
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(false);
   const [error, setError] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [categories, setCategories] = useState([]);
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(searchQuery);
 
   const table = useReactTable({
     data,
@@ -85,7 +89,11 @@ export default function ProductListViewer() {
     state: { pagination },
   });
 
-  const fetchProducts = async (pageIndex, pageSize, { initial = false } = {}) => {
+  const fetchProducts = async (
+    pageIndex,
+    pageSize,
+    { initial = false, search, categoryId } = {}
+  ) => {
     if (initial) {
       setIsLoading(true);
     } else {
@@ -93,9 +101,10 @@ export default function ProductListViewer() {
     }
     setError(null);
     try {
-      const response = await api.get('/admin/products', {
-        params: { page: pageIndex + 1, per_page: pageSize },
-      });
+      const params = { page: pageIndex + 1, per_page: pageSize };
+      if (search && String(search).trim() !== '') params.search = search;
+      if (categoryId && String(categoryId).trim() !== '') params.category_id = categoryId;
+      const response = await api.get('/admin/products', { params });
 
       // Extrai apenas o array de produtos para a tabela
       const items = Array.isArray(response?.data?.data) ? response.data.data : [];
@@ -128,17 +137,65 @@ export default function ProductListViewer() {
 
   useEffect(() => {
     // Carregamento inicial
-    fetchProducts(pagination.pageIndex, pagination.pageSize, { initial: true });
+    fetchProducts(pagination.pageIndex, pagination.pageSize, {
+      initial: true,
+      search: searchQuery,
+      categoryId: selectedCategory,
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Carregar categorias ao montar o componente
   useEffect(() => {
-    // Paginação e mudanças de pageSize
+    let isMounted = true;
+    const loadCategories = async () => {
+      try {
+        const response = await api.get('/categories');
+        // Aceita diferentes formatos de resposta
+        const list = Array.isArray(response?.data?.data)
+          ? response.data.data
+          : Array.isArray(response?.data)
+          ? response.data
+          : [];
+        if (isMounted) setCategories(list);
+      } catch {
+        // Silencioso por enquanto; podemos ligar ao estado de erro no futuro
+        // console.error('Erro ao carregar categorias', e);
+      }
+    };
+    loadCategories();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    // Paginação, pageSize, pesquisa e categoria
     if (!(pagination.pageIndex === 0 && pagination.pageSize === 10 && data.length === 0)) {
-      fetchProducts(pagination.pageIndex, pagination.pageSize, { initial: false });
+      fetchProducts(pagination.pageIndex, pagination.pageSize, {
+        initial: false,
+        search: debouncedSearchQuery,
+        categoryId: selectedCategory,
+      });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pagination.pageIndex, pagination.pageSize]);
+  }, [pagination.pageIndex, pagination.pageSize, debouncedSearchQuery, selectedCategory]);
+
+  // Debounce para a pesquisa: espera 500ms após o utilizador parar de digitar
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+      // Reset para a primeira página quando a pesquisa muda
+      setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+    }, 500);
+
+    return () => clearTimeout(handler);
+  }, [searchQuery]);
+
+  // Reset da página ao mudar a categoria
+  useEffect(() => {
+    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+  }, [selectedCategory]);
 
   const TableSkeleton = () => (
     <div className="overflow-x-auto border rounded-md">
@@ -176,6 +233,29 @@ export default function ProductListViewer() {
         <h2 className="text-xl font-semibold">Produtos</h2>
         {isLoading && <p className="text-sm text-gray-500">A carregar...</p>}
         {error && <p className="text-sm text-red-600">{error}</p>}
+      </div>
+
+      {/* Filtros: Pesquisa e Categoria */}
+      <div className="mb-4 flex flex-col md:flex-row gap-3">
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Pesquisar produtos..."
+          className="w-full md:w-1/2 px-3 py-2 border rounded"
+        />
+        <select
+          value={selectedCategory ?? ''}
+          onChange={(e) => setSelectedCategory(e.target.value || null)}
+          className="w-full md:w-1/2 px-3 py-2 border rounded"
+        >
+          <option value="">Todas as Categorias</option>
+          {Array.isArray(categories) && categories.map((cat) => (
+            <option key={cat.id ?? cat.slug ?? cat.name} value={cat.id ?? cat.slug ?? ''}>
+              {cat.name ?? cat.title ?? 'Categoria'}
+            </option>
+          ))}
+        </select>
       </div>
 
       {isLoading || isFetching ? (
