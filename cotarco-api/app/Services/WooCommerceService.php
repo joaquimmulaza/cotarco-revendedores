@@ -67,57 +67,102 @@ class WooCommerceService
     public function getProducts(int $categoryId = null, int $page = 1, int $perPage = 10, $search = null)
     {
         try {
-            $params = [
+            $baseParams = [
                 'page' => $page,
                 'per_page' => $perPage,
                 'status' => 'publish'
             ];
 
             if ($categoryId !== null) {
-                $params['category'] = $categoryId;
+                $baseParams['category'] = $categoryId;
             }
 
+            $http = Http::withBasicAuth($this->consumerKey, $this->consumerSecret);
+
+            $productsCombined = [];
+            $seenProductIds = [];
+            $totalItemsHeader = 0;
+            $totalPagesHeader = 0;
+
+            // 1) Pesquisa por nome/descrição (search)
+            $paramsSearch = $baseParams;
             if ($search !== null && trim((string) $search) !== '') {
-                $params['search'] = $search;
+                $paramsSearch['search'] = $search;
+            }
+            $responseSearch = $http->get($this->storeUrl . '/wp-json/wc/v3/products', $paramsSearch);
+            if ($responseSearch->successful()) {
+                $productsSearch = $responseSearch->json();
+                $totalItemsHeader = (int) ($responseSearch->header('X-WP-Total') ?? 0);
+                $totalPagesHeader = (int) ($responseSearch->header('X-WP-TotalPages') ?? 0);
+                foreach ($productsSearch as $product) {
+                    $productsCombined[] = $product;
+                    $seenProductIds[$product['id']] = true;
+                }
             }
 
-            $response = Http::withBasicAuth($this->consumerKey, $this->consumerSecret)
-                ->get($this->storeUrl . '/wp-json/wc/v3/products', $params);
-
-            if ($response->successful()) {
-                $products = $response->json();
-                $totalItems = $response->header('X-WP-Total');
-                $totalPages = $response->header('X-WP-TotalPages');
-
-                // Inicializar array para produtos expandidos
-                $flattenedProducts = [];
-
-                foreach ($products as $product) {
-                    if (isset($product['type']) && $product['type'] === 'variable') {
-                        // Buscar variações do produto variável
-                        $variations = $this->getProductVariations($product['id']);
-                        
-                        foreach ($variations as $variation) {
-                            $flattenedProducts[] = $this->createVariationProduct($product, $variation);
+            // 2) Pesquisa adicional por SKU exato (quando há termo de pesquisa)
+            if ($search !== null && trim((string) $search) !== '') {
+                $paramsSku = $baseParams;
+                // Para SKU, forçamos primeira página e um per_page maior para garantir captura
+                $paramsSku['page'] = 1;
+                $paramsSku['per_page'] = max(100, (int) $perPage);
+                $paramsSku['sku'] = trim((string) $search); // WooCommerce aceita filtro por SKU exato
+                $responseSku = $http->get($this->storeUrl . '/wp-json/wc/v3/products', $paramsSku);
+                if ($responseSku->successful()) {
+                    $productsSku = $responseSku->json();
+                    foreach ($productsSku as $product) {
+                        if (!isset($seenProductIds[$product['id']])) {
+                            $productsCombined[] = $product;
+                            $seenProductIds[$product['id']] = true;
                         }
-                    } else {
-                        // Produto simples - adicionar diretamente
-                        $flattenedProducts[] = $product;
                     }
                 }
-
-                return [
-                    'products' => $flattenedProducts,
-                    'pagination' => [
-                        'current_page' => $page,
-                        'per_page' => $perPage,
-                        'total_items' => (int) $totalItems,
-                        'total_pages' => (int) $totalPages,
-                        'has_next_page' => $page < (int) $totalPages,
-                        'has_prev_page' => $page > 1
-                    ]
-                ];
             }
+
+            // Se não houve nenhuma resposta bem-sucedida, tenta uma chamada simples sem search
+            if (empty($productsCombined)) {
+                $response = $http->get($this->storeUrl . '/wp-json/wc/v3/products', $baseParams);
+                if ($response->successful()) {
+                    $productsCombined = $response->json();
+                    $totalItemsHeader = (int) ($response->header('X-WP-Total') ?? 0);
+                    $totalPagesHeader = (int) ($response->header('X-WP-TotalPages') ?? 0);
+                } else {
+                    Log::error('Erro ao buscar produtos do WooCommerce', [
+                        'status' => $response->status(),
+                        'body' => $response->body(),
+                        'params' => $baseParams
+                    ]);
+                }
+            }
+
+            // Inicializar array para produtos expandidos (variantes)
+            $flattenedProducts = [];
+            foreach ($productsCombined as $product) {
+                if (isset($product['type']) && $product['type'] === 'variable') {
+                    $variations = $this->getProductVariations($product['id']);
+                    foreach ($variations as $variation) {
+                        $flattenedProducts[] = $this->createVariationProduct($product, $variation);
+                    }
+                } else {
+                    $flattenedProducts[] = $product;
+                }
+            }
+
+            // Ajustar paginação: quando há search, combinamos resultados (nome + SKU)
+            $totalItems = $totalItemsHeader > 0 ? $totalItemsHeader : count($flattenedProducts);
+            $totalPages = $totalPagesHeader > 0 ? $totalPagesHeader : (int) ceil($totalItems / max(1, $perPage));
+
+            return [
+                'products' => $flattenedProducts,
+                'pagination' => [
+                    'current_page' => $page,
+                    'per_page' => $perPage,
+                    'total_items' => (int) $totalItems,
+                    'total_pages' => (int) $totalPages,
+                    'has_next_page' => $page < (int) $totalPages,
+                    'has_prev_page' => $page > 1
+                ]
+            ];
 
             Log::error('Erro ao buscar produtos do WooCommerce', [
                 'status' => $response->status(),
