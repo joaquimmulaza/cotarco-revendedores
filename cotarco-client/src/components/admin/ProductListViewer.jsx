@@ -102,8 +102,12 @@ export default function ProductListViewer() {
     setError(null);
     try {
       const params = { page: pageIndex + 1, per_page: pageSize };
-      if (search && String(search).trim() !== '') params.search = search;
-      if (categoryId && String(categoryId).trim() !== '') params.category_id = categoryId;
+      if (search != null && String(search).trim() !== '') {
+        params.search = search;
+      }
+      if (categoryId != null && String(categoryId).trim() !== '') {
+        params.category_id = categoryId;
+      }
       const response = await api.get('/admin/products', { params });
 
       // Extrai apenas o array de produtos para a tabela
@@ -163,14 +167,11 @@ export default function ProductListViewer() {
 
   useEffect(() => {
     // Paginação, pageSize, pesquisa e categoria
-    if (!(pagination.pageIndex === 0 && pagination.pageSize === 10 && data.length === 0)) {
-      fetchProducts(pagination.pageIndex, pagination.pageSize, {
-        initial: false,
-        search: debouncedSearchQuery,
-        categoryId: selectedCategory,
-      });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    fetchProducts(pagination.pageIndex, pagination.pageSize, {
+      initial: false,
+      search: debouncedSearchQuery,
+      categoryId: selectedCategory,
+    });
   }, [pagination.pageIndex, pagination.pageSize, debouncedSearchQuery, selectedCategory]);
 
   // Debounce para a pesquisa: espera 500ms após o utilizador parar de digitar

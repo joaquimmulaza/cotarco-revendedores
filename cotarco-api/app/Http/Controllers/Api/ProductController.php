@@ -91,19 +91,21 @@ class ProductController extends Controller
     public function indexForAdmin(Request $request): JsonResponse
     {
         $categoryId = $request->query('category_id');
+        $search = $request->query('search');
         $page = (int) $request->query('page', 1);
         $perPage = (int) $request->query('per_page', 10);
 
         $cacheKey = sprintf(
-            'products_admin_page_%d_per_%d_cat_%s',
+            'products_admin_page_%d_per_%d_cat_%s_search_%s',
             $page,
             $perPage,
-            $categoryId !== null ? (string) $categoryId : 'all'
+            $categoryId !== null ? (string) $categoryId : 'all',
+            ($search !== null && $search !== '') ? (string) $search : 'all'
         );
 
-        $paginatedProducts = Cache::remember($cacheKey, now()->addMinutes(15), function () use ($categoryId, $page, $perPage, $request) {
+        $paginatedProducts = Cache::remember($cacheKey, now()->addMinutes(15), function () use ($categoryId, $page, $perPage, $request, $search) {
             // 1. Obter produtos do WooCommerce (já processados com variações separadas)
-            $result = $this->wooCommerceService->getProducts($categoryId, $page, $perPage);
+            $result = $this->wooCommerceService->getProducts($categoryId, $page, $perPage, $search);
             $products = $result['products'];
 
             // 2. Recolher todos os SKUs não vazios

@@ -64,7 +64,7 @@ class WooCommerceService
      * @param int $perPage
      * @return array
      */
-    public function getProducts(int $categoryId = null, int $page = 1, int $perPage = 10)
+    public function getProducts(int $categoryId = null, int $page = 1, int $perPage = 10, $search = null)
     {
         try {
             $params = [
@@ -75,6 +75,10 @@ class WooCommerceService
 
             if ($categoryId !== null) {
                 $params['category'] = $categoryId;
+            }
+
+            if ($search !== null && trim((string) $search) !== '') {
+                $params['search'] = $search;
             }
 
             $response = Http::withBasicAuth($this->consumerKey, $this->consumerSecret)
