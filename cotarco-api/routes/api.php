@@ -205,9 +205,11 @@ Route::middleware('auth:sanctum')->group(function () {
         });
     });
 
-    // Rotas de Produtos e Categorias (protegidas por auth:sanctum e parceiro)
+    // Rota de Categorias (protegida apenas por auth:sanctum)
+    Route::get('/categories', [CategoryController::class, 'index']);
+
+    // Rotas de Produtos (protegidA por auth:sanctum e parceiro)
     Route::middleware('parceiro')->group(function () {
-        Route::get('/categories', [CategoryController::class, 'index']);
         Route::get('/products', [ProductController::class, 'index']);
     });
 });

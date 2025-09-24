@@ -135,15 +135,7 @@ export default function ProductListViewer() {
     }
   };
 
-  useEffect(() => {
-    // Carregamento inicial
-    fetchProducts(pagination.pageIndex, pagination.pageSize, {
-      initial: true,
-      search: searchQuery,
-      categoryId: selectedCategory,
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  
 
   // Carregar categorias ao montar o componente
   useEffect(() => {
