@@ -18,6 +18,8 @@ const PartnerManager = () => {
   const [selectedTabIndex, setSelectedTabIndex] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [actionLoading, setActionLoading] = useState({});
+  const [searchTerm] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm);
   
   // Estados para o modal de edição
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -36,12 +38,13 @@ const PartnerManager = () => {
   console.log(`[PartnerManager] Current state - Tab: ${selectedTabIndex}, Status: ${currentStatus}, Page: ${currentPage}`);
   
   // Usar o hook customizado para gerenciar dados dos parceiros
-  const { partners, pagination, loading, error, refetch: fetchPartners } = usePartners(
-    currentStatus, 
-    currentPage, 
-    isAdmin, 
-    authLoading
-  );
+  const { data, isLoading, error, refetch: fetchPartners } = usePartners({
+    status: currentStatus,
+    page: currentPage,
+    searchTerm: debouncedSearchTerm,
+  });
+  const partners = data?.data ?? [];
+  const pagination = data || null; // API response já é o objeto de paginação
   
   // Estados para estatísticas
   const [stats, setStats] = useState({
@@ -146,12 +149,16 @@ const PartnerManager = () => {
     }
   }, [selectedTabIndex, authLoading, isAdmin, fetchStats]);
 
-  const handlePageChange = useCallback((newPage) => {
-    console.log(`[PartnerManager] Page change requested from ${currentPage} to ${newPage}`);
-    if (newPage !== currentPage) {
-      setCurrentPage(newPage);
-    }
-  }, [currentPage]);
+  // Debounce simples para termo de pesquisa
+  useEffect(() => {
+    const t = setTimeout(() => {
+      if (debouncedSearchTerm !== searchTerm) {
+        setDebouncedSearchTerm(searchTerm);
+        setCurrentPage(1);
+      }
+    }, 500);
+    return () => clearTimeout(t);
+  }, [searchTerm, debouncedSearchTerm]);
 
   const handleViewAlvara = async (userId) => {
     try {
@@ -352,7 +359,7 @@ const PartnerManager = () => {
           
           <TabPanels>
             {/* Todos os painéis renderizam o mesmo conteúdo, mas com status diferentes */}
-            {tabStatusMap.map((status, index) => (
+            {tabStatusMap.map((status) => (
               <TabPanel key={status}>
                 <div className=" py-4">
                   {authLoading ? (
@@ -399,7 +406,7 @@ const PartnerManager = () => {
                     <>
                       <PartnerList
                         partners={partners}
-                        loading={loading}
+                        loading={isLoading}
                         error={error}
                         currentStatus={currentStatus}
                         actionLoading={actionLoading}
@@ -409,11 +416,13 @@ const PartnerManager = () => {
                         onRetry={fetchPartners}
                       />
                       
-                      <Pagination
-                        pagination={pagination}
-                        currentPage={currentPage}
-                        onPageChange={handlePageChange}
-                      />
+                      {pagination && (
+                        <Pagination
+                          currentPage={pagination.current_page}
+                          totalPages={pagination.last_page}
+                          onPageChange={setCurrentPage}
+                        />
+                      )}
                     </>
                   )}
                 </div>

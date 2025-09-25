@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { adminService } from '../services/api';
+import api from '../services/api';
 
 /**
  * Hook customizado para gerenciar dados de parceiros
@@ -9,14 +9,19 @@ import { adminService } from '../services/api';
  * @param {boolean} authLoading - Se a autenticação está carregando
  * @returns {Object} { partners, pagination, loading, error, refetch }
  */
-export const usePartners = (status, page, isAdmin, authLoading) => {
+export const usePartners = ({ status, page, searchTerm }) => {
   return useQuery({
-    queryKey: ['partners', status, page, isAdmin, authLoading],
+    queryKey: ['partners', { status, page, searchTerm }],
     queryFn: async () => {
-      const response = await adminService.getPartners(status, page);
-      return response;
+      const params = {
+        page: page ?? 1,
+        per_page: 15,
+      };
+      if (status) params.status = status;
+      if (searchTerm && String(searchTerm).trim() !== '') params.search = searchTerm;
+      const response = await api.get('/admin/partners', { params });
+      return response.data;
     },
-    enabled: !!isAdmin && !authLoading,
     keepPreviousData: true,
   });
 };
