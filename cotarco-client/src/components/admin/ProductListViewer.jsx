@@ -97,7 +97,7 @@ export default function ProductListViewer() {
   
   const { data: categories, isLoading: isLoadingCategories, error: categoriesError } = useQuery({
     queryKey: ['categories'],
-    queryFn: () => api.get('/categories').then(res => res.data),
+    queryFn: () => api.get('/categories').then(res => res.data?.data),
     staleTime: Infinity,
   });
 
