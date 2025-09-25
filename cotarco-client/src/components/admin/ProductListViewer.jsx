@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, Fragment } from 'react';
+import React, { useEffect, useState, Fragment } from 'react';
 import { Listbox, ListboxButton, ListboxOptions, ListboxOption, Transition } from '@headlessui/react';
 import { CheckIcon, ChevronUpDownIcon } from '@heroicons/react/20/solid';
 import {
@@ -7,6 +7,7 @@ import {
   getPaginationRowModel,
   flexRender,
 } from '@tanstack/react-table';
+import { useQuery } from '@tanstack/react-query';
 import api from '../../services/api';
 
 // Definição das colunas
@@ -86,27 +87,54 @@ function deriveImageUrl(product) {
 }
 
 export default function ProductListViewer() {
-  const [data, setData] = useState([]);
   const [pagination, setPagination] = useState({
     pageIndex: 0,
     pageSize: 10
   });
-  const [pageCount, setPageCount] = useState(0);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isFetching, setIsFetching] = useState(false);
-  const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState(null);
-  const [categories, setCategories] = useState([]);
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(searchQuery);
   
-  // Para controlar quando já tivemos dados carregados
-  const hasInitialFetch = useRef(false);
-  const hasDataLoaded = useRef(false);
-  const [isLoadingCategories, setIsLoadingCategories] = useState(false);
+  const { data: categories, isLoading: isLoadingCategories, error: categoriesError } = useQuery({
+    queryKey: ['categories'],
+    queryFn: () => api.get('/categories').then(res => res.data),
+    staleTime: Infinity,
+  });
+
+  const fetchProducts = async () => {
+    const params = {
+      page: pagination.pageIndex + 1,
+      per_page: pagination.pageSize,
+    };
+    if (debouncedSearchQuery != null && String(debouncedSearchQuery).trim() !== '') {
+      params.search = debouncedSearchQuery;
+    }
+    if (selectedCategory != null && String(selectedCategory).trim() !== '') {
+      params.category_id = selectedCategory;
+    }
+    const response = await api.get('/admin/products', { params });
+    return response.data;
+  };
+
+  const { data, isLoading, isFetching, error } = useQuery({
+    queryKey: ['adminProducts', pagination.pageIndex, pagination.pageSize, debouncedSearchQuery, selectedCategory],
+    queryFn: fetchProducts,
+    keepPreviousData: true,
+  });
+
+  const items = (Array.isArray(data?.data) ? data.data : []).map((p) => ({
+    ...p,
+    image_url: p.image_url ?? deriveImageUrl(p),
+  }));
+
+  const pageCount = (() => {
+    const lastPage = data?.meta?.last_page ?? data?.pagination?.total_pages ?? data?.last_page ?? 0;
+    const parsed = Number(lastPage);
+    return !Number.isNaN(parsed) && parsed > 0 ? parsed : 0;
+  })();
 
   const table = useReactTable({
-    data,
+    data: items,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -118,135 +146,11 @@ export default function ProductListViewer() {
     },
   });
 
-  const fetchProducts = async (
-    pageIndex,
-    pageSize,
-    { initial = false, search, categoryId } = {}
-  ) => {
-    // Determina se deve mostrar skeleton (loading) ou overlay (fetching)
-    const shouldShowSkeleton = initial || !hasDataLoaded.current;
-    
-    if (shouldShowSkeleton) {
-      setIsLoading(true);
-    } else {
-      setIsFetching(true);
-    }
-    
-    setError(null);
-
-    try {
-      const params = {
-        page: pageIndex + 1,
-        per_page: pageSize
-      };
-
-      if (search != null && String(search).trim() !== '') {
-        params.search = search;
-      }
-
-      if (categoryId != null && String(categoryId).trim() !== '') {
-        params.category_id = categoryId;
-      }
-
-      const response = await api.get('/admin/products', { params });
-
-      // Extrai apenas o array de produtos para a tabela
-      const items = Array.isArray(response?.data?.data) ? response.data.data : [];
-      const normalized = items.map((p) => ({
-        ...p,
-        image_url: p.image_url ?? deriveImageUrl(p),
-      }));
-
-      setData(normalized);
-
-      // Guarda os metadados da paginação (compatível com paginator do Laravel e fallback antigo)
-      const lastPage = response?.data?.meta?.last_page ?? 
-                      response?.data?.pagination?.total_pages ?? 
-                      response?.data?.last_page ?? 0;
-      const parsedLastPage = Number(lastPage);
-      if (!Number.isNaN(parsedLastPage) && parsedLastPage > 0) {
-        setPageCount(parsedLastPage);
-      }
-
-      // Marca que já temos dados carregados
-      hasDataLoaded.current = true;
-
-    } catch (err) {
-      setError(err?.response?.data?.message || 'Erro ao carregar produtos');
-    } finally {
-      if (shouldShowSkeleton) {
-        setIsLoading(false);
-      } else {
-        setIsFetching(false);
-      }
-    }
-  };
-
-  // Carregar categorias ao montar o componente
-  useEffect(() => {
-    let isMounted = true;
-    const loadCategories = async () => {
-      try {
-        const CACHE_KEY = 'categories_cache_v1';
-        const now = Date.now();
-        let usedCache = false;
-        const cached = sessionStorage.getItem(CACHE_KEY);
-        if (cached) {
-          try {
-            const parsed = JSON.parse(cached);
-            if (parsed && Array.isArray(parsed.data) && typeof parsed.ts === 'number') {
-              const isFresh = now - parsed.ts < 10 * 60 * 1000; // 10 min
-              if (isFresh) {
-                if (isMounted) setCategories(parsed.data);
-                usedCache = true;
-              }
-            }
-          } catch {
-            // Ignora cache inválido
-          }
-        }
-
-        if (!usedCache) setIsLoadingCategories(true);
-
-        const response = await api.get('/categories');
-        // Aceita diferentes formatos de resposta
-        const list = Array.isArray(response?.data?.data) 
-          ? response.data.data 
-          : Array.isArray(response?.data) 
-            ? response.data 
-            : [];
-        if (isMounted) setCategories(list);
-        try {
-          sessionStorage.setItem(CACHE_KEY, JSON.stringify({ data: list, ts: now }));
-        } catch {
-          // Ignora falhas de armazenamento
-        }
-      } catch {
-        // Silencioso por enquanto
-      } finally {
-        if (isMounted) setIsLoadingCategories(false);
-      }
-    };
-
-    loadCategories();
-    return () => {
-      isMounted = false;
-    };
-  }, []);
+  // Removido o carregamento manual de categorias; agora é feito via useQuery
 
   useEffect(() => {
-    // Paginação, pageSize, pesquisa e categoria
-    const isInitial = !hasInitialFetch.current;
-    
-    fetchProducts(pagination.pageIndex, pagination.pageSize, {
-      initial: isInitial,
-      search: debouncedSearchQuery,
-      categoryId: selectedCategory,
-    });
-
-    if (isInitial) {
-      hasInitialFetch.current = true;
-    }
+    // Reset para a primeira página quando a pesquisa muda
+    // (o useQuery reagirá ao queryKey e buscará os dados)
   }, [pagination.pageIndex, pagination.pageSize, debouncedSearchQuery, selectedCategory]);
 
   // Debounce para a pesquisa: espera 500ms após o utilizador parar de digitar
@@ -310,6 +214,7 @@ export default function ProductListViewer() {
       <div className="mb-4">
         <h2 className="text-xl font-semibold">Produtos</h2>
         {error && <p className="text-sm text-red-600">{error}</p>}
+        {categoriesError && <p className="text-sm text-red-600">Erro ao carregar categorias</p>}
       </div>
 
       {/* Filtros: Pesquisa e Categoria */}

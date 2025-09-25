@@ -34,50 +34,64 @@ class ProductController extends Controller
         $page = (int) $request->query('page', 1);
         $perPage = (int) $request->query('per_page', 10);
 
-        // 1. Obter produtos do WooCommerce (já processados com variações separadas)
-        $result = $this->wooCommerceService->getProducts($categoryId, $page, $perPage);
-        $products = $result['products'];
+        $cacheKey = sprintf(
+            'products_page_%d_per_%d_cat_%s',
+            $page,
+            $perPage,
+            $categoryId !== null ? (string) $categoryId : 'all'
+        );
 
-        // 2. Criar array para guardar todos os SKUs
-        $allSkus = [];
+        $data = Cache::remember($cacheKey, now()->addMinutes(15), function () use ($categoryId, $page, $perPage) {
+            // 1. Obter produtos do WooCommerce (já processados com variações separadas)
+            $result = $this->wooCommerceService->getProducts($categoryId, $page, $perPage);
+            $products = $result['products'];
 
-        // 3. Percorrer a lista de produtos para recolher todos os SKUs
-        foreach ($products as $product) {
-            if (isset($product['sku']) && !empty($product['sku'])) {
-                $allSkus[] = $product['sku'];
-            }
-        }
+            // 2. Criar array para guardar todos os SKUs
+            $allSkus = [];
 
-        // 4. Obter o business model do utilizador autenticado (via partnerProfile)
-        $businessModel = auth()->user()->partnerProfile->business_model ?? null;
-
-        // 5. Verificar se existe mapa de stock ativo para este business model
-        $stockFileIsActive = $businessModel
-            ? StockFile::where('target_business_model', $businessModel)->where('is_active', true)->exists()
-            : false;
-
-        // 6. Apenas anexar preços locais se houver mapa ativo para o business model
-        if ($businessModel && $stockFileIsActive) {
-            $localPrices = ProductPrice::whereIn('product_sku', $allSkus)->get()->keyBy('product_sku');
-
-            foreach ($products as &$product) {
-                $sku = $product['sku'] ?? null;
-                if ($sku && $localPrices->has($sku)) {
-                    $priceData = $localPrices[$sku];
-                    $product['local_price'] = match ($businessModel) {
-                        'B2C' => $priceData->price_b2c,
-                        'B2B' => $priceData->price_b2b,
-                        default => null,
-                    };
+            // 3. Percorrer a lista de produtos para recolher todos os SKUs
+            foreach ($products as $product) {
+                if (isset($product['sku']) && !empty($product['sku'])) {
+                    $allSkus[] = $product['sku'];
                 }
             }
-            unset($product);
-        }
+
+            // 4. Obter o business model do utilizador autenticado (via partnerProfile)
+            $businessModel = auth()->user()->partnerProfile->business_model ?? null;
+
+            // 5. Verificar se existe mapa de stock ativo para este business model
+            $stockFileIsActive = $businessModel
+                ? StockFile::where('target_business_model', $businessModel)->where('is_active', true)->exists()
+                : false;
+
+            // 6. Apenas anexar preços locais se houver mapa ativo para o business model
+            if ($businessModel && $stockFileIsActive) {
+                $localPrices = ProductPrice::whereIn('product_sku', $allSkus)->get()->keyBy('product_sku');
+
+                foreach ($products as &$product) {
+                    $sku = $product['sku'] ?? null;
+                    if ($sku && $localPrices->has($sku)) {
+                        $priceData = $localPrices[$sku];
+                        $product['local_price'] = match ($businessModel) {
+                            'B2C' => $priceData->price_b2c,
+                            'B2B' => $priceData->price_b2b,
+                            default => null,
+                        };
+                    }
+                }
+                unset($product);
+            }
+
+            return [
+                'products' => $products,
+                'pagination' => $result['pagination'] ?? null,
+            ];
+        });
 
         return response()->json([
             'success' => true,
-            'data' => ProductResource::collection($products),
-            'pagination' => $result['pagination'],
+            'data' => ProductResource::collection($data['products'] ?? []),
+            'pagination' => $data['pagination'] ?? null,
             'message' => 'Produtos obtidos com sucesso'
         ]);
     }
