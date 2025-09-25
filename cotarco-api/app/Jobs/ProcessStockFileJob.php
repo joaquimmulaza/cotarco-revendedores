@@ -60,6 +60,7 @@ class ProcessStockFileJob implements ShouldQueue
             $headerRowIndex = -1;
             $skuColumnIndex = -1;
             $priceColumnIndex = -1;
+            $stockColumnIndex = -1;
             $headers = [];
 
             // 1. Encontrar a linha do cabeçalho (procurando nas primeiras 20 linhas)
@@ -67,6 +68,7 @@ class ProcessStockFileJob implements ShouldQueue
                 $normalizedRow = array_map('strtolower', array_filter($row)); // Normaliza para minúsculas
                 $foundSku = false;
                 $foundPrice = false;
+                $foundStock = false;
 
                 foreach ($normalizedRow as $cellIndex => $cellValue) {
                     if (str_contains($cellValue, 'referencia') || str_contains($cellValue, 'sku')) {
@@ -77,9 +79,15 @@ class ProcessStockFileJob implements ShouldQueue
                         $foundPrice = true;
                         $priceColumnIndex = $cellIndex;
                     }
+                    // Procurar coluna de stock
+                    if (str_contains($cellValue, 'qtd total')) {
+                        $foundStock = true;
+                        $stockColumnIndex = $cellIndex;
+                    }
                 }
 
-                if ($foundSku && $foundPrice) {
+                // Cabeçalho só é válido se encontrar SKU, Preço e Stock
+                if ($foundSku && $foundPrice && $foundStock) {
                     $headerRowIndex = $rowIndex;
                     $headers = array_map('strtolower', $row);
                     break; // Encontrámos o cabeçalho, podemos parar
@@ -88,13 +96,14 @@ class ProcessStockFileJob implements ShouldQueue
 
             // 2. Se não encontrámos o cabeçalho, o ficheiro é inválido
             if ($headerRowIndex === -1) {
-                Log::error('Linha de cabeçalho com colunas de Referencia e Preço não encontrada no ficheiro.');
+                Log::error('Linha de cabeçalho com colunas de Referencia, Preço e Stock não encontrada no ficheiro.');
                 throw new \Exception('Ficheiro Excel num formato irreconhecível.');
             }
 
             Log::info('Cabeçalho encontrado na linha ' . ($headerRowIndex + 1), [
                 'sku_column_index' => $skuColumnIndex,
-                'price_column_index' => $priceColumnIndex
+                'price_column_index' => $priceColumnIndex,
+                'stock_column_index' => $stockColumnIndex
             ]);
 
             // 3. Processar as linhas de dados (a partir da linha a seguir ao cabeçalho)
@@ -107,6 +116,9 @@ class ProcessStockFileJob implements ShouldQueue
                     $sku = $row[$skuColumnIndex] ?? null;
                     $priceValue = $row[$priceColumnIndex] ?? null;
                     $parsedPrice = $this->parsePrice($priceValue);
+                    // Extrair quantidade de stock
+                    $stockRaw = $row[$stockColumnIndex] ?? null;
+                    $stockQuantity = $this->parseStockQuantity($stockRaw);
 
                     if (empty(trim((string)$sku))) {
                         continue; // Ignora linhas sem SKU
@@ -123,6 +135,8 @@ class ProcessStockFileJob implements ShouldQueue
                     } elseif ($this->targetBusinessModel === 'B2B') {
                         $dataToUpdate['price_b2b'] = $parsedPrice;
                     }
+                    // Guardar stock_quantity sempre que presente (numérico ou null)
+                    $dataToUpdate['stock_quantity'] = $stockQuantity;
 
                     if (!empty($dataToUpdate)) {
                         ProductPrice::updateOrCreate(
@@ -133,7 +147,11 @@ class ProcessStockFileJob implements ShouldQueue
                     }
                 } catch (\Exception $e) {
                     $errorCount++;
-                    Log::error('Erro ao processar linha de dados', ['row_index' => $headerRowIndex + $index + 2, 'error' => $e->getMessage()]);
+                    Log::error('Erro ao processar linha de dados', [
+                        'row_index' => $headerRowIndex + $index + 2,
+                        'error' => $e->getMessage(),
+                        'stock_raw' => $stockRaw ?? null,
+                    ]);
                 }
             }
 
@@ -141,7 +159,8 @@ class ProcessStockFileJob implements ShouldQueue
                 'file_path' => $absolutePath,
                 'total_rows' => count($dataRows),
                 'processed_count' => $processedCount,
-                'error_count' => $errorCount
+                'error_count' => $errorCount,
+                'stock_column_index' => $stockColumnIndex
             ]);
 
         } catch (\Exception $e) {
@@ -175,5 +194,25 @@ class ProcessStockFileJob implements ShouldQueue
 
         // Se não for um número válido após a limpeza, retorna nulo.
         return null;
+    }
+
+    /**
+     * Converte valores de stock em inteiro; valores não numéricos/ou vazios tornam-se null
+     */
+    private function parseStockQuantity($value): ?int
+    {
+        if ($value === null) {
+            return null;
+        }
+        $trimmed = trim((string) $value);
+        if ($trimmed === '') {
+            return null;
+        }
+        // Remover separadores comuns
+        $normalized = str_replace([',', ' '], '', $trimmed);
+        if (!is_numeric($normalized)) {
+            return null;
+        }
+        return (int) $normalized;
     }
 }

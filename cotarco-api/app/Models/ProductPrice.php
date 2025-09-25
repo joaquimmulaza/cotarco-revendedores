@@ -10,6 +10,7 @@ class ProductPrice extends Model
         'product_sku',
         'price_b2c',
         'price_b2b',
+        'stock_quantity',
     ];
 
     protected $casts = [

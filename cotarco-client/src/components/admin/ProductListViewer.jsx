@@ -59,6 +59,17 @@ const columns = [
     },
   },
   {
+    header: 'Quantidade',
+    accessorKey: 'stock_quantity',
+    cell: ({ getValue }) => {
+      const value = getValue();
+      if (value === null || value === undefined) return 'N/D';
+      const num = Number(value);
+      if (Number.isNaN(num)) return 'N/D';
+      return num.toLocaleString('pt-AO');
+    },
+  },
+  {
     header: 'Stock',
     accessorKey: 'stock_status',
   },

@@ -121,16 +121,18 @@ class ProductController extends Controller
                 ? collect([])
                 : ProductPrice::whereIn('product_sku', $allSkus)->get()->keyBy('product_sku');
 
-            // 4. Anexar ambos os preços para cada produto
+            // 4. Anexar ambos os preços e o stock para cada produto
             foreach ($products as &$product) {
                 $sku = $product['sku'] ?? null;
                 if ($sku && $localPrices->has($sku)) {
                     $priceData = $localPrices[$sku];
                     $product['price_b2b'] = $priceData->price_b2b ?? null;
                     $product['price_b2c'] = $priceData->price_b2c ?? null;
+                    $product['stock_quantity'] = $priceData->stock_quantity ?? null;
                 } else {
                     $product['price_b2b'] = null;
                     $product['price_b2c'] = null;
+                    $product['stock_quantity'] = null;
                 }
             }
             unset($product);
