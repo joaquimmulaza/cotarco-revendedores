@@ -41,7 +41,7 @@ class ProductController extends Controller
             $categoryId !== null ? (string) $categoryId : 'all'
         );
 
-        $data = Cache::remember($cacheKey, now()->addMinutes(15), function () use ($categoryId, $page, $perPage) {
+        $data = Cache::tags(['products'])->remember($cacheKey, now()->addMinutes(15), function () use ($categoryId, $page, $perPage) {
             // 1. Obter produtos do WooCommerce (já processados com variações separadas)
             $result = $this->wooCommerceService->getProducts($categoryId, $page, $perPage);
             $products = $result['products'];
@@ -117,7 +117,7 @@ class ProductController extends Controller
             ($search !== null && $search !== '') ? (string) $search : 'all'
         );
 
-        $paginatedProducts = Cache::remember($cacheKey, now()->addMinutes(15), function () use ($categoryId, $page, $perPage, $request, $search) {
+        $paginatedProducts = Cache::tags(['products'])->remember($cacheKey, now()->addMinutes(15), function () use ($categoryId, $page, $perPage, $request, $search) {
             // 1. Obter produtos do WooCommerce (já processados com variações separadas)
             $result = $this->wooCommerceService->getProducts($categoryId, $page, $perPage, $search);
             $products = $result['products'];
