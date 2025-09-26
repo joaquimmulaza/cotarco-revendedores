@@ -6,13 +6,13 @@ import ProductCard from '../components/ProductCard';
 import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
 import { productService } from '../services/api';
+import ProductDetailModal from '../components/ProductDetailModal';
 
 const Dashboard = () => {
   const { user, logout } = useAuth();
 
   // Estado para controlar se está a mostrar o mapa de stock
   const [showStockMap, setShowStockMap] = useState(false);
-  const [loading, setLoading] = useState(true);
 
   // Estados para produtos e categorias
   const [categories, setCategories] = useState([]);
@@ -29,11 +29,11 @@ const Dashboard = () => {
     totalPages: 1
   });
 
-  // Simular loading inicial
-  useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 1500);
-    return () => clearTimeout(timer);
-  }, []);
+  // Estado do modal de detalhes de produto
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+
+  // Simular loading inicial (removido, não utilizado)
 
   // Carregar categorias na primeira renderização
   useEffect(() => {
@@ -123,6 +123,16 @@ const Dashboard = () => {
     if (paginationInfo.currentPage < paginationInfo.totalPages) {
       setPaginationInfo(prev => ({ ...prev, currentPage: prev.currentPage + 1 }));
     }
+  };
+
+  const handleViewDetails = (product) => {
+    setSelectedProduct(product);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedProduct(null);
   };
 
   return (
@@ -260,7 +270,7 @@ const Dashboard = () => {
                   <>
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 mb-6">
                       {products.map((product) => (
-                        <ProductCard key={product.id} product={product} />
+                        <ProductCard key={product.id} product={product} onViewDetails={handleViewDetails} />
                       ))}
                     </div>
 
@@ -430,6 +440,11 @@ const Dashboard = () => {
           )}
         </div>
       </main>
+      <ProductDetailModal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        product={selectedProduct}
+      />
     </div>
   );
 };

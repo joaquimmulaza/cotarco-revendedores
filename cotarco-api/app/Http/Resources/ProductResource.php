@@ -21,6 +21,9 @@ class ProductResource extends JsonResource
             'formatted_price' => $this->formatPrice($this->getLocalPrice()),
             'stock_status' => $this['stock_status'],
             'image_url' => $this->getFirstImageUrl(),
+            'description' => $this['description'] ?? null,
+            'short_description' => $this['short_description'] ?? null,
+            'images' => $this['images'] ?? [],
         ];
     }
 

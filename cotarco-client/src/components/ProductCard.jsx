@@ -1,6 +1,6 @@
 import React from 'react';
 
-const ProductCard = ({ product }) => {
+const ProductCard = ({ product, onViewDetails }) => {
   const getStockStatusBadge = (status) => {
     const isInStock = status === 'instock';
     
@@ -56,6 +56,7 @@ const ProductCard = ({ product }) => {
         <div className="absolute inset-0 z-10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
           <button
             type="button"
+            onClick={() => onViewDetails && onViewDetails(product)}
             className="px-4 py-2 rounded-md bg-white/90 text-gray-900 font-medium shadow hover:bg-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
             Ver Detalhes
