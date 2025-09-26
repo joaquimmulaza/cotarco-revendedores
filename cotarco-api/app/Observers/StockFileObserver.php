@@ -3,7 +3,7 @@
 namespace App\Observers;
 
 use App\Models\StockFile;
-use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Artisan;
 
 class StockFileObserver
 {
@@ -12,7 +12,7 @@ class StockFileObserver
      */
     public function updated(StockFile $stockFile): void
     {
-        Cache::tags(['products'])->flush();
+        Artisan::call('cache:clear');
     }
 
     /**
@@ -20,7 +20,7 @@ class StockFileObserver
      */
     public function deleted(StockFile $stockFile): void
     {
-        Cache::tags(['products'])->flush();
+        Artisan::call('cache:clear');
     }
 }
 

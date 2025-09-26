@@ -213,7 +213,7 @@ export default function ProductListViewer() {
     <div className="w-full">
       <div className="mb-4">
         <h2 className="text-xl font-semibold">Produtos</h2>
-        {error && <p className="text-sm text-red-600">{error}</p>}
+        {error && <p className="text-sm text-red-600">{error.message || String(error)}</p>}
         {categoriesError && <p className="text-sm text-red-600">Erro ao carregar categorias</p>}
       </div>
 

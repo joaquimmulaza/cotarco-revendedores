@@ -61,7 +61,7 @@ const PartnerList = ({
           </svg>
         </div>
         <p className="text-red-600 font-medium mb-2">Erro ao carregar dados</p>
-        <p className="text-gray-600 mb-4">{error}</p>
+        <p className="text-gray-600 mb-4">{error.message || String(error)}</p>
         <button
           onClick={onRetry}
           className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
