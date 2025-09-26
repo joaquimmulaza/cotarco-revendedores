@@ -18,14 +18,14 @@ const ProductCard = ({ product }) => {
   };
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg shadow-md hover:shadow-xl hover:transform hover:-translate-y-1 transition-all duration-300 overflow-hidden">
+    <div className="group bg-white border border-gray-200 rounded-lg shadow-md hover:shadow-xl hover:transform hover:-translate-y-1 transition-all duration-300 overflow-hidden">
       {/* Área da Imagem */}
-      <div className="aspect-square bg-gray-100 flex items-center justify-center">
+      <div className="relative aspect-square bg-gray-100 flex items-center justify-center overflow-hidden">
         {product.image_url ? (
           <img
             src={product.image_url}
             alt={product.name}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover transition-transform duration-300 transform group-hover:scale-105"
             onError={(e) => {
               e.target.style.display = 'none';
               e.target.nextSibling.style.display = 'flex';
@@ -50,6 +50,16 @@ const ProductCard = ({ product }) => {
               d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
             />
           </svg>
+        </div>
+        {/* Overlay e Botão "Ver Detalhes" */}
+        <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        <div className="absolute inset-0 z-10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <button
+            type="button"
+            className="px-4 py-2 rounded-md bg-white/90 text-gray-900 font-medium shadow hover:bg-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
+            Ver Detalhes
+          </button>
         </div>
       </div>
 

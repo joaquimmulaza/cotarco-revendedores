@@ -12,7 +12,7 @@ class StockFileObserver
      */
     public function updated(StockFile $stockFile): void
     {
-        Artisan::call('cache:clear');
+        \Illuminate\Support\Facades\Artisan::call('cache:clear');
     }
 
     /**
@@ -20,7 +20,7 @@ class StockFileObserver
      */
     public function deleted(StockFile $stockFile): void
     {
-        Artisan::call('cache:clear');
+        \Illuminate\Support\Facades\Artisan::call('cache:clear');
     }
 }
 
