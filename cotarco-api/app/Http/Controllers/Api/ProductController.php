@@ -130,19 +130,23 @@ class ProductController extends Controller
                 }
             }
 
-            // 3. Buscar preços locais para os SKUs
-            $localPrices = empty($allSkus)
-                ? collect([])
-                : ProductPrice::whereIn('product_sku', $allSkus)->get()->keyBy('product_sku');
+			// 3. Verificar se existem mapas de stock ativos para B2B e B2C antes de buscar preços
+			$b2bFileIsActive = StockFile::where('target_business_model', 'B2B')->where('is_active', true)->exists();
+			$b2cFileIsActive = StockFile::where('target_business_model', 'B2C')->where('is_active', true)->exists();
 
-            // 4. Anexar ambos os preços e o stock para cada produto
+			// 4. Buscar preços locais para os SKUs (sempre, para obter stock_quantity)
+			$localPrices = empty($allSkus)
+				? collect([])
+				: ProductPrice::whereIn('product_sku', $allSkus)->get()->keyBy('product_sku');
+
+			// 5. Anexar preços condicionais e o stock para cada produto
             foreach ($products as &$product) {
                 $sku = $product['sku'] ?? null;
                 if ($sku && $localPrices->has($sku)) {
                     $priceData = $localPrices[$sku];
-                    $product['price_b2b'] = $priceData->price_b2b ?? null;
-                    $product['price_b2c'] = $priceData->price_b2c ?? null;
-                    $product['stock_quantity'] = $priceData->stock_quantity ?? null;
+					$product['price_b2b'] = $b2bFileIsActive ? ($priceData->price_b2b ?? null) : null;
+					$product['price_b2c'] = $b2cFileIsActive ? ($priceData->price_b2c ?? null) : null;
+					$product['stock_quantity'] = $priceData->stock_quantity ?? null;
                 } else {
                     $product['price_b2b'] = null;
                     $product['price_b2c'] = null;

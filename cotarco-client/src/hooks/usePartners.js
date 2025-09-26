@@ -20,7 +20,19 @@ export const usePartners = ({ status, page, searchTerm }) => {
       if (status) params.status = status;
       if (searchTerm && String(searchTerm).trim() !== '') params.search = searchTerm;
       const response = await api.get('/admin/partners', { params });
-      return response.data;
+
+      const payload = response.data;
+      // Backend retorna { partners: [...], pagination: { current_page, last_page, per_page, total } }
+      // A UI espera um formato tipo paginator do Laravel: { data: [...], current_page, last_page, per_page, total }
+      if (payload && payload.partners && payload.pagination) {
+        return {
+          data: payload.partners,
+          ...payload.pagination,
+        };
+      }
+
+      // Fallback para manter compatibilidade caso o backend já esteja no formato esperado
+      return payload;
     },
     keepPreviousData: true,
   });
