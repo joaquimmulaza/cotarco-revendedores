@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\PartnerController;
 use App\Http\Controllers\StockFileController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\CategoryController;
+use Illuminate\Support\Facades\Http;
 
 /*
 |--------------------------------------------------------------------------
@@ -27,6 +28,28 @@ Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('
 
 // Rota de teste
 Route::get('/test', fn() => response()->json(['message' => 'API funcionando!']));
+
+// Rota de teste para debug do custom_description
+Route::get('/test-product/{id}', function ($id, App\Services\WooCommerceService $wooCommerceService) {
+    // Busca um único produto usando a API do WooCommerce
+    $response = Http::withBasicAuth(config('services.woocommerce.consumer_key'), config('services.woocommerce.consumer_secret'))
+        ->get(config('services.woocommerce.store_url') . '/wp-json/wc/v3/products/' . $id);
+    
+    if (!$response->successful()) {
+        return response()->json(['error' => 'Produto não encontrado'], 404);
+    }
+    
+    $productData = $response->json();
+    
+    // Usar reflexão para chamar o método privado fetchCustomDescription
+    $reflection = new ReflectionClass($wooCommerceService);
+    $method = $reflection->getMethod('fetchCustomDescription');
+    $method->setAccessible(true);
+    
+    $productData['custom_description'] = $method->invokeArgs($wooCommerceService, [$productData]);
+    
+    return response()->json($productData);
+});
 
 // Rotas de verificação de email
 Route::get('/email/verify/{id}/{hash}', function ($id, $hash, Request $request) {
