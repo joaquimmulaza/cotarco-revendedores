@@ -335,13 +335,16 @@ class WooCommerceService
         $iframeUrl = null;
         if (isset($productData['meta_data'])) {
             foreach ($productData['meta_data'] as $meta) {
-                // O nome da chave pode variar, teremos que confirmar.
-                // Boas hipóteses são '_wpcode_page_scripts_footer' ou algo similar.
-                if ($meta['key'] === '_wpcode_page_scripts_footer' && is_string($meta['value'])) {
-                    // Extrai a URL do src do iframe usando uma expressão regular
-                    if (preg_match('/<iframe[^>]+src="([^"]+)"/i', $meta['value'], $matches)) {
-                        $iframeUrl = $matches[1];
-                        break;
+                // 1. Procurar pela chave correta
+                if ($meta['key'] === '_wpcode_footer_scripts') {
+                    // 2. Verificar se o valor é um array e se a sub-chave 'any' existe
+                    if (is_array($meta['value']) && !empty($meta['value']['any']) && is_string($meta['value']['any'])) {
+                        $htmlContent = $meta['value']['any'];
+                        // 3. Extrair a URL do src do iframe a partir do conteúdo HTML
+                        if (preg_match('/<iframe[^>]+src="([^"]+)"/i', $htmlContent, $matches)) {
+                            $iframeUrl = $matches[1];
+                            break; // Encontrou, pode sair do loop
+                        }
                     }
                 }
             }

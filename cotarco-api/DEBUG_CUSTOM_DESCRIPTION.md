@@ -13,7 +13,7 @@ GET /api/test-product/{id}
 1. **Encontrar um ID de produto no WordPress:**
    - Acesse o painel admin do WordPress
    - Vá para WooCommerce > Produtos
-   - Encontre um produto que tenha um iframe no campo de metadados `_wpcode_page_scripts_footer`
+   - Encontre um produto que tenha um iframe no campo de metadados `_wpcode_footer_scripts`
    - Anote o ID do produto
 
 2. **Testar a rota:**
@@ -41,23 +41,26 @@ GET /api/test-product/{id}
 Na resposta JSON, procure por:
 
 - **`meta_data`**: Array com todos os metadados do produto
-  - Procure por `_wpcode_page_scripts_footer` com iframe
+  - Procure por `_wpcode_footer_scripts` com estrutura de array
 - **`custom_description`**: O novo campo com HTML limpo ou `null`
 
 ### Exemplo de Metadado com iframe:
 
 ```json
 {
-  "key": "_wpcode_page_scripts_footer",
-  "value": "<iframe src=\"https://example.com/product-description\" width=\"100%\" height=\"400\"></iframe>"
+  "key": "_wpcode_footer_scripts",
+  "value": {
+    "any": "<iframe src=\"https://example.com/product-description\" width=\"100%\" height=\"400\"></iframe>"
+  }
 }
 ```
 
 ### Possíveis Resultados:
 
 1. **`custom_description: null`**: 
-   - Produto não tem metadado `_wpcode_page_scripts_footer`
-   - Metadado existe mas não contém iframe
+   - Produto não tem metadado `_wpcode_footer_scripts`
+   - Metadado existe mas não tem estrutura de array com chave `any`
+   - Metadado existe mas não contém iframe na string HTML
    - Erro na requisição para a URL do iframe
 
 2. **`custom_description: "...HTML..."`**:
