@@ -4,6 +4,7 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Symfony\Component\DomCrawler\Crawler;
 
 class WooCommerceService
 {
@@ -137,7 +138,10 @@ class WooCommerceService
 
             // Inicializar array para produtos expandidos (variantes)
             $flattenedProducts = [];
-            foreach ($productsCombined as $product) {
+            foreach ($productsCombined as &$product) { // Adicionado '&' para modificar o array original
+                // Adiciona a descrição personalizada
+                $product['custom_description'] = $this->fetchCustomDescription($product);
+
                 if (isset($product['type']) && $product['type'] === 'variable') {
                     $variations = $this->getProductVariations($product['id']);
                     foreach ($variations as $variation) {
@@ -147,6 +151,7 @@ class WooCommerceService
                     $flattenedProducts[] = $product;
                 }
             }
+            unset($product); // Boa prática para remover a referência
 
             // Ajustar paginação: quando há search, combinamos resultados (nome + SKU)
             $totalItems = $totalItemsHeader > 0 ? $totalItemsHeader : count($flattenedProducts);
@@ -264,7 +269,8 @@ class WooCommerceService
             'images' => $image ? [$image] : ($parentProduct['images'] ?? []),
             'image' => $image, // Adicionar imagem individual da variação
             'type' => 'variation',
-            'parent_id' => $parentProduct['id']
+            'parent_id' => $parentProduct['id'],
+            'custom_description' => $parentProduct['custom_description'] ?? null
         ];
     }
 
@@ -315,5 +321,66 @@ class WooCommerceService
 
         // Retornar null para usar imagem do pai
         return null;
+    }
+
+    /**
+     * Busca e limpa a descrição personalizada de um iframe.
+     *
+     * @param array $productData Os dados do produto do WooCommerce.
+     * @return string|null O HTML limpo ou null se não houver.
+     */
+    private function fetchCustomDescription(array $productData): ?string
+    {
+        // Encontra a URL do iframe nos metadados
+        $iframeUrl = null;
+        if (isset($productData['meta_data'])) {
+            foreach ($productData['meta_data'] as $meta) {
+                // O nome da chave pode variar, teremos que confirmar.
+                // Boas hipóteses são '_wpcode_page_scripts_footer' ou algo similar.
+                if ($meta['key'] === '_wpcode_page_scripts_footer' && is_string($meta['value'])) {
+                    // Extrai a URL do src do iframe usando uma expressão regular
+                    if (preg_match('/<iframe[^>]+src="([^"]+)"/i', $meta['value'], $matches)) {
+                        $iframeUrl = $matches[1];
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (!$iframeUrl) {
+            return null;
+        }
+
+        try {
+            // Faz a requisição para a página do iframe
+            $response = Http::get($iframeUrl);
+
+            if (!$response->successful()) {
+                return null;
+            }
+
+            // Inicia o Crawler para manipular o HTML
+            $crawler = new Crawler($response->body());
+
+            // Seleciona o corpo do HTML e remove o footer
+            $bodyNode = $crawler->filter('body');
+            if ($bodyNode->count() > 0) {
+                $bodyNode->filter('#colophon')->each(function (Crawler $crawler) {
+                    foreach ($crawler as $node) {
+                        $node->parentNode->removeChild($node);
+                    }
+                });
+
+                // Retorna o HTML limpo
+                return $bodyNode->html();
+            }
+
+            return null;
+
+        } catch (\Exception $e) {
+            // Em caso de erro na requisição, apenas retornamos null
+            Log::error('Erro ao buscar descrição personalizada: ' . $e->getMessage());
+            return null;
+        }
     }
 }

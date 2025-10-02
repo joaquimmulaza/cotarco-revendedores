@@ -23,6 +23,7 @@ class ProductResource extends JsonResource
             'image_url' => $this->getFirstImageUrl(),
             'description' => $this['description'] ?? null,
             'short_description' => $this['short_description'] ?? null,
+            'custom_description' => $this['custom_description'] ?? null,
             'images' => $this['images'] ?? [],
         ];
     }
