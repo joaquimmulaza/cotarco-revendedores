@@ -76,12 +76,20 @@ const ProductDetailModal = ({ isOpen, onClose, product }) => {
                       <h2 className="mb-3 text-2xl font-bold text-gray-900">{product.name}</h2>
                       <p className="mb-4 text-xl text-gray-900">{product.formatted_price}</p>
 
-                      {product.short_description ? (
-                        <div
-                          className="prose prose-sm max-w-none text-gray-700"
-                          dangerouslySetInnerHTML={{ __html: product.short_description }}
-                        />
-                      ) : null}
+                      <div className="mt-6">
+                        <h3 className="text-lg font-medium text-gray-800 mb-2">Descrição do Produto</h3>
+                        <div className="prose max-w-none text-sm text-gray-600 border p-4 rounded-md overflow-y-auto max-h-[500px]">
+                          {product.custom_description ? (
+                            <div dangerouslySetInnerHTML={{ __html: product.custom_description }} />
+                          ) : product.description ? (
+                            <div dangerouslySetInnerHTML={{ __html: product.description }} />
+                          ) : product.short_description ? (
+                            <div dangerouslySetInnerHTML={{ __html: product.short_description }} />
+                          ) : (
+                            <p>Nenhuma descrição detalhada disponível.</p>
+                          )}
+                        </div>
+                      </div>
 
                       <div className="mt-6">
                         <Button
