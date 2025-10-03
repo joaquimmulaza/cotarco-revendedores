@@ -46,7 +46,7 @@ Route::get('/test-product/{id}', function ($id, App\Services\WooCommerceService 
     $method = $reflection->getMethod('fetchCustomDescription');
     $method->setAccessible(true);
     
-    $productData['custom_description'] = $method->invokeArgs($wooCommerceService, [$productData]);
+    $productData['custom_description_url'] = $method->invokeArgs($wooCommerceService, [$productData]);
     
     return response()->json($productData);
 });

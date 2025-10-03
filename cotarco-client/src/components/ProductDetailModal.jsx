@@ -78,15 +78,20 @@ const ProductDetailModal = ({ isOpen, onClose, product }) => {
 
                       <div className="mt-6">
                         <h3 className="text-lg font-medium text-gray-800 mb-2">Descrição do Produto</h3>
-                        <div className="prose max-w-none text-sm text-gray-600 border p-4 rounded-md overflow-y-auto max-h-[500px]">
-                          {product.custom_description ? (
-                            <div dangerouslySetInnerHTML={{ __html: product.custom_description }} />
+                        <div className="text-sm text-gray-600 border p-2 rounded-md">
+                          {product.custom_description_url ? (
+                            <iframe
+                              src={product.custom_description_url}
+                              title={product.name || 'Descrição Detalhada'}
+                              className="w-full h-[80vh] border-none rounded-md"
+                              sandbox="allow-scripts allow-same-origin"
+                            />
                           ) : product.description ? (
-                            <div dangerouslySetInnerHTML={{ __html: product.description }} />
+                            <div className="prose max-w-none p-2" dangerouslySetInnerHTML={{ __html: product.description }} />
                           ) : product.short_description ? (
-                            <div dangerouslySetInnerHTML={{ __html: product.short_description }} />
+                            <div className="prose max-w-none p-2" dangerouslySetInnerHTML={{ __html: product.short_description }} />
                           ) : (
-                            <p>Nenhuma descrição detalhada disponível.</p>
+                            <p className="p-2">Nenhuma descrição detalhada disponível.</p>
                           )}
                         </div>
                       </div>

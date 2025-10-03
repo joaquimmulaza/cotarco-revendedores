@@ -4,7 +4,6 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Symfony\Component\DomCrawler\Crawler;
 
 class WooCommerceService
 {
@@ -139,8 +138,8 @@ class WooCommerceService
             // Inicializar array para produtos expandidos (variantes)
             $flattenedProducts = [];
             foreach ($productsCombined as &$product) { // Adicionado '&' para modificar o array original
-                // Adiciona a descrição personalizada
-                $product['custom_description'] = $this->fetchCustomDescription($product);
+                // Adiciona a URL da descrição personalizada
+                $product['custom_description_url'] = $this->fetchCustomDescription($product);
 
                 if (isset($product['type']) && $product['type'] === 'variable') {
                     $variations = $this->getProductVariations($product['id']);
@@ -270,7 +269,7 @@ class WooCommerceService
             'image' => $image, // Adicionar imagem individual da variação
             'type' => 'variation',
             'parent_id' => $parentProduct['id'],
-            'custom_description' => $parentProduct['custom_description'] ?? null
+            'custom_description_url' => $parentProduct['custom_description_url'] ?? null
         ];
     }
 
@@ -324,10 +323,10 @@ class WooCommerceService
     }
 
     /**
-     * Busca e limpa a descrição personalizada de um iframe.
+     * Extrai a URL do iframe a partir dos metadados do produto.
      *
      * @param array $productData Os dados do produto do WooCommerce.
-     * @return string|null O HTML limpo ou null se não houver.
+     * @return string|null A URL do iframe ou null se não houver.
      */
     private function fetchCustomDescription(array $productData): ?string
     {
@@ -354,36 +353,7 @@ class WooCommerceService
             return null;
         }
 
-        try {
-            // Faz a requisição para a página do iframe
-            $response = Http::get($iframeUrl);
-
-            if (!$response->successful()) {
-                return null;
-            }
-
-            // Inicia o Crawler para manipular o HTML
-            $crawler = new Crawler($response->body());
-
-            // Seleciona o corpo do HTML e remove o footer
-            $bodyNode = $crawler->filter('body');
-            if ($bodyNode->count() > 0) {
-                $bodyNode->filter('#colophon')->each(function (Crawler $crawler) {
-                    foreach ($crawler as $node) {
-                        $node->parentNode->removeChild($node);
-                    }
-                });
-
-                // Retorna o HTML limpo
-                return $bodyNode->html();
-            }
-
-            return null;
-
-        } catch (\Exception $e) {
-            // Em caso de erro na requisição, apenas retornamos null
-            Log::error('Erro ao buscar descrição personalizada: ' . $e->getMessage());
-            return null;
-        }
+        // Agora retornamos diretamente a URL do iframe
+        return $iframeUrl;
     }
 }
