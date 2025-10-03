@@ -4,9 +4,13 @@ import logoCotarco from '../assets/logo-cotarco.png';
 import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
 import './Header.css';
+import { ShoppingCart } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { useCart } from '../contexts/CartContext.jsx';
 
-const Header = ({ user, onLogout, isAdmin = false, showStockMap = false, onStockMapClick, onLogoClick, loading = false }) => {
+const Header = ({ user, onLogout, isAdmin = false, showStockMap = false, onStockMapClick, onLogoClick, loading = false, onCartClick }) => {
   const navigate = useNavigate();
+  const { totalItems } = useCart();
 
   const handleLogoClick = () => {
     if (onLogoClick) {
@@ -78,8 +82,25 @@ const Header = ({ user, onLogout, isAdmin = false, showStockMap = false, onStock
             )}
           </div>
 
-          {/* Informações do usuário e botão de logout */}
+          {/* Carrinho (apenas parceiros), informações do usuário e logout */}
           <div className="flex items-center space-x-4">
+            {!isAdmin && user?.role === 'parceiro' && (
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={onCartClick}
+                  className="relative inline-flex items-center justify-center p-2 rounded-md hover:bg-gray-100"
+                  aria-label="Abrir carrinho"
+                >
+                  <ShoppingCart className="h-6 w-6" />
+                  {totalItems > 0 && (
+                    <Badge className="absolute -top-1 -right-1 px-1.5 py-0 text-[10px] leading-none">
+                      {totalItems}
+                    </Badge>
+                  )}
+                </button>
+              </div>
+            )}
             <div className="hidden sm:block text-right">
               {loading ? (
                 <div className="space-y-1">

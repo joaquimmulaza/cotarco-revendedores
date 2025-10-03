@@ -15,7 +15,6 @@ import ResetPassword from './pages/ResetPassword';
 
 // Import components
 import ProtectedRoute from './components/ProtectedRoute';
-import { AuthProvider } from './contexts/AuthContext';
 
 function AppContent() {
   const router = createBrowserRouter([
@@ -92,12 +91,4 @@ function AppContent() {
   );
 }
 
-function App() {
-  return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
-  );
-}
-
-export default App
+export default AppContent

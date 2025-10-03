@@ -2,6 +2,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useState, useEffect } from 'react';
 import StockFileDownloader from '../components/StockFileDownloader';
 import Header from '../components/Header';
+import CartDrawer from '../components/CartDrawer';
 import ProductCard from '../components/ProductCard';
 import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
@@ -32,6 +33,9 @@ const Dashboard = () => {
   // Estado do modal de detalhes de produto
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
+
+  // Estado do carrinho (Drawer)
+  const [isCartOpen, setIsCartOpen] = useState(false);
 
   // Simular loading inicial (removido, não utilizado)
 
@@ -146,6 +150,7 @@ const Dashboard = () => {
         showStockMap={showStockMap}
         onStockMapClick={handleStockMapClick}
         onLogoClick={handleLogoClick}
+        onCartClick={() => setIsCartOpen(true)}
       />
 
       {/* Main Content */}
@@ -445,6 +450,7 @@ const Dashboard = () => {
         onClose={handleCloseModal}
         product={selectedProduct}
       />
+      <CartDrawer open={isCartOpen} onOpenChange={setIsCartOpen} />
     </div>
   );
 };

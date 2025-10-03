@@ -52,5 +52,3 @@ export default function QuantityInput({ value, onChange, min = 0, step = 1, clas
     </div>
   );
 }
-
-

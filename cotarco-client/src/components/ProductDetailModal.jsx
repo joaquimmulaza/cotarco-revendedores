@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Dialog } from '@headlessui/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { Button } from '@/components/ui/button';
+import { useCart } from '../contexts/CartContext.jsx';
+import QuantityInput from './QuantityInput.jsx';
 
 const backdrop = {
   hidden: { opacity: 0 },
@@ -17,6 +19,15 @@ const modal = {
 };
 
 const ProductDetailModal = ({ isOpen, onClose, product }) => {
+  const [quantity, setQuantity] = useState(1);
+  const { addToCart } = useCart();
+
+  const handleAddToCart = () => {
+    if (!product) return;
+    const priceNumber = Number(product.price || product.regular_price || 0);
+    const item = { ...product, price: priceNumber };
+    addToCart(item, quantity);
+  };
   return (
     <AnimatePresence>
       {isOpen && (
@@ -75,9 +86,13 @@ const ProductDetailModal = ({ isOpen, onClose, product }) => {
                           <div className="mt-4">
                             <h2 className="mb-3 text-2xl font-bold text-gray-900">{product.name}</h2>
                             <p className="mb-4 text-xl text-gray-900">{product.formatted_price}</p>
+                            <div className="mb-4">
+                              <QuantityInput value={quantity} onChange={setQuantity} min={1} />
+                            </div>
                             <Button
                               type="button"
                               disabled={product.stock_status !== 'instock'}
+                              onClick={handleAddToCart}
                             >
                               Adicionar ao Carrinho
                             </Button>
@@ -120,10 +135,15 @@ const ProductDetailModal = ({ isOpen, onClose, product }) => {
                           <h2 className="mb-3 text-2xl font-bold text-gray-900">{product.name}</h2>
                           <p className="mb-4 text-xl text-gray-900">{product.formatted_price}</p>
 
+                          <div className="mt-2 mb-4">
+                            <QuantityInput value={quantity} onChange={setQuantity} min={1} />
+                          </div>
+
                           <div className="mt-6">
                             <Button
                               type="button"
                               disabled={product.stock_status !== 'instock'}
+                              onClick={handleAddToCart}
                             >
                               Adicionar ao Carrinho
                             </Button>
