@@ -52,59 +52,98 @@ const ProductDetailModal = ({ isOpen, onClose, product }) => {
                 {/* Renderização condicional: apenas mostra conteúdo se existir product */}
                 {!product ? null : (
                   <div className="grid gap-6 md:grid-cols-2 lg:gap-12">
-                    {/* Coluna Esquerda: Carousel de imagens */}
-                    <div>
-                      <Carousel className="relative w-full overflow-hidden rounded-lg bg-gray-50">
-                        <CarouselContent>
-                          {(product.images || []).map((image, index) => (
-                            <CarouselItem key={index} className="flex items-center justify-center">
-                              <img
-                                src={image?.src || image?.url || ''}
-                                alt={product.name}
-                                className="max-h-[420px] w-full object-contain"
-                              />
-                            </CarouselItem>
-                          ))}
-                        </CarouselContent>
-                        <CarouselPrevious className="left-2 md:left-3 lg:left-4 z-10" />
-                        <CarouselNext className="right-2 md:right-3 lg:right-4 z-10" />
-                      </Carousel>
-                    </div>
+                    {product.custom_description_url ? (
+                      <>
+                        {/* Coluna Esquerda: Carousel + título, preço e botão */}
+                        <div>
+                          <Carousel className="relative w-full overflow-hidden rounded-lg bg-gray-50">
+                            <CarouselContent>
+                              {(product.images || []).map((image, index) => (
+                                <CarouselItem key={index} className="flex items-center justify-center">
+                                  <img
+                                    src={image?.src || image?.url || ''}
+                                    alt={product.name}
+                                    className="max-h-[420px] w-full object-contain"
+                                  />
+                                </CarouselItem>
+                              ))}
+                            </CarouselContent>
+                            <CarouselPrevious className="left-2 md:left-3 lg:left-4 z-10" />
+                            <CarouselNext className="right-2 md:right-3 lg:right-4 z-10" />
+                          </Carousel>
 
-                    {/* Coluna Direita: Detalhes do produto */}
-                    <div>
-                      <h2 className="mb-3 text-2xl font-bold text-gray-900">{product.name}</h2>
-                      <p className="mb-4 text-xl text-gray-900">{product.formatted_price}</p>
-
-                      <div className="mt-6">
-                        <h3 className="text-lg font-medium text-gray-800 mb-2">Descrição do Produto</h3>
-                        <div className="text-sm text-gray-600 border p-2 rounded-md">
-                          {product.custom_description_url ? (
-                            <iframe
-                              src={product.custom_description_url}
-                              title={product.name || 'Descrição Detalhada'}
-                              className="w-full h-[80vh] border-none rounded-md"
-                              sandbox="allow-scripts allow-same-origin"
-                            />
-                          ) : product.description ? (
-                            <div className="prose max-w-none p-2" dangerouslySetInnerHTML={{ __html: product.description }} />
-                          ) : product.short_description ? (
-                            <div className="prose max-w-none p-2" dangerouslySetInnerHTML={{ __html: product.short_description }} />
-                          ) : (
-                            <p className="p-2">Nenhuma descrição detalhada disponível.</p>
-                          )}
+                          <div className="mt-4">
+                            <h2 className="mb-3 text-2xl font-bold text-gray-900">{product.name}</h2>
+                            <p className="mb-4 text-xl text-gray-900">{product.formatted_price}</p>
+                            <Button
+                              type="button"
+                              disabled={product.stock_status !== 'instock'}
+                            >
+                              Adicionar ao Carrinho
+                            </Button>
+                          </div>
                         </div>
-                      </div>
 
-                      <div className="mt-6">
-                        <Button
-                          type="button"
-                          disabled={product.stock_status !== 'instock'}
-                        >
-                          Adicionar ao Carrinho
-                        </Button>
-                      </div>
-                    </div>
+                        {/* Coluna Direita: Apenas iframe */}
+                        <div>
+                          <iframe
+                            src={product.custom_description_url}
+                            title={product.name || 'Descrição Detalhada'}
+                            className="w-full h-full min-h-[75vh] border-none rounded-lg"
+                            sandbox="allow-scripts allow-same-origin"
+                          />
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        {/* Coluna Esquerda: Apenas Carousel */}
+                        <div>
+                          <Carousel className="relative w-full overflow-hidden rounded-lg bg-gray-50">
+                            <CarouselContent>
+                              {(product.images || []).map((image, index) => (
+                                <CarouselItem key={index} className="flex items-center justify-center">
+                                  <img
+                                    src={image?.src || image?.url || ''}
+                                    alt={product.name}
+                                    className="max-h-[420px] w-full object-contain"
+                                  />
+                                </CarouselItem>
+                              ))}
+                            </CarouselContent>
+                            <CarouselPrevious className="left-2 md:left-3 lg:left-4 z-10" />
+                            <CarouselNext className="right-2 md:right-3 lg:right-4 z-10" />
+                          </Carousel>
+                        </div>
+
+                        {/* Coluna Direita: Título, preço, botão e descrição fallback */}
+                        <div>
+                          <h2 className="mb-3 text-2xl font-bold text-gray-900">{product.name}</h2>
+                          <p className="mb-4 text-xl text-gray-900">{product.formatted_price}</p>
+
+                          <div className="mt-6">
+                            <Button
+                              type="button"
+                              disabled={product.stock_status !== 'instock'}
+                            >
+                              Adicionar ao Carrinho
+                            </Button>
+                          </div>
+
+                          <div className="mt-6">
+                            <h3 className="text-lg font-medium text-gray-800 mb-2">Descrição do Produto</h3>
+                            <div className="text-sm text-gray-600 border p-2 rounded-md">
+                              {product.description ? (
+                                <div className="prose max-w-none p-2" dangerouslySetInnerHTML={{ __html: product.description }} />
+                              ) : product.short_description ? (
+                                <div className="prose max-w-none p-2" dangerouslySetInnerHTML={{ __html: product.short_description }} />
+                              ) : (
+                                <p className="p-2">Nenhuma descrição disponível.</p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </>
+                    )}
                   </div>
                 )}
               </Dialog.Panel>
