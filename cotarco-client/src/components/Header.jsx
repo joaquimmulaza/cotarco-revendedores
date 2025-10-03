@@ -84,7 +84,7 @@ const Header = ({ user, onLogout, isAdmin = false, showStockMap = false, onStock
 
           {/* Carrinho (apenas parceiros), informações do usuário e logout */}
           <div className="flex items-center space-x-4">
-            {!isAdmin && user?.role === 'parceiro' && (
+            {!isAdmin && user?.role === 'distribuidor' && (
               <div className="relative">
                 <button
                   type="button"

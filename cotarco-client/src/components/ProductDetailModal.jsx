@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog } from '@headlessui/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
@@ -20,6 +20,11 @@ const modal = {
 
 const ProductDetailModal = ({ isOpen, onClose, product }) => {
   const [quantity, setQuantity] = useState(1);
+  useEffect(() => {
+    if (product) {
+      setQuantity(1);
+    }
+  }, [product]);
   const { addToCart } = useCart();
 
   const handleAddToCart = () => {
