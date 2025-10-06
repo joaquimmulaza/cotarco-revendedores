@@ -6,7 +6,7 @@ import { useCart } from '../contexts/CartContext.jsx';
 
 export default function CartDrawer({ open, onOpenChange }) {
   const { items, subtotal, updateQuantity, removeFromCart } = useCart();
-  const formatCurrency = (value) => (Number(value) || 0).toLocaleString('pt-PT', { style: 'currency', currency: 'EUR' });
+  const formatCurrency = (value) => (Number(value) || 0).toLocaleString('pt-AO', { style: 'currency', currency: 'AOA' });
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="flex flex-col">

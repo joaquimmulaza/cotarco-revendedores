@@ -20,11 +20,17 @@ const modal = {
 
 const ProductDetailModal = ({ isOpen, onClose, product }) => {
   const [quantity, setQuantity] = useState(1);
+  const [iframeLoaded, setIframeLoaded] = useState(false);
   useEffect(() => {
     if (product) {
       setQuantity(1);
     }
   }, [product]);
+  useEffect(() => {
+    if (product?.custom_description_url) {
+      setIframeLoaded(false);
+    }
+  }, [product?.custom_description_url]);
   const { addToCart } = useCart();
 
   const handleAddToCart = () => {
@@ -60,7 +66,7 @@ const ProductDetailModal = ({ isOpen, onClose, product }) => {
                   type="button"
                   aria-label="Fechar"
                   onClick={onClose}
-                  className="absolute right-3 top-3 inline-flex h-8 w-8 items-center justify-center rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400"
+                  className="z-50 absolute right-3 top-3 inline-flex h-8 w-8 items-center justify-center rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400"
                 >
                   ×
                 </button>
@@ -104,13 +110,23 @@ const ProductDetailModal = ({ isOpen, onClose, product }) => {
                           </div>
                         </div>
 
-                        {/* Coluna Direita: Apenas iframe */}
-                        <div>
+                        {/* Coluna Direita: Apenas iframe com skeleton loading */}
+                        <div className="relative">
+                          {!iframeLoaded && (
+                            <div className="w-full min-h-[75vh] rounded-lg border bg-gray-100 p-4 animate-pulse">
+                              <div className="h-6 w-40 bg-gray-300 rounded mb-4" />
+                              <div className="h-4 w-3/4 bg-gray-300 rounded mb-2" />
+                              <div className="h-4 w-2/3 bg-gray-300 rounded mb-2" />
+                              <div className="h-4 w-1/2 bg-gray-300 rounded mb-6" />
+                              <div className="h-[48vh] w-full bg-gray-200 rounded" />
+                            </div>
+                          )}
                           <iframe
                             src={product.custom_description_url}
                             title={product.name || 'Descrição Detalhada'}
-                            className="w-full h-full min-h-[75vh] border-none rounded-lg"
+                            className={`w-full h-full min-h-[75vh] border-none rounded-lg ${iframeLoaded ? '' : 'invisible absolute top-0 left-0'}`}
                             sandbox="allow-scripts allow-same-origin"
+                            onLoad={() => setIframeLoaded(true)}
                           />
                         </div>
                       </>

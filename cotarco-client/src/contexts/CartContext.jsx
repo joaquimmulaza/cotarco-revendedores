@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useMemo, useReducer } from 'react';
+import { toast } from 'sonner';
 
 // Estado inicial do carrinho
 const initialState = {
@@ -58,8 +59,12 @@ export function CartProvider({ children }) {
   const [cartState, dispatch] = useReducer(cartReducer, initialState);
 
   // Ações expostas
-  const addToCart = (item, quantity = 1) =>
+  const addToCart = (item, quantity = 1) => {
     dispatch({ type: 'ADD_ITEM', payload: { item, quantity } });
+    const safeQuantity = Number(quantity) || 1;
+    const name = item?.name || 'Produto';
+    toast.success(`${safeQuantity} x "${name}" adicionado${safeQuantity > 1 ? 's' : ''} ao carrinho`);
+  };
 
   const updateQuantity = (id, quantity) =>
     dispatch({ type: 'UPDATE_QUANTITY', payload: { id, quantity } });
