@@ -56,16 +56,10 @@ class AuthController extends Controller
         // Gerar token de API usando Laravel Sanctum
         $token = $user->createToken('auth-token')->plainTextToken;
 
-        // Retornar token e dados do usuário
+        // Retornar token e dados do usuário com perfil de parceiro carregado
         return response()->json([
             'message' => 'Login realizado com sucesso.',
-            'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'role' => $user->role,
-                'status' => $user->status,
-            ],
+            'user' => $user->load('partnerProfile'),
             'token' => $token,
         ], 200);
     }

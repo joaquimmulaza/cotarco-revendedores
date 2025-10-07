@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import QuantityInput from './QuantityInput.jsx';
@@ -6,6 +7,7 @@ import { useCart } from '../contexts/CartContext.jsx';
 
 export default function CartDrawer({ open, onOpenChange }) {
   const { items, subtotal, updateQuantity, removeFromCart } = useCart();
+  const navigate = useNavigate();
   const formatCurrency = (value) => (Number(value) || 0).toLocaleString('pt-AO', { style: 'currency', currency: 'AOA' });
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -49,7 +51,7 @@ export default function CartDrawer({ open, onOpenChange }) {
         <SheetFooter>
           <div className="w-full flex items-center justify-between">
             <div className="text-sm text-gray-600">Subtotal: {formatCurrency(subtotal)}</div>
-            <Button>Finalizar Compra</Button>
+            <Button onClick={() => { onOpenChange?.(false); navigate('/checkout'); }}>Finalizar Compra</Button>
           </div>
         </SheetFooter>
       </SheetContent>

@@ -12,6 +12,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import ApiTestPage from './pages/ApiTestPage';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
+import CheckoutPage from './pages/CheckoutPage';
 
 // Import components
 import ProtectedRoute from './components/ProtectedRoute';
@@ -64,6 +65,14 @@ function AppContent() {
       element: (
         <ProtectedRoute>
           <Dashboard />
+        </ProtectedRoute>
+      )
+    },
+    {
+      path: "/checkout",
+      element: (
+        <ProtectedRoute>
+          <CheckoutPage />
         </ProtectedRoute>
       )
     },
