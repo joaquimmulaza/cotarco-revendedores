@@ -1,9 +1,10 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { useCart } from '../contexts/CartContext.jsx';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import api from '../services/api';
 
 export default function CheckoutPage() {
   const { user } = useAuth();
@@ -22,8 +23,29 @@ export default function CheckoutPage() {
   const { register, handleSubmit, formState: { errors } } = useForm({
     defaultValues
   });
+  const [isLoading, setIsLoading] = useState(false);
 
-  const onSubmit = (data) => console.log(data);
+  const onSubmit = async (data) => {
+    setIsLoading(true);
+    const payload = {
+      details: data,
+      items: items,
+    };
+    try {
+      const response = await api.post('/orders/create-payment', payload);
+      if (response?.data?.payment_url) {
+        window.location.href = response.data.payment_url;
+      } else {
+        console.error('Resposta inesperada da API:', response?.data);
+        alert('Não foi possível iniciar o pagamento. Tente novamente.');
+      }
+    } catch (error) {
+      console.error('Erro ao criar pagamento:', error);
+      alert(error?.response?.data?.message || 'Erro ao criar pagamento.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
@@ -69,8 +91,8 @@ export default function CheckoutPage() {
               </div>
             </div>
 
-            <button type="submit" className="w-full md:w-auto inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90">
-              Finalizar Encomenda
+            <button type="submit" disabled={isLoading} className="w-full md:w-auto inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90">
+              {isLoading ? 'A processar...' : 'Finalizar Encomenda'}
             </button>
           </form>
         </div>
