@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\PartnerController;
 use App\Http\Controllers\StockFileController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\CategoryController;
+use App\Http\Controllers\OrderController;
 use Illuminate\Support\Facades\Http;
 
 /*
@@ -235,4 +236,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('parceiro')->group(function () {
         Route::get('/products', [ProductController::class, 'index']);
     });
+
+    // Pagamentos / Encomendas
+    Route::post('/orders/create-payment', [OrderController::class, 'createPayment']);
 });
