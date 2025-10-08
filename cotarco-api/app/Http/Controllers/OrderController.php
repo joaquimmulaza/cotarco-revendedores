@@ -77,16 +77,11 @@ class OrderController extends Controller
 
             if ($response->successful()) {
                 $data = $response->json();
-                $paymentUrl = $data['payment_url'] ?? null;
-                if ($paymentUrl) {
-                    return response()->json([
-                        'payment_url' => $paymentUrl,
-                    ]);
-                }
                 return response()->json([
-                    'message' => 'Resposta inválida da AppyPay.',
-                    'details' => $data,
-                ], 502);
+                    'entity' => $data['entity'] ?? null,
+                    'reference' => $data['reference'] ?? null,
+                    'amount' => $data['amount'] ?? null,
+                ]);
             }
 
             return response()->json([
