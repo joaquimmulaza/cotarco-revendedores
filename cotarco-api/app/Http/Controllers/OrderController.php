@@ -10,7 +10,12 @@ class OrderController extends Controller
 {
     public function createPayment(Request $request)
     {
+        Log::info('createPayment method called');
         $user = $request->user();
+        if (!$user) {
+            Log::error('User not authenticated');
+            return response()->json(['message' => 'User not authenticated'], 401);
+        }
 
         $cartItems = $request->input('items', []);
         $customerDetails = $request->input('details', []);
@@ -41,12 +46,13 @@ class OrderController extends Controller
         }
 
         // Security hash
-        $hash = hash('sha256', $merchantId . $amount . $transactionId . $apiKey);
+        $hash = hash('sha256', $merchantId . $transactionId . $amount . $apiKey);
 
         $payload = [
             'merchantId' => $merchantId,
             'amount' => $amount,
-            'transactionId' => $transactionId,
+            'reference' => $transactionId,
+            'description' => 'Encomenda Cotarco',
             'hash' => $hash,
             'customer' => [
                 'name' => $customerDetails['fullName'] ?? ($user->name ?? ''),
@@ -60,7 +66,14 @@ class OrderController extends Controller
         ];
 
         try {
-            $response = Http::post(rtrim($baseUrl, '/') . '/checkout', $payload);
+            Log::info('Sending payment request to AppyPay', ['url' => rtrim($baseUrl, '/') . '/charges', 'payload' => $payload]);
+            $response = Http::withHeaders([
+                'X-Api-Key' => $apiKey,
+            ])->post(rtrim($baseUrl, '/') . '/charges', $payload);
+            Log::info('Received response from AppyPay', [
+                'status' => $response->status(),
+                'body' => $response->json() ?? $response->body(),
+            ]);
 
             if ($response->successful()) {
                 $data = $response->json();
