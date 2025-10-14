@@ -69,7 +69,7 @@ class AppyPayService
             'amount' => $amount,
             'currency' => 'AOA',
             'description' => $description,
-            'merchantTransactionId' => $merchantTransactionId,
+            'merchantTransactionId'  => $merchantTransactionId,
             'paymentMethod' => 'REF_' . $this->paymentMethodId,
         ];
 

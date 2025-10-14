@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Services\AppyPayService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class OrderController extends Controller
 {
@@ -23,8 +24,8 @@ class OrderController extends Controller
         // Ensure amount is an integer (AppyPay expects integer for AOA)
         $amount = (int) round($amount);
 
-        // Generate unique reference (transaction id)
-        $reference = 'cotarco-' . uniqid();
+        // Generate unique reference (transaction id) - must be alphanumeric, max 15 chars
+        $reference = 'TR' . strtoupper(Str::random(13));
 
         // Description for the charge
         $description = 'Encomenda Cotarco #' . $reference;
