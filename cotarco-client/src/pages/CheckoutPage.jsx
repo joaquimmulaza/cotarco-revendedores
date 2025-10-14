@@ -4,11 +4,21 @@ import { useAuth } from '../contexts/AuthContext.jsx';
 import { useCart } from '../contexts/CartContext.jsx';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { AnimatePresence, motion as M } from 'framer-motion';
+import { Clipboard, Landmark, LoaderCircle } from 'lucide-react';
+import { toast } from 'sonner';
 import api from '../services/api';
+import CotarcoLogo from '@/assets/logo-cotarco.png';
+import { Link } from 'react-router-dom';
 
 export default function CheckoutPage() {
   const { user } = useAuth();
-  const { items, subtotal } = useCart();
+  const { items, subtotal, clearCart } = useCart();
+  const [isLoading, setIsLoading] = useState(false);
+  const [paymentData, setPaymentData] = useState(null);
 
   const formatCurrency = (value) => (Number(value) || 0).toLocaleString('pt-AO', { style: 'currency', currency: 'AOA' });
 
@@ -23,7 +33,15 @@ export default function CheckoutPage() {
   const { register, handleSubmit, formState: { errors } } = useForm({
     defaultValues
   });
-  const [isLoading, setIsLoading] = useState(false);
+
+  const copyToClipboard = (text, fieldName) => {
+    navigator.clipboard.writeText(text).then(() => {
+      toast.success(`${fieldName} copiado com sucesso!`);
+    }).catch(err => {
+      console.error('Failed to copy text: ', err);
+      toast.error('Falha ao copiar.');
+    });
+  };
 
   const onSubmit = async (data) => {
     setIsLoading(true);
@@ -33,15 +51,16 @@ export default function CheckoutPage() {
     };
     try {
       const response = await api.post('/orders/create-payment', payload);
-      if (response?.data?.payment_url) {
-        window.location.href = response.data.payment_url;
+      if (response?.data?.entity && response?.data?.reference) {
+        setPaymentData(response.data);
+        clearCart(); // Limpa o carrinho após o sucesso
       } else {
         console.error('Resposta inesperada da API:', response?.data);
-        alert('Não foi possível iniciar o pagamento. Tente novamente.');
+        toast.error('Não foi possível iniciar o pagamento. Tente novamente.');
       }
     } catch (error) {
       console.error('Erro ao criar pagamento:', error);
-      alert(error?.response?.data?.message || 'Erro ao criar pagamento.');
+      toast.error(error?.response?.data?.message || 'Erro ao criar pagamento.');
     } finally {
       setIsLoading(false);
     }
@@ -49,60 +68,130 @@ export default function CheckoutPage() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
+      <div className="mb-6">
+        <Link to="/dashboard" aria-label="Voltar para a página inicial de parceiros">
+          <img src={CotarcoLogo} alt="COTARCO" className="h-10 w-auto cursor-pointer" />
+        </Link>
+      </div>
       <h1 className="text-2xl font-semibold mb-6">Checkout</h1>
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-        {/* Left column: form */}
-        <div className="md:col-span-7 lg:col-span-8 bg-white rounded-md border p-6">
-          <h2 className="text-lg font-medium mb-4">Dados para Envio</h2>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="fullName">Nome Completo</Label>
-                <Input id="fullName" readOnly defaultValue={defaultValues.fullName} />
-              </div>
-              <div>
-                <Label htmlFor="companyName">Nome da Empresa</Label>
-                <Input id="companyName" readOnly defaultValue={defaultValues.companyName} />
-              </div>
-            </div>
+        <div className="md:col-span-7 lg:col-span-8">
+          <AnimatePresence mode="wait">
+            {!paymentData ? (
+              <M.div
+                key="form"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.5 }}
+              >
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+                  <div className="bg-white rounded-md border p-6">
+                    <h2 className="text-lg font-medium mb-4">Dados para Envio</h2>
+                    <div className="space-y-5">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="fullName">Nome Completo</Label>
+                          <Input id="fullName" readOnly defaultValue={defaultValues.fullName} />
+                        </div>
+                        <div>
+                          <Label htmlFor="companyName">Nome da Empresa</Label>
+                          <Input id="companyName" readOnly defaultValue={defaultValues.companyName} />
+                        </div>
+                      </div>
+                      <div>
+                        <Label htmlFor="shippingAddress">Endereço</Label>
+                        <Input id="shippingAddress" placeholder="Rua, número, bairro" aria-invalid={errors.shippingAddress ? 'true' : 'false'} {...register('shippingAddress', { required: true })} />
+                        {errors.shippingAddress && <p className="text-sm text-red-600 mt-1">O endereço é obrigatório.</p>}
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="city">Cidade</Label>
+                          <Input id="city" placeholder="Cidade" aria-invalid={errors.city ? 'true' : 'false'} {...register('city', { required: true })} />
+                          {errors.city && <p className="text-sm text-red-600 mt-1">A cidade é obrigatória.</p>}
+                        </div>
+                        <div>
+                          <Label htmlFor="phoneNumber">Telefone</Label>
+                          <Input id="phoneNumber" placeholder="Telefone" aria-invalid={errors.phoneNumber ? 'true' : 'false'} {...register('phoneNumber', { required: true })} />
+                          {errors.phoneNumber && <p className="text-sm text-red-600 mt-1">O telefone é obrigatório.</p>}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
 
-            <div>
-              <Label htmlFor="shippingAddress">Endereço</Label>
-              <Input id="shippingAddress" placeholder="Rua, número, bairro" aria-invalid={errors.shippingAddress ? 'true' : 'false'} {...register('shippingAddress', { required: true })} />
-              {errors.shippingAddress && (
-                <p className="text-sm text-red-600 mt-1">O endereço é obrigatório.</p>
-              )}
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="city">Cidade</Label>
-                <Input id="city" placeholder="Cidade" aria-invalid={errors.city ? 'true' : 'false'} {...register('city', { required: true })} />
-                {errors.city && (
-                  <p className="text-sm text-red-600 mt-1">A cidade é obrigatória.</p>
-                )}
-              </div>
-              <div>
-                <Label htmlFor="phoneNumber">Telefone</Label>
-                <Input id="phoneNumber" placeholder="Telefone" aria-invalid={errors.phoneNumber ? 'true' : 'false'} {...register('phoneNumber', { required: true })} />
-                {errors.phoneNumber && (
-                  <p className="text-sm text-red-600 mt-1">O telefone é obrigatório.</p>
-                )}
-              </div>
-            </div>
-
-            <button type="submit" disabled={isLoading} className="w-full md:w-auto inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90">
-              {isLoading ? 'A processar...' : 'Finalizar Encomenda'}
-            </button>
-          </form>
+                  <div className="bg-white rounded-md border p-6">
+                     <h2 className="text-lg font-medium mb-4">Pagamento</h2>
+                     <RadioGroup defaultValue="reference" className="gap-4">
+                        <div>
+                          
+                           <Label htmlFor="ref" className="flex flex-row items-center justify-start gap-x-4 rounded-md border-1 p-4 hover:bg-accent hover:text-accent-foreground  [&:has([data-state=checked])]:border-gray-200 custom-radio bg-gray-50">
+                           <RadioGroupItem value="reference" id="ref" className="my-bg-red my-stroke-red" />
+                              <span>Pagamento Por Referência</span>
+                           
+                           </Label>
+                        </div>
+                     </RadioGroup>
+                  </div>
+                  
+                  <Button type="submit" disabled={isLoading} className="w-full text-base my-bg-red py-6">
+                    {isLoading ? <LoaderCircle className="animate-spin" /> : 'Finalizar Encomenda'}
+                  </Button>
+                </form>
+              </M.div>
+            ) : (
+              <M.div
+                key="payment-details"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5, ease: "easeOut" }}
+              >
+                <Alert>
+                  <AlertTitle className="text-xl font-bold">Pagamento Gerado com Sucesso!</AlertTitle>
+                  <AlertDescription className="mt-4 space-y-4">
+                    <p>Utilize os dados abaixo para efetuar o pagamento. A sua encomenda será processada após a confirmação.</p>
+                    <div className="border rounded-md p-4 space-y-3 bg-muted/50">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <span className="text-sm text-gray-600">Entidade</span>
+                          <p className="font-mono text-lg font-semibold">{paymentData.entity}</p>
+                        </div>
+                        <Button variant="ghost" size="icon" onClick={() => copyToClipboard(paymentData.entity, 'Entidade')}>
+                          <Clipboard className="h-5 w-5" />
+                        </Button>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <span className="text-sm text-gray-600">Referência</span>
+                          <p className="font-mono text-lg font-semibold">{paymentData.reference}</p>
+                        </div>
+                        <Button variant="ghost" size="icon" onClick={() => copyToClipboard(paymentData.reference, 'Referência')}>
+                          <Clipboard className="h-5 w-5" />
+                        </Button>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <span className="text-sm text-gray-600">Valor</span>
+                          <p className="font-mono text-lg font-semibold">{formatCurrency(paymentData.amount)}</p>
+                        </div>
+                         <Button variant="ghost" size="icon" onClick={() => copyToClipboard(paymentData.amount, 'Valor')}>
+                          <Clipboard className="h-5 w-5" />
+                        </Button>
+                      </div>
+                    </div>
+                  </AlertDescription>
+                </Alert>
+              </M.div>
+            )}
+          </AnimatePresence>
         </div>
 
-        {/* Right column: order summary */}
         <div className="md:col-span-5 lg:col-span-4 bg-white rounded-md border p-6 h-fit">
           <h2 className="text-lg font-medium mb-4">Resumo da Encomenda</h2>
           <div className="space-y-4 max-h-[60vh] overflow-auto pr-2">
-            {items.length === 0 ? (
+            {items.length === 0 && !paymentData ? (
               <p className="text-sm text-gray-600">O seu carrinho está vazio.</p>
+            ) : items.length === 0 && paymentData ? (
+               <p className="text-sm text-gray-600">Carrinho finalizado.</p>
             ) : (
               items.map((it) => (
                 <div key={it.id} className="flex items-center gap-3 border-b pb-3">
@@ -125,5 +214,3 @@ export default function CheckoutPage() {
     </div>
   );
 }
-
-

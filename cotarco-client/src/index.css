@@ -178,3 +178,12 @@
     @apply bg-background text-foreground;
     }
 }
+
+
+.custom-radio .fill-primary{
+  fill: #fff;
+  width: 10px;
+  height: 10px;
+  border: none !important;
+  outline: none !important;
+}
