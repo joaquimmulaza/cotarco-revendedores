@@ -6,6 +6,7 @@ use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\PartnerController;
+use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\StockFileController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\CategoryController;
@@ -211,6 +212,9 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::patch('/{file}/toggle-status', [StockFileController::class, 'toggleStatus']);
             Route::delete('/{file}', [StockFileController::class, 'destroy']);
         });
+
+        // Gestão de Encomendas
+        Route::get('/orders', [AdminOrderController::class, 'index']);
 
         // Rotas de Revendedores (estrutura antiga - mantida para compatibilidade)
         Route::prefix('revendedores')->group(function () {
