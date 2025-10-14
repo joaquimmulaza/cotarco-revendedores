@@ -2,23 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\AppyPayService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class OrderController extends Controller
 {
-    public function createPayment(Request $request)
+    public function createPayment(Request $request, AppyPayService $appyPayService)
     {
-        Log::info('createPayment method called');
-        $user = $request->user();
-        if (!$user) {
-            Log::error('User not authenticated');
-            return response()->json(['message' => 'User not authenticated'], 401);
-        }
-
         $cartItems = $request->input('items', []);
-        $customerDetails = $request->input('details', []);
 
         // Calculate total amount from items
         $amount = 0;
@@ -28,72 +20,48 @@ class OrderController extends Controller
             $amount += $price * $qty;
         }
 
-        // Ensure amount is a numeric string
-        $amount = (string) $amount;
+        // Ensure amount is an integer (AppyPay expects integer for AOA)
+        $amount = (int) round($amount);
 
-        // Generate unique transaction id
-        $transactionId = uniqid('cotarco-');
+        // Generate unique reference (transaction id)
+        $reference = 'cotarco-' . uniqid();
 
-        // Load AppyPay credentials from config
-        $merchantId = config('services.appypay.merchant_id');
-        $apiKey = config('services.appypay.api_key');
-        $baseUrl = config('services.appypay.url');
-
-        if (!$merchantId || !$apiKey || !$baseUrl) {
-            return response()->json([
-                'message' => 'Configuração AppyPay ausente.',
-            ], 500);
-        }
-
-        // Security hash
-        $hash = hash('sha256', $merchantId . $transactionId . $amount . $apiKey);
-
-        $payload = [
-            'merchantId' => $merchantId,
-            'amount' => $amount,
-            'reference' => $transactionId,
-            'description' => 'Encomenda Cotarco',
-            'hash' => $hash,
-            'customer' => [
-                'name' => $customerDetails['fullName'] ?? ($user->name ?? ''),
-                'company' => $customerDetails['companyName'] ?? ($user->partner_profile['company_name'] ?? ''),
-                'address' => $customerDetails['shippingAddress'] ?? '',
-                'city' => $customerDetails['city'] ?? '',
-                'phone' => $customerDetails['phoneNumber'] ?? '',
-                'email' => $user->email ?? '',
-            ],
-            'items' => $cartItems,
-        ];
+        // Description for the charge
+        $description = 'Encomenda Cotarco #' . $reference;
 
         try {
-            Log::info('Sending payment request to AppyPay', ['url' => rtrim($baseUrl, '/') . '/charges', 'payload' => $payload]);
-            $response = Http::withHeaders([
-                'X-Api-Key' => $apiKey,
-            ])->post(rtrim($baseUrl, '/') . '/charges', $payload);
-            Log::info('Received response from AppyPay', [
-                'status' => $response->status(),
-                'body' => $response->json() ?? $response->body(),
-            ]);
+            $response = $appyPayService->createCharge($amount, $reference, $description);
 
-            if ($response->successful()) {
-                $data = $response->json();
+            if (isset($response['entity']) && isset($response['reference'])) {
+                Log::info('AppyPay charge created successfully', [
+                    'reference' => $response['reference'],
+                    'entity' => $response['entity'],
+                ]);
+
                 return response()->json([
-                    'entity' => $data['entity'] ?? null,
-                    'reference' => $data['reference'] ?? null,
-                    'amount' => $data['amount'] ?? null,
+                    'entity' => $response['entity'],
+                    'reference' => $response['reference'],
                 ]);
             }
 
+            Log::error('Invalid response from AppyPayService', [
+                'response' => $response,
+            ]);
+
             return response()->json([
                 'message' => 'Falha ao criar pagamento na AppyPay.',
-                'details' => $response->json(),
-            ], $response->status());
+                'details' => $response,
+            ], 502);
+
         } catch (\Throwable $e) {
             Log::error('Erro ao criar pagamento AppyPay', [
                 'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
             ]);
+            
             return response()->json([
                 'message' => 'Erro interno ao criar pagamento.',
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
