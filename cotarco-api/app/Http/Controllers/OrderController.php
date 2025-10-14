@@ -33,15 +33,17 @@ class OrderController extends Controller
         try {
             $response = $appyPayService->createCharge($amount, $reference, $description);
 
-            if (isset($response['entity']) && isset($response['reference'])) {
+            $referenceData = $response['responseStatus']['reference'] ?? null;
+            if ($referenceData && isset($referenceData['entity']) && isset($referenceData['referenceNumber'])) {
                 Log::info('AppyPay charge created successfully', [
-                    'reference' => $response['reference'],
-                    'entity' => $response['entity'],
+                    'reference' => $referenceData['referenceNumber'],
+                    'entity' => $referenceData['entity'],
                 ]);
 
                 return response()->json([
-                    'entity' => $response['entity'],
-                    'reference' => $response['reference'],
+                    'entity' => $referenceData['entity'],
+                    'reference' => $referenceData['referenceNumber'],
+                    'amount' => $amount, // Vamos também retornar o valor para a página de sucesso
                 ]);
             }
 
