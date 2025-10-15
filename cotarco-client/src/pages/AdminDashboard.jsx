@@ -5,8 +5,9 @@ import { useAuth } from '../contexts/AuthContext';
 import StockFileManager from '../components/StockFileManager';
 import Header from '../components/Header';
 import PartnerManager from '../components/admin/PartnerManager';
-import { UserGroupIcon, DocumentDuplicateIcon, CubeIcon } from '@heroicons/react/24/outline';
+import { UserGroupIcon, DocumentDuplicateIcon, CubeIcon, ShoppingCartIcon } from '@heroicons/react/24/outline';
 import ProductListViewer from '../components/admin/ProductListViewer';
+import OrderList from '../components/admin/OrderList';
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(' ');
@@ -20,6 +21,7 @@ const AdminDashboard = () => {
     { name: 'Gestão de Parceiros', icon: UserGroupIcon },
     { name: 'Mapa de Stock', icon: DocumentDuplicateIcon },
     { name: 'Gestão de Produtos', icon: CubeIcon },
+    { name: 'Encomendas', icon: ShoppingCartIcon },
   ];
 
   return (
@@ -83,6 +85,9 @@ const AdminDashboard = () => {
                 </TabPanel>
                 <TabPanel>
                   <ProductListViewer />
+                </TabPanel>
+                <TabPanel>
+                  <OrderList />
                 </TabPanel>
               </Motion.div>
             </AnimatePresence>
