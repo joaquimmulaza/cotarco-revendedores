@@ -11,6 +11,7 @@ use App\Http\Controllers\StockFileController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\WebhookController;
 use Illuminate\Support\Facades\Http;
 
 /*
@@ -171,6 +172,7 @@ Route::get('/email/verify/{id}/{hash}', function ($id, $hash, Request $request) 
     
 })->name('verification.verify');
 
+Route::post('/webhooks/appypay', [App\Http\Controllers\WebhookController::class, 'handleAppyPay']);
 
 // Rotas Protegidas (requerem autenticação)
 Route::middleware('auth:sanctum')->group(function () {

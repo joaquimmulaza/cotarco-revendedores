@@ -94,18 +94,23 @@ const OrderList = () => {
     pageSize: 10,
   });
   const [globalFilter, setGlobalFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState(''); // '' para 'Todos'
 
   const fetchOrders = async () => {
     const params = {
       page: pagination.pageIndex + 1,
       per_page: pagination.pageSize,
+      search: globalFilter,
     };
+    if (statusFilter) {
+      params.status = statusFilter;
+    }
     const response = await api.get('/admin/orders', { params });
     return response.data;
   };
 
   const { data, isLoading, isError, error } = useQuery({
-    queryKey: ['adminOrders', pagination],
+    queryKey: ['adminOrders', pagination, statusFilter, globalFilter],
     queryFn: fetchOrders,
     keepPreviousData: true,
   });
@@ -134,12 +139,56 @@ const OrderList = () => {
     <div className="w-full">
       <div className="mb-4">
         <h2 className="text-xl font-semibold">Encomendas</h2>
-        <Input
-          placeholder="Filtrar por nome do parceiro..."
-          value={globalFilter ?? ''}
-          onChange={(event) => setGlobalFilter(event.target.value)}
-          className="max-w-sm mt-2"
-        />
+        <div className="flex justify-between items-center mt-2">
+          <div className="flex space-x-2">
+            <button
+              onClick={() => setStatusFilter('')}
+              className={`px-3 py-1 text-sm rounded-md ${
+                statusFilter === ''
+                  ? 'bg-red-500 text-white'
+                  : 'bg-gray-200 text-gray-700'
+              }`}
+            >
+              Todos
+            </button>
+            <button
+              onClick={() => setStatusFilter('pending')}
+              className={`px-3 py-1 text-sm rounded-md ${
+                statusFilter === 'pending'
+                  ? 'bg-red-500 text-white'
+                  : 'bg-gray-200 text-gray-700'
+              }`}
+            >
+              Pending
+            </button>
+            <button
+              onClick={() => setStatusFilter('success')}
+              className={`px-3 py-1 text-sm rounded-md ${
+                statusFilter === 'success'
+                  ? 'bg-red-500 text-white'
+                  : 'bg-gray-200 text-gray-700'
+              }`}
+            >
+              Success
+            </button>
+            <button
+              onClick={() => setStatusFilter('failed')}
+              className={`px-3 py-1 text-sm rounded-md ${
+                statusFilter === 'failed'
+                  ? 'bg-red-500 text-white'
+                  : 'bg-gray-200 text-gray-700'
+              }`}
+            >
+              Failed
+            </button>
+          </div>
+          <Input
+            placeholder="Filtrar por nome do parceiro..."
+            value={globalFilter ?? ''}
+            onChange={(event) => setGlobalFilter(event.target.value)}
+            className="max-w-sm"
+          />
+        </div>
       </div>
 
       {isLoading ? (
