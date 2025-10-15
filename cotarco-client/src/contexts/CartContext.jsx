@@ -46,6 +46,9 @@ function cartReducer(state, action) {
       return { ...state, items: filtered };
     }
 
+    case 'CLEAR_CART':
+      return { ...state, items: [] };
+
     default:
       return state;
   }
@@ -72,6 +75,8 @@ export function CartProvider({ children }) {
   const removeFromCart = (id) =>
     dispatch({ type: 'REMOVE_ITEM', payload: { id } });
 
+  const clearCart = () => dispatch({ type: 'CLEAR_CART' });
+
   // Valores calculados
   const { totalItems, subtotal } = useMemo(() => {
     const totals = cartState.items.reduce(
@@ -95,6 +100,7 @@ export function CartProvider({ children }) {
       removeFromCart,
       totalItems,
       subtotal,
+      clearCart,
     }),
     [cartState.items, totalItems, subtotal]
   );
@@ -110,7 +116,3 @@ export function useCart() {
   }
   return ctx;
 }
-
-export default CartContext;
-
-

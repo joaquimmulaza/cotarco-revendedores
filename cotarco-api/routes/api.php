@@ -241,8 +241,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // Rotas de Produtos (protegidA por auth:sanctum e parceiro)
     Route::middleware('parceiro')->group(function () {
         Route::get('/products', [ProductController::class, 'index']);
+        
+        // Pagamentos / Encomendas
+        Route::post('/orders/create-payment', [OrderController::class, 'createPayment']);
     });
-
-    // Pagamentos / Encomendas
-    Route::post('/orders/create-payment', [OrderController::class, 'createPayment']);
 });

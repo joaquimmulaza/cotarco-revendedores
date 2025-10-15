@@ -27,6 +27,15 @@ class Order extends Model
     ];
 
     /**
+     * The attributes that should be cast.
+     *
+     * @var array<string, string>
+     */
+    protected $casts = [
+        'shipping_details' => 'json',
+    ];
+
+    /**
      * Get the user that owns the order.
      */
     public function user(): BelongsTo
