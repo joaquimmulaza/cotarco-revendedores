@@ -13,7 +13,7 @@ class WebhookController extends Controller
         Log::info('Webhook AppyPay recebido:', $request->all());
 
         $merchantTransactionId = $request->input('merchantTransactionId');
-        $status = $request->input('status');
+        $status = $request->input('responseStatus.status');
 
         if (!$merchantTransactionId || !$status) {
             return response()->json(['error' => 'merchantTransactionId and status are required.'], 400);

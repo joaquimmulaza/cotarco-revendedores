@@ -74,6 +74,7 @@ class AppyPayService
         ];
 
         $response = Http::withToken($accessToken)
+            ->timeout(60)
             ->acceptJson()
             ->post($this->apiUrl . '/v2.0/charges', $payload);
 
