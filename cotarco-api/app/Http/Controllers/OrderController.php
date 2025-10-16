@@ -38,48 +38,50 @@ class OrderController extends Controller
         $description = 'Encomenda Cotarco #' . $reference;
 
         try {
-            $order = null;
-            $response = DB::transaction(function () use ($request, $appyPayService, $amount, $reference, $description, $shippingDetails, &$order) {
-                $order = Order::create([
-                    'user_id' => auth()->user()->id,
-                    'merchant_transaction_id' => $reference,
-                    'total_amount' => $amount,
-                    'shipping_details' => json_encode($shippingDetails),
-                    'status' => 'pending',
-                ]);
+            // 1. Create the order first, outside of a transaction that includes the API call
+            $order = Order::create([
+                'user_id' => auth()->user()->id,
+                'merchant_transaction_id' => $reference,
+                'total_amount' => $amount,
+                'shipping_details' => json_encode($shippingDetails),
+                'status' => 'pending',
+            ]);
 
-                $chargeResponse = $appyPayService->createCharge($amount, $reference, $description);
+            // 2. Now, make the call to the payment service
+            $chargeResponse = $appyPayService->createCharge($amount, $reference, $description);
 
-                $appyPayTransactionId = $chargeResponse['transactionId'] ?? null;
-                if ($appyPayTransactionId) {
-                    $order->update(['appy_pay_transaction_id' => $appyPayTransactionId]);
-                }
+            // 3. Handle the response from the payment service
+            $appyPayTransactionId = $chargeResponse['transactionId'] ?? null;
+            if ($appyPayTransactionId) {
+                $order->update(['appy_pay_transaction_id' => $appyPayTransactionId]);
+            }
 
-                return $chargeResponse;
-            });
-
-
-            $referenceData = $response['responseStatus']['reference'] ?? null;
+            $referenceData = $chargeResponse['responseStatus']['reference'] ?? null;
             if ($referenceData && isset($referenceData['entity']) && isset($referenceData['referenceNumber'])) {
                 Log::info('AppyPay charge created successfully', [
+                    'order_id' => $order->id,
                     'reference' => $referenceData['referenceNumber'],
                     'entity' => $referenceData['entity'],
                 ]);
 
+                // The order status remains 'pending' until the webhook confirms payment
                 return response()->json([
                     'entity' => $referenceData['entity'],
                     'reference' => $referenceData['referenceNumber'],
-                    'amount' => $amount, // Vamos também retornar o valor para a página de sucesso
+                    'amount' => $amount,
                 ]);
             }
 
-            Log::error('Invalid response from AppyPayService', [
-                'response' => $response,
+            // If the charge failed, we should log it and potentially mark the order as failed
+            $order->update(['status' => 'failed']);
+            Log::error('Invalid or failed response from AppyPayService', [
+                'order_id' => $order->id,
+                'response' => $chargeResponse,
             ]);
 
             return response()->json([
-                'message' => 'Falha ao criar pagamento na AppyPay.',
-                'details' => $response,
+                'message' => 'Falha ao iniciar o pagamento. Por favor, tente novamente.',
+                'details' => $chargeResponse,
             ], 502);
 
         } catch (\Throwable $e) {
