@@ -2,9 +2,13 @@
 
 namespace App\Jobs;
 
+use App\Mail\OrderPlacedAdmin;
+use App\Mail\OrderPlacedCustomer;
 use App\Models\Order;
+use App\Models\User;
 use App\Services\AppyPayService;
 use Illuminate\Bus\Queueable;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
@@ -71,8 +75,31 @@ class CreateAppyPayChargeJob implements ShouldQueue
                     'reference' => $referenceData['referenceNumber'],
                     'entity' => $referenceData['entity'],
                 ]);
-                // The order status remains 'pending' until the webhook confirms payment.
-                // No need to update status here unless there's a final failure.
+
+                // Enviar e-mails de encomenda criada
+                try {
+                    Log::info("A enviar e-mails de encomenda criada para a encomenda ID: {$order->id}");
+                    $paymentDetails = [
+                        'entidade' => $referenceData['entity'],
+                        'referencia' => $referenceData['referenceNumber'],
+                        'valor' => $this->amount,
+                    ];
+
+                    // E-mail para o cliente
+                    Mail::to($order->user->email)->send(new OrderPlacedCustomer($order, $paymentDetails));
+
+                    // E-mail para o admin
+                    $admin = User::where('role', 'admin')->first();
+                    if ($admin) {
+                        Mail::to($admin->email)->send(new OrderPlacedAdmin($order));
+                    }
+                } catch (\Throwable $e) {
+                    Log::error("Falha ao enviar e-mails de encomenda criada para a encomenda ID: {$order->id}", [
+                        'error' => $e->getMessage(),
+                        'trace' => $e->getTraceAsString(),
+                    ]);
+                }
+
             } else {
                 // If the response is invalid or failed
                 $order->update(['status' => 'failed']);

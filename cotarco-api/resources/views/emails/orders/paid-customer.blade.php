@@ -3,11 +3,9 @@
 
 Olá,
 
-Obrigado pelo seu pagamento. A sua encomenda #{{ $order->id }} está agora em processamento.
+Agradecemos a sua requisição. Informamos que a sua encomenda # ID: #{{ $order->id }} foi recebida e encontra-se em fase de processamento. 
 
-Pode acompanhar o estado da sua encomenda no nosso site.
-
-Obrigado,
+Atenciosamente,
 <br>
 {{ config('app.name') }}
 </x-mail::message>

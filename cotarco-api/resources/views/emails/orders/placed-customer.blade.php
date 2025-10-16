@@ -1,18 +1,16 @@
 <x-mail::message>
 # Olá,
 
-Obrigado pela sua encomenda na Cotarco.
-
-**Valor Total:** {{ $order->total_amount }} Kz
+Agradecemos a sua encomenda.
 
 **Detalhes de Pagamento:**
 - **Entidade:** {{ $paymentDetails['entidade'] }}
 - **Referência:** {{ $paymentDetails['referencia'] }}
 - **Valor:** {{ $paymentDetails['valor'] }} Kz
 
-Pode acompanhar o estado da sua encomenda no nosso site.
+Assim que o pagamento for confirmado, daremos continuidade ao processamento da sua encomenda.
 
-Obrigado,
+Atenciosamente,
 <br>
 {{ config('app.name') }}
 </x-mail::message>
