@@ -1,0 +1,96 @@
+<?php
+
+namespace App\Jobs;
+
+use App\Models\Order;
+use App\Services\AppyPayService;
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
+
+class CreateAppyPayChargeJob implements ShouldQueue
+{
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+
+    protected $orderId;
+    protected $amount;
+    protected $reference;
+    protected $description;
+
+    /**
+     * Create a new job instance.
+     *
+     * @param int $orderId
+     * @param int $amount
+     * @param string $reference
+     * @param string $description
+     */
+    public function __construct($orderId, $amount, $reference, $description)
+    {
+        $this->orderId = $orderId;
+        $this->amount = $amount;
+        $this->reference = $reference;
+        $this->description = $description;
+    }
+
+    /**
+     * Execute the job.
+     *
+     * @param AppyPayService $appyPayService
+     * @return void
+     */
+    public function handle(AppyPayService $appyPayService)
+    {
+        try {
+            $order = Order::find($this->orderId);
+            if (!$order) {
+                Log::error('CreateAppyPayChargeJob: Order not found.', ['order_id' => $this->orderId]);
+                return;
+            }
+
+            // Make the call to the payment service
+            $chargeResponse = $appyPayService->createCharge($this->amount, $this->reference, $this->description);
+
+            // Handle the response from the payment service
+            $appyPayTransactionId = $chargeResponse['transactionId'] ?? null;
+            if ($appyPayTransactionId) {
+                $order->update(['appy_pay_transaction_id' => $appyPayTransactionId]);
+            }
+
+            $referenceData = $chargeResponse['reference']
+                ?? ($chargeResponse['responseStatus']['reference'] ?? null);
+
+            if ($referenceData && isset($referenceData['entity']) && isset($referenceData['referenceNumber'])) {
+                Log::info('AppyPay charge created successfully via Job', [
+                    'order_id' => $this->orderId,
+                    'reference' => $referenceData['referenceNumber'],
+                    'entity' => $referenceData['entity'],
+                ]);
+                // The order status remains 'pending' until the webhook confirms payment.
+                // No need to update status here unless there's a final failure.
+            } else {
+                // If the response is invalid or failed
+                $order->update(['status' => 'failed']);
+                Log::error('Invalid or failed response from AppyPayService in Job', [
+                    'order_id' => $this->orderId,
+                    'response' => $chargeResponse,
+                ]);
+            }
+        } catch (\Throwable $e) {
+            Log::error('Error in CreateAppyPayChargeJob', [
+                'order_id' => $this->orderId,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            // Optionally, find the order and mark it as failed
+            $order = Order::find($this->orderId);
+            if ($order) {
+                $order->update(['status' => 'failed']);
+            }
+        }
+    }
+}

@@ -6,6 +6,7 @@ use App\Models\Order;
 use App\Services\AppyPayService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Jobs\CreateAppyPayChargeJob;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
@@ -38,7 +39,7 @@ class OrderController extends Controller
         $description = 'Encomenda Cotarco #' . $reference;
 
         try {
-            // 1. Create the order first, outside of a transaction that includes the API call
+            // 1. Create the order with 'pending' status
             $order = Order::create([
                 'user_id' => auth()->user()->id,
                 'merchant_transaction_id' => $reference,
@@ -47,71 +48,24 @@ class OrderController extends Controller
                 'status' => 'pending',
             ]);
 
-            // 2. Now, make the call to the payment service
-            $chargeResponse = $appyPayService->createCharge($amount, $reference, $description);
+            // 2. Dispatch the job to handle the AppyPay charge creation
+            CreateAppyPayChargeJob::dispatch($order->id, $amount, $reference, $description);
 
-            // 3. Handle the response from the payment service
-            $appyPayTransactionId = $chargeResponse['transactionId'] ?? null;
-            if ($appyPayTransactionId) {
-                $order->update(['appy_pay_transaction_id' => $appyPayTransactionId]);
-            }
-
-            // Estrutura esperada da AppyPay (conforme logs de webhook):
-            // {
-            //   "reference": { "referenceNumber": "...", "entity": "...", ... },
-            //   "responseStatus": { ... }
-            // }
-            $referenceData = $chargeResponse['reference']
-                ?? ($chargeResponse['responseStatus']['reference'] ?? null);
-
-            if ($referenceData && isset($referenceData['entity']) && isset($referenceData['referenceNumber'])) {
-                Log::info('AppyPay charge created successfully', [
-                    'order_id' => $order->id,
-                    'reference' => $referenceData['referenceNumber'],
-                    'entity' => $referenceData['entity'],
-                ]);
-
-                // The order status remains 'pending' until the webhook confirms payment
-                return response()->json([
-                    'entity' => $referenceData['entity'],
-                    'reference' => $referenceData['referenceNumber'],
-                    'amount' => $amount,
-                ]);
-            }
-
-            // Se houve falha de conexão/timeout, devolver 202 com o transaction id para o frontend poder fazer polling
-            if (($chargeResponse['success'] ?? true) === false) {
-                Log::warning('AppyPayService connection issue when creating charge', [
-                    'order_id' => $order->id,
-                    'response' => $chargeResponse,
-                ]);
-
-                // Mantém a encomenda como 'pending' e aguarda webhook
-                return response()->json([
-                    'merchantTransactionId' => $reference,
-                    'message' => 'Aguardando confirmação do serviço de pagamentos.',
-                ], 202);
-            }
-
-            // Caso a resposta não tenha o formato esperado
-            $order->update(['status' => 'failed']);
-            Log::error('Invalid or failed response from AppyPayService', [
-                'order_id' => $order->id,
-                'response' => $chargeResponse,
-            ]);
-
+            // 3. Return an immediate 202 Accepted response
+            // The frontend will use the merchantTransactionId for polling
             return response()->json([
-                'message' => 'Falha ao iniciar o pagamento. Por favor, tente novamente.',
-            ], 502);
+                'merchantTransactionId' => $reference,
+                'message' => 'O seu pedido de pagamento foi recebido e está a ser processado.',
+            ], 202);
 
         } catch (\Throwable $e) {
-            Log::error('Erro ao criar pagamento AppyPay', [
+            Log::error('Erro ao criar a encomenda ou ao enviar para a fila', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
 
             return response()->json([
-                'message' => 'Erro interno ao criar pagamento.',
+                'message' => 'Erro interno ao processar o seu pedido.',
                 'error' => $e->getMessage(),
             ], 500);
         }
