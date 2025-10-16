@@ -1,5 +1,5 @@
 <x-mail::message>
-# Olá, **{{ $order->user->name }}**
+# Olá,
 
 Obrigado pela sua encomenda na Cotarco.
 

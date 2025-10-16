@@ -44,8 +44,10 @@ class CreateAppyPayChargeJob implements ShouldQueue
      */
     public function handle(AppyPayService $appyPayService)
     {
+        Log::info("Job CreateAppyPayChargeJob iniciado para a encomenda ID: {$this->orderId}");
+
         try {
-            $order = Order::find($this->orderId);
+            $order = Order::with('user')->find($this->orderId);
             if (!$order) {
                 Log::error('CreateAppyPayChargeJob: Order not found.', ['order_id' => $this->orderId]);
                 return;
@@ -80,10 +82,9 @@ class CreateAppyPayChargeJob implements ShouldQueue
                 ]);
             }
         } catch (\Throwable $e) {
-            Log::error('Error in CreateAppyPayChargeJob', [
-                'order_id' => $this->orderId,
+            Log::error("Falha ao enviar e-mails de encomenda criada para a encomenda ID: {$this->orderId}", [
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
+                'trace' => $e->getTraceAsString() // Regista o stack trace completo
             ]);
 
             // Optionally, find the order and mark it as failed

@@ -24,12 +24,13 @@ class WebhookController extends Controller
             return response()->json(['error' => 'merchantTransactionId and status are required.'], 400);
         }
 
-        $order = Order::where('merchant_transaction_id', $merchantTransactionId)->first();
+        $order = Order::with('user')->where('merchant_transaction_id', $merchantTransactionId)->first();
 
         if ($order) {
             if (strtolower($status) === 'success' && $order->status !== 'success') {
                 $order->update(['status' => 'success']);
 
+                Log::info("A enviar e-mails de pagamento confirmado para a encomenda ID: {$order->id}");
                 try {
                     // Enviar e-mail para o cliente
                     Mail::to($order->user->email)->send(new PaymentSuccessCustomer($order));
@@ -39,8 +40,11 @@ class WebhookController extends Controller
                     if ($admin) {
                         Mail::to($admin->email)->send(new PaymentSuccessAdmin($order));
                     }
-                } catch (\Exception $e) {
-                    Log::error('Falha ao enviar e-mails de confirmação de pagamento: ' . $e->getMessage());
+                } catch (\Throwable $e) {
+                    Log::error("Falha ao enviar e-mails de pagamento confirmado para a encomenda ID: {$order->id}", [
+                        'error' => $e->getMessage(),
+                        'trace' => $e->getTraceAsString()
+                    ]);
                 }
             } else {
                 $order->status = $status;
