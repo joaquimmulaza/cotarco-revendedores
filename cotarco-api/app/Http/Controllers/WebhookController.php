@@ -2,9 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\PaymentSuccessAdmin;
+use App\Mail\PaymentSuccessCustomer;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use App\Models\Order;
+use Illuminate\Support\Facades\Mail;
 
 class WebhookController extends Controller
 {
@@ -23,7 +27,24 @@ class WebhookController extends Controller
         $order = Order::where('merchant_transaction_id', $merchantTransactionId)->first();
 
         if ($order) {
-            $order->status = $status;
+            if (strtolower($status) === 'success' && $order->status !== 'success') {
+                $order->update(['status' => 'success']);
+
+                try {
+                    // Enviar e-mail para o cliente
+                    Mail::to($order->user->email)->send(new PaymentSuccessCustomer($order));
+
+                    // Enviar e-mail para o admin
+                    $admin = User::where('role', 'admin')->first();
+                    if ($admin) {
+                        Mail::to($admin->email)->send(new PaymentSuccessAdmin($order));
+                    }
+                } catch (\Exception $e) {
+                    Log::error('Falha ao enviar e-mails de confirmação de pagamento: ' . $e->getMessage());
+                }
+            } else {
+                $order->status = $status;
+            }
 
             // Guardar dados de referência dentro de shipping_details (JSON) para consulta pelo frontend
             if (is_array($reference) && isset($reference['entity']) && isset($reference['referenceNumber'])) {
