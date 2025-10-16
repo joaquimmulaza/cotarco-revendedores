@@ -17,7 +17,7 @@ const columns = [
     accessorKey: 'user.name',
   },
   {
-    header: 'Total da Encomenda',
+    header: 'Valor Total',
     accessorKey: 'total_amount',
     cell: ({ getValue }) => {
       const value = getValue();
