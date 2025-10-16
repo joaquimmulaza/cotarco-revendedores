@@ -13,6 +13,10 @@ class OrderController extends Controller
 {
     public function createPayment(Request $request, AppyPayService $appyPayService)
     {
+        if (!auth()->check()) {
+            return response()->json(['message' => 'Sessão inválida ou expirada. Por favor, faça login novamente.'], 401);
+        }
+
         $cartItems = $request->input('items', []);
         $shippingDetails = $request->input('details', []);
 
