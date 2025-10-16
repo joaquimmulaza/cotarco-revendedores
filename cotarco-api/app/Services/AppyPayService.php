@@ -73,18 +73,42 @@ class AppyPayService
             'paymentMethod' => 'REF_' . $this->paymentMethodId,
         ];
 
-        $response = Http::withToken($accessToken)
-            ->timeout(30)
-            ->acceptJson()
-            ->post($this->apiUrl . '/v2.0/charges', $payload);
+        try {
+            $response = Http::withToken($accessToken)
+                ->acceptJson()
+                ->connectTimeout(10)
+                ->timeout(20)
+                ->retry(1, 500)
+                ->post($this->apiUrl . '/v2.0/charges', $payload);
 
-        if ($response->failed()) {
-            Log::error('AppyPay charge creation failed', [
-                'status' => $response->status(),
-                'response' => $response->body(),
+            if ($response->failed()) {
+                Log::error('AppyPay charge creation failed', [
+                    'status' => $response->status(),
+                    'url' => $this->apiUrl . '/v2.0/charges',
+                    'response' => $response->body(),
+                ]);
+
+                // Garantir retorno consistente em falhas
+                return [
+                    'success' => false,
+                    'status' => $response->status(),
+                    'response' => json_decode($response->body(), true) ?? $response->body(),
+                ];
+            }
+
+            return $response->json();
+        } catch (\Throwable $e) {
+            // Tratamento de timeouts/conexão sem lançar exceção para o controlador
+            Log::error('Erro ao criar pagamento AppyPay', [
+                'error' => $e->getMessage(),
+                'url' => $this->apiUrl . '/v2.0/charges',
             ]);
-        }
 
-        return $response->json();
+            return [
+                'success' => false,
+                'error' => 'connection_error',
+                'message' => $e->getMessage(),
+            ];
+        }
     }
 }

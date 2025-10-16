@@ -14,6 +14,7 @@ class WebhookController extends Controller
 
         $merchantTransactionId = $request->input('merchantTransactionId');
         $status = $request->input('responseStatus.status');
+        $reference = $request->input('reference');
 
         if (!$merchantTransactionId || !$status) {
             return response()->json(['error' => 'merchantTransactionId and status are required.'], 400);
@@ -23,6 +24,18 @@ class WebhookController extends Controller
 
         if ($order) {
             $order->status = $status;
+
+            // Guardar dados de referência dentro de shipping_details (JSON) para consulta pelo frontend
+            if (is_array($reference) && isset($reference['entity']) && isset($reference['referenceNumber'])) {
+                $details = is_array($order->shipping_details) ? $order->shipping_details : (json_decode($order->shipping_details, true) ?: []);
+                $details['payment_reference'] = [
+                    'entity' => $reference['entity'],
+                    'referenceNumber' => $reference['referenceNumber'],
+                    'dueDate' => $reference['dueDate'] ?? null,
+                ];
+                $order->shipping_details = $details;
+            }
+
             $order->save();
             return response()->json(['status' => 'received'], 200);
         } else {

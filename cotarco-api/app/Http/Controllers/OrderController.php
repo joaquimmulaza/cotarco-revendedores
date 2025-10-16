@@ -56,7 +56,14 @@ class OrderController extends Controller
                 $order->update(['appy_pay_transaction_id' => $appyPayTransactionId]);
             }
 
-            $referenceData = $chargeResponse['responseStatus']['reference'] ?? null;
+            // Estrutura esperada da AppyPay (conforme logs de webhook):
+            // {
+            //   "reference": { "referenceNumber": "...", "entity": "...", ... },
+            //   "responseStatus": { ... }
+            // }
+            $referenceData = $chargeResponse['reference']
+                ?? ($chargeResponse['responseStatus']['reference'] ?? null);
+
             if ($referenceData && isset($referenceData['entity']) && isset($referenceData['referenceNumber'])) {
                 Log::info('AppyPay charge created successfully', [
                     'order_id' => $order->id,
@@ -72,7 +79,21 @@ class OrderController extends Controller
                 ]);
             }
 
-            // If the charge failed, we should log it and potentially mark the order as failed
+            // Se houve falha de conexão/timeout, devolver 202 com o transaction id para o frontend poder fazer polling
+            if (($chargeResponse['success'] ?? true) === false) {
+                Log::warning('AppyPayService connection issue when creating charge', [
+                    'order_id' => $order->id,
+                    'response' => $chargeResponse,
+                ]);
+
+                // Mantém a encomenda como 'pending' e aguarda webhook
+                return response()->json([
+                    'merchantTransactionId' => $reference,
+                    'message' => 'Aguardando confirmação do serviço de pagamentos.',
+                ], 202);
+            }
+
+            // Caso a resposta não tenha o formato esperado
             $order->update(['status' => 'failed']);
             Log::error('Invalid or failed response from AppyPayService', [
                 'order_id' => $order->id,
@@ -81,7 +102,6 @@ class OrderController extends Controller
 
             return response()->json([
                 'message' => 'Falha ao iniciar o pagamento. Por favor, tente novamente.',
-                'details' => $chargeResponse,
             ], 502);
 
         } catch (\Throwable $e) {

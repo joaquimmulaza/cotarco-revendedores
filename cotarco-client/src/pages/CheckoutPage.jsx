@@ -53,11 +53,50 @@ export default function CheckoutPage() {
       const response = await api.post('/orders/create-payment', payload);
       if (response?.data?.entity && response?.data?.reference) {
         setPaymentData(response.data);
-        clearCart(); // Limpa o carrinho após o sucesso
-      } else {
-        console.error('Resposta inesperada da API:', response?.data);
-        toast.error('Não foi possível iniciar o pagamento. Tente novamente.');
+        clearCart();
+        return;
       }
+
+      // Se a API retornar 202 com merchantTransactionId, iniciar polling até o webhook preencher a referência
+      if (response?.status === 202 && response?.data?.merchantTransactionId) {
+        const tx = response.data.merchantTransactionId;
+        const start = Date.now();
+        const timeoutMs = 60000; // 60s
+        const pollIntervalMs = 3000; // 3s
+
+        const poll = async () => {
+          try {
+            const refRes = await api.get(`/orders/payment-reference/${tx}`);
+            if (refRes?.data?.entity && refRes?.data?.reference) {
+              setPaymentData({ ...refRes.data });
+              clearCart();
+              return true;
+            }
+          } catch (e) {
+            // Se 202, continuar a tentar; outros erros mostram toast e param
+            if (e?.response?.status && e.response.status !== 202) {
+              toast.error(e?.response?.data?.message || 'Erro ao consultar referência.');
+              return true;
+            }
+          }
+          return false;
+        };
+
+        const loop = async () => {
+          while (Date.now() - start < timeoutMs) {
+            const done = await poll();
+            if (done) return;
+            await new Promise(r => setTimeout(r, pollIntervalMs));
+          }
+          toast.error('Tempo de espera excedido ao obter a referência. Tente novamente.');
+        };
+
+        await loop();
+        return;
+      }
+
+      console.error('Resposta inesperada da API:', response?.data);
+      toast.error('Não foi possível iniciar o pagamento. Tente novamente.');
     } catch (error) {
       console.error('Erro ao criar pagamento:', error);
       toast.error(error?.response?.data?.message || 'Erro ao criar pagamento.');

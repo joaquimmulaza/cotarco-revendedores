@@ -244,5 +244,21 @@ Route::middleware('auth:sanctum')->group(function () {
         
         // Pagamentos / Encomendas
         Route::post('/orders/create-payment', [OrderController::class, 'createPayment']);
+        Route::get('/orders/payment-reference/{merchantTransactionId}', function ($merchantTransactionId) {
+            $order = \App\Models\Order::where('merchant_transaction_id', $merchantTransactionId)->first();
+            if (!$order) {
+                return response()->json(['message' => 'Order not found'], 404);
+            }
+            $details = is_array($order->shipping_details) ? $order->shipping_details : (json_decode($order->shipping_details, true) ?: []);
+            $ref = $details['payment_reference'] ?? null;
+            if ($ref && isset($ref['entity']) && isset($ref['referenceNumber'])) {
+                return response()->json([
+                    'entity' => $ref['entity'],
+                    'reference' => $ref['referenceNumber'],
+                    'amount' => (int) $order->total_amount,
+                ]);
+            }
+            return response()->json(['message' => 'Reference not ready'], 202);
+        });
     });
 });
