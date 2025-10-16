@@ -31,7 +31,7 @@ class AppyPayService
             return Cache::get('appypay_access_token');
         }
 
-        $response = Http::asForm()->post($this->authUrl, [
+        $response = Http::asForm()->timeout(30)->post($this->authUrl, [
             'grant_type' => 'client_credentials',
             'client_id' => $this->clientId,
             'client_secret' => $this->clientSecret,
