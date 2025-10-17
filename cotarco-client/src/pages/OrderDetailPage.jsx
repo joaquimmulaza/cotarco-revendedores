@@ -16,7 +16,7 @@ const fetchOrderDetail = async (orderId) => {
 
 // Componente para o estado de carregamento (Skeleton)
 const OrderDetailSkeleton = () => (
-  <div className="space-y-6">
+  <div className="space-y-6 w-full">
     <Skeleton className="h-8 w-1/4" />
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <Skeleton className="h-48 w-full" />
@@ -59,7 +59,8 @@ export const OrderDetailPage = () => {
   const items = order?.items || [];
 
   const getPaymentStatusBadge = (status) => {
-    switch (status) {
+    const lowerCaseStatus = status?.toLowerCase();
+    switch (lowerCaseStatus) {
         case 'paid':
         case 'success':
             return <Badge variant="success">Pago</Badge>;
@@ -73,8 +74,8 @@ export const OrderDetailPage = () => {
   };
 
   return (
-    <div className="container mx-auto p-4 md:p-6 lg:p-8 space-y-6">
-      <div className="flex items-center gap-4">
+    <div className="container mx-auto space-y-6 w-full">
+      <div className="flex items-center gap-4 w-full">
         <Link to="/admin/dashboard/orders" className="p-2 rounded-md hover:bg-muted">
             <ArrowLeft className="h-5 w-5" />
         </Link>
@@ -83,9 +84,9 @@ export const OrderDetailPage = () => {
         </h1>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full">
         {/* Detalhes da Encomenda */}
-        <Card className="lg:col-span-1">
+        <Card className="lg:col-span-1 w-full">
           <CardHeader>
             <CardTitle>Resumo da Encomenda</CardTitle>
           </CardHeader>
@@ -141,7 +142,7 @@ export const OrderDetailPage = () => {
             <div className="flex items-start gap-2">
                 <Home className="h-4 w-4 mt-0.5 text-muted-foreground" />
                 <p className="whitespace-pre-line">
-                    {`${address?.address_1 || ''}\n${address?.city || ''}, ${address?.province || ''}\n${address?.country || ''}`}
+                    {`${address?.shippingAddress || ''}, ${address?.city || ''}`}
                 </p>
             </div>
           </CardContent>
