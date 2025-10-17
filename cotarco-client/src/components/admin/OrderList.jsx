@@ -34,14 +34,34 @@ const columns = [
     header: 'Status',
     accessorKey: 'status',
     cell: ({ getValue }) => {
-      const status = getValue();
-      const variant =
-        status === 'paid'
-          ? 'success'
-          : status === 'failed'
-          ? 'destructive'
-          : 'secondary';
-      return <Badge variant={variant}>{status}</Badge>;
+      const status = getValue()?.toLowerCase();
+      let variant;
+      let translatedStatus;
+
+      switch (status) {
+        case 'paid':
+        case 'success':
+          variant = 'success';
+          translatedStatus = 'Sucesso';
+          break;
+        case 'failed':
+          variant = 'destructive';
+          translatedStatus = 'Falhou';
+          break;
+        case 'pending':
+          variant = 'secondary';
+          translatedStatus = 'Pendente';
+          break;
+        default:
+          variant = 'secondary';
+          translatedStatus = status;
+      }
+
+      return (
+        <Badge variant={variant} className="w-20 justify-center">
+          {translatedStatus}
+        </Badge>
+      );
     },
   },
   {
@@ -159,7 +179,7 @@ const OrderList = () => {
                   : 'bg-gray-200 text-gray-700'
               }`}
             >
-              Pending
+              Pendente
             </button>
             <button
               onClick={() => setStatusFilter('success')}
@@ -169,7 +189,7 @@ const OrderList = () => {
                   : 'bg-gray-200 text-gray-700'
               }`}
             >
-              Success
+              Sucesso
             </button>
             <button
               onClick={() => setStatusFilter('failed')}
@@ -179,7 +199,7 @@ const OrderList = () => {
                   : 'bg-gray-200 text-gray-700'
               }`}
             >
-              Failed
+              Falhou
             </button>
           </div>
           <Input
