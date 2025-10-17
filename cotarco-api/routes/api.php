@@ -217,6 +217,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
         // Gestão de Encomendas
         Route::get('/orders', [AdminOrderController::class, 'index']);
+        Route::get('/orders/{order}', [AdminOrderController::class, 'show']);
 
         // Rotas de Revendedores (estrutura antiga - mantida para compatibilidade)
         Route::prefix('revendedores')->group(function () {

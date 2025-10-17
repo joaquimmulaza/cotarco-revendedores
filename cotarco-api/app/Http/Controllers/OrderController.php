@@ -39,16 +39,31 @@ class OrderController extends Controller
         $description = 'Encomenda Cotarco #' . $reference;
 
         try {
-            // 1. Create the order with 'pending' status
-            $order = Order::create([
-                'user_id' => auth()->user()->id,
-                'merchant_transaction_id' => $reference,
-                'total_amount' => $amount,
-                'shipping_details' => json_encode($shippingDetails),
-                'status' => 'pending',
-            ]);
+            $order = DB::transaction(function () use ($cartItems, $shippingDetails, $reference, $amount) {
+                // 1. Create the order with 'pending' status
+                $order = Order::create([
+                    'user_id' => auth()->user()->id,
+                    'merchant_transaction_id' => $reference,
+                    'total_amount' => $amount,
+                    'shipping_details' => $shippingDetails,
+                    'status' => 'pending',
+                ]);
 
-            // 2. Dispatch the job to handle the AppyPay charge creation
+                // 2. Create order items
+                foreach ($cartItems as $item) {
+                    $order->items()->create([
+                        'product_sku' => $item['sku'],
+                        'name' => $item['name'],
+                        'quantity' => $item['quantity'],
+                        'price' => $item['price'],
+                        'image_url' => $item['image_url'] ?? null,
+                    ]);
+                }
+
+                return $order;
+            });
+
+            // 3. Dispatch the job to handle the AppyPay charge creation
             CreateAppyPayChargeJob::dispatch($order->id, $amount, $reference, $description);
 
             // 3. Return an immediate 202 Accepted response

@@ -36,7 +36,7 @@ const ProductDetailModal = ({ isOpen, onClose, product }) => {
   const handleAddToCart = () => {
     if (!product) return;
     const priceNumber = Number(product.price || product.regular_price || 0);
-    const item = { ...product, price: priceNumber };
+    const item = { ...product, price: priceNumber, sku: product.sku };
     addToCart(item, quantity);
   };
   return (
@@ -197,6 +197,3 @@ const ProductDetailModal = ({ isOpen, onClose, product }) => {
 };
 
 export default ProductDetailModal;
-
-
-

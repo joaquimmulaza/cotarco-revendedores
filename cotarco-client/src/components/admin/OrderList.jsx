@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
   useReactTable,
@@ -109,6 +110,7 @@ const TableSkeleton = () => (
 );
 
 const OrderList = () => {
+  const navigate = useNavigate();
   const [pagination, setPagination] = useState({
     pageIndex: 0,
     pageSize: 10,
@@ -150,6 +152,10 @@ const OrderList = () => {
     },
     onGlobalFilterChange: setGlobalFilter,
   });
+
+  const handleRowClick = (orderId) => {
+    navigate(`/admin/dashboard/orders/${orderId}`);
+  };
 
   if (isError) {
     return <div>Erro ao carregar encomendas: {error.message}</div>;
@@ -237,7 +243,11 @@ const OrderList = () => {
             </thead>
             <tbody className="bg-white divide-y divide-gray-100">
               {table.getRowModel().rows.map((row) => (
-                <tr key={row.id} className="hover:bg-gray-50">
+                <tr
+                  key={row.id}
+                  onClick={() => handleRowClick(row.original.id)}
+                  className="cursor-pointer hover:bg-muted/50"
+                >
                   {row.getVisibleCells().map((cell) => (
                     <td
                       key={cell.id}

@@ -22,4 +22,14 @@ class OrderController extends Controller
 
         return response()->json($orders);
     }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show(Order $order)
+    {
+        $order->load('user.partnerProfile', 'items');
+
+        return response()->json($order);
+    }
 }

@@ -81,7 +81,7 @@ function AppContent() {
       element: <AdminLogin />
     },
     {
-      path: "/admin/dashboard",
+      path: "/admin/dashboard/*",
       element: (
         <ProtectedRoute adminOnly={true}>
           <AdminDashboard />
