@@ -14,6 +14,11 @@ import { Input } from '../ui/input';
 
 const columns = [
   {
+    header: 'ID da Encomenda',
+    accessorKey: 'id',
+    cell: ({ getValue }) => `#${getValue().substring(0, 8)}`,
+  },
+  {
     header: 'Parceiro',
     accessorKey: 'user.name',
   },
@@ -144,7 +149,7 @@ const OrderList = () => {
     getPaginationRowModel: getPaginationRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     manualPagination: true,
-    pageCount: data?.meta?.last_page ?? 0,
+    pageCount: data?.last_page ?? 0,
     onPaginationChange: setPagination,
     state: {
       pagination,

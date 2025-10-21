@@ -1,11 +1,11 @@
 <x-mail::message>
 # Pagamento Efectuado
 
-Foi confirmado um pagamento proveniente de **{{ $order->user->name }}** referente à encomenda ID: #{{ $order->id }}.
+Foi confirmado um pagamento proveniente de **{{ $order->user->name }}** referente à encomenda ID: #{{ substr($order->id, 0, 8) }}.
 
 A encomenda encontra-se agora disponível para verificação e processamento.
 
-<x-mail::button :url="env('FRONTEND_URL') . '/admin/dashboard'">
+<x-mail::button :url="env('FRONTEND_URL') . '/distribuidores/admin/dashboard'">
 Ver Encomenda
 </x-mail::button>
 

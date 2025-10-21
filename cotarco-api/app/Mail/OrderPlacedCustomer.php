@@ -32,7 +32,7 @@ class OrderPlacedCustomer extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Detalhes de Pagamento da sua Encomenda Cotarco',
+            subject: 'Detalhes de Pagamento da sua Encomenda Cotarco #' . substr($this->order->id, 0, 8),
         );
     }
 

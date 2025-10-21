@@ -30,7 +30,7 @@ class OrderPlacedAdmin extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Nova Encomenda Recebida (#' . $this->order->id . ')',
+            subject: 'Nova Encomenda Recebida (#' . substr($this->order->id, 0, 8) . ')',
         );
     }
 

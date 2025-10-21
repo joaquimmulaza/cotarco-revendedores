@@ -1,12 +1,16 @@
+import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import api from '@/services/api';
+import { config } from '@/config/config';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { ArrowLeft, User, Mail, Phone, Home, Hash, Calendar, CreditCard, AlertCircle } from 'lucide-react';
+import { ArrowLeft, User, Mail, Phone, Home, Hash, Calendar, CreditCard, AlertCircle, Download, Loader2 } from 'lucide-react';
 
 // Função para buscar os detalhes da encomenda
 const fetchOrderDetail = async (orderId) => {
@@ -30,6 +34,7 @@ const OrderDetailSkeleton = () => (
 
 export const OrderDetailPage = () => {
   const { orderId } = useParams();
+  const [isDownloading, setIsDownloading] = useState(false);
 
   const { data: order, error, isLoading, isError } = useQuery({
     queryKey: ['order', orderId],
@@ -58,6 +63,51 @@ export const OrderDetailPage = () => {
   const address = order?.shipping_details;
   const items = order?.items || [];
 
+  const handleDownloadInvoice = async () => {
+    const token = localStorage.getItem(config.AUTH.TOKEN_KEY);
+    if (!token) {
+      toast.error("Sessão inválida. Por favor, faça login novamente.");
+      return;
+    }
+
+    setIsDownloading(true);
+    const toastId = toast.loading("A iniciar o download da fatura...");
+
+    try {
+      const apiUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+      const invoiceUrl = `${apiUrl}/api/admin/orders/${orderId}/invoice`;
+
+      const response = await fetch(invoiceUrl, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('A resposta da rede não foi bem-sucedida');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      a.download = `fatura-${order.id}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast.success("Fatura descarregada com sucesso!", { id: toastId });
+
+    } catch (error) {
+      console.error('Error downloading the invoice:', error);
+      toast.error("Ocorreu um erro ao descarregar a fatura.", { id: toastId });
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
   const getPaymentStatusBadge = (status) => {
     const lowerCaseStatus = status?.toLowerCase();
     switch (lowerCaseStatus) {
@@ -80,8 +130,22 @@ export const OrderDetailPage = () => {
             <ArrowLeft className="h-5 w-5" />
         </Link>
         <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
-          Detalhes da Encomenda <span className="text-muted-foreground">#{order.id}</span>
+          Detalhes da Encomenda <span className="text-muted-foreground">#{order.id.substring(0, 8)}</span>
         </h1>
+        <Button 
+            onClick={handleDownloadInvoice} 
+            variant="outline" 
+            size="sm" 
+            className="ml-auto flex items-center gap-2 my-bg-red text-white cursor-pointer"
+            disabled={isDownloading}
+        >
+            {isDownloading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+                <Download className="h-4 w-4 " />
+            )}
+            {isDownloading ? 'Aguarde...' : 'Baixar Fatura'}
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full">

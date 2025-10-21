@@ -16,6 +16,7 @@ import CheckoutPage from './pages/CheckoutPage';
 
 // Import components
 import ProtectedRoute from './components/ProtectedRoute';
+import { Toaster } from 'sonner';
 
 function AppContent() {
   const router = createBrowserRouter([
@@ -95,6 +96,7 @@ function AppContent() {
 
   return (
     <div className="App">
+      <Toaster richColors position="top-right" />
       <RouterProvider router={router} />
     </div>
   );
