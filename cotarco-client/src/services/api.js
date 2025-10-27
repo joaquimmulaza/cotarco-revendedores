@@ -429,7 +429,7 @@ export const parceiroService = {
   },
 
   // Fazer download do ficheiro de stock
-  async downloadStockFile(fileId) {
+  async downloadStockFile(fileId, fileName = 'mapa-stock.xlsx') {
     try {
       const token = localStorage.getItem(appConfig.AUTH.TOKEN_KEY);
       if (!token) {
@@ -450,16 +450,8 @@ export const parceiroService = {
         throw new Error(errorData.message || 'Erro ao fazer download do ficheiro');
       }
 
-      // Obter o nome do ficheiro do header Content-Disposition
-      const contentDisposition = response.headers.get('Content-Disposition');
-      let filename = 'mapa-stock.xlsx';
-      
-      if (contentDisposition) {
-        const filenameMatch = contentDisposition.match(/filename="([^"]+)"/);
-        if (filenameMatch) {
-          filename = filenameMatch[1];
-        }
-      }
+      // Usar o nome do ficheiro passado como argumento
+      const filename = fileName;
 
       // Converter resposta para blob
       const blob = await response.blob();

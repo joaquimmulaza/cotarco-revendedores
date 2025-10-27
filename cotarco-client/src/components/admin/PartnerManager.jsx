@@ -5,7 +5,7 @@ import { adminService } from '../../services/api';
 import { usePartners } from '../../hooks/usePartners';
 import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import PartnerList from './PartnerList';
 import Pagination from './Pagination';
 import EditPartnerModal from './EditPartnerModal';

@@ -97,16 +97,17 @@ const ProductDetailModal = ({ isOpen, onClose, product }) => {
                           <div className="mt-4">
                             <h2 className="mb-3 text-2xl font-bold text-gray-900">{product.name}</h2>
                             <p className="mb-4 text-xl text-gray-900">{product.formatted_price}</p>
-                            <div className="mb-4">
+                            <div className="flex items-center gap-4">
                               <QuantityInput value={quantity} onChange={setQuantity} min={1} />
+                              <Button
+                                type="button"
+                                size="lg"
+                                disabled={product.stock_status !== 'instock'}
+                                onClick={handleAddToCart}
+                              >
+                                Adicionar ao Carrinho
+                              </Button>
                             </div>
-                            <Button
-                              type="button"
-                              disabled={product.stock_status !== 'instock'}
-                              onClick={handleAddToCart}
-                            >
-                              Adicionar ao Carrinho
-                            </Button>
                           </div>
                         </div>
 
@@ -156,13 +157,11 @@ const ProductDetailModal = ({ isOpen, onClose, product }) => {
                           <h2 className="mb-3 text-2xl font-bold text-gray-900">{product.name}</h2>
                           <p className="mb-4 text-xl text-gray-900">{product.formatted_price}</p>
 
-                          <div className="mt-2 mb-4">
+                          <div className="mt-6 flex items-center gap-4">
                             <QuantityInput value={quantity} onChange={setQuantity} min={1} />
-                          </div>
-
-                          <div className="mt-6">
                             <Button
                               type="button"
+                              size="lg"
                               disabled={product.stock_status !== 'instock'}
                               onClick={handleAddToCart}
                             >

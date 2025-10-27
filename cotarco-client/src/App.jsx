@@ -96,7 +96,7 @@ function AppContent() {
 
   return (
     <div className="App">
-      <Toaster richColors position="top-right" />
+      <Toaster richColors position="top-right" closeButton />
       <RouterProvider router={router} />
     </div>
   );
