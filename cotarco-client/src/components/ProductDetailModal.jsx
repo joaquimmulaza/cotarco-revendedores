@@ -172,7 +172,7 @@ const ProductDetailModal = ({ isOpen, onClose, product }) => {
 
                           <div className="mt-6">
                             <h3 className="text-lg font-medium text-gray-800 mb-2">Descrição do Produto</h3>
-                            <div className="text-sm text-gray-600 border p-2 rounded-md">
+                            <div className="text-sm text-gray-600 border p-2 rounded-md max-h-64 overflow-y-auto">
                               {product.description ? (
                                 <div className="prose max-w-none p-2" dangerouslySetInnerHTML={{ __html: product.description }} />
                               ) : product.short_description ? (
