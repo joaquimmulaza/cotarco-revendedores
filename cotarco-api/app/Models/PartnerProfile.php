@@ -20,6 +20,7 @@ class PartnerProfile extends Model
         'phone_number',
         'alvara_path',
         'business_model',
+        'discount_percentage',
     ];
 
     /**

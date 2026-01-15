@@ -96,7 +96,19 @@ const ProductDetailModal = ({ isOpen, onClose, product }) => {
 
                           <div className="mt-4">
                             <h2 className="mb-3 text-2xl font-bold text-gray-900">{product.name}</h2>
-                            <p className="mb-4 text-xl text-gray-900">{product.formatted_price}</p>
+                            <div className="mb-4 flex flex-col items-start">
+                              {product.discount_percentage > 0 && product.formatted_original_price ? (
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className="text-lg text-gray-500 line-through">
+                                    {product.formatted_original_price}
+                                  </span>
+                                  <span className="text-sm font-semibold text-green-800 bg-green-100 px-2 py-0.5 rounded">
+                                    -{product.discount_percentage}%
+                                  </span>
+                                </div>
+                              ) : null}
+                              <p className="text-xl font-bold text-gray-900">{product.formatted_price}</p>
+                            </div>
                             <div className="flex items-center gap-4">
                               <QuantityInput value={quantity} onChange={setQuantity} min={1} />
                               <Button
@@ -155,7 +167,19 @@ const ProductDetailModal = ({ isOpen, onClose, product }) => {
                         {/* Coluna Direita: Título, preço, botão e descrição fallback */}
                         <div>
                           <h2 className="mb-3 text-2xl font-bold text-gray-900">{product.name}</h2>
-                          <p className="mb-4 text-xl text-gray-900">{product.formatted_price}</p>
+                          <div className="mb-4 flex flex-col items-start">
+                            {product.discount_percentage > 0 && product.formatted_original_price ? (
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="text-lg text-gray-500 line-through">
+                                  {product.formatted_original_price}
+                                </span>
+                                <span className="text-sm font-semibold text-green-800 bg-green-100 px-2 py-0.5 rounded">
+                                  -{product.discount_percentage}%
+                                </span>
+                              </div>
+                            ) : null}
+                            <p className="text-xl font-bold text-gray-900">{product.formatted_price}</p>
+                          </div>
 
                           <div className="mt-6 flex items-center gap-4">
                             <QuantityInput value={quantity} onChange={setQuantity} min={1} />

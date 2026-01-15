@@ -85,6 +85,7 @@ class PartnerController extends Controller
                     'company_name' => $user->partnerProfile->company_name,
                     'phone_number' => $user->partnerProfile->phone_number,
                     'business_model' => $user->partnerProfile->business_model,
+                    'discount_percentage' => $user->partnerProfile->discount_percentage,
                     'alvara_path' => $user->partnerProfile->alvara_path
                 ];
             }
@@ -129,6 +130,7 @@ class PartnerController extends Controller
         // Validar os campos recebidos
         $validated = $request->validate([
             'business_model' => 'sometimes|string|in:B2B,B2C',
+            'discount_percentage' => 'sometimes|numeric|min:0|max:100',
         ]);
 
         // Verificar se o usuário é um parceiro (revendedor, distribuidor ou null - não classificado)
@@ -144,6 +146,13 @@ class PartnerController extends Controller
             if ($request->has('business_model')) {
                 $user->partnerProfile()->update([
                     'business_model' => $request->input('business_model')
+                ]);
+            }
+
+            // Atualizar a discount_percentage no perfil se fornecida
+            if ($request->has('discount_percentage')) {
+                $user->partnerProfile()->update([
+                    'discount_percentage' => $request->input('discount_percentage')
                 ]);
             }
 

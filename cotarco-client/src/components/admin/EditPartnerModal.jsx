@@ -1,22 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { Dialog } from '@headlessui/react';
 
-const EditPartnerModal = ({ 
-  isOpen, 
-  onClose, 
-  partner, 
-  onSubmit, 
-  loading = false 
+const EditPartnerModal = ({
+  isOpen,
+  onClose,
+  partner,
+  onSubmit,
+  loading = false
 }) => {
   const [formData, setFormData] = useState({
-    business_model: ''
+    business_model: '',
+    discount_percentage: 0
   });
 
   // Atualizar formData quando o partner mudar
   useEffect(() => {
     if (partner) {
       setFormData({
-        business_model: partner.partner_profile?.business_model || ''
+        business_model: partner.partner_profile?.business_model || '',
+        discount_percentage: partner.partner_profile?.discount_percentage || 0
       });
     }
   }, [partner]);
@@ -24,12 +26,12 @@ const EditPartnerModal = ({
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!partner) return;
-    
+
     await onSubmit(partner.id, formData);
   };
 
   const handleClose = () => {
-    setFormData({ business_model: '' });
+    setFormData({ business_model: '', discount_percentage: 0 });
     onClose();
   };
 
@@ -69,6 +71,25 @@ const EditPartnerModal = ({
               </select>
             </div>
 
+            <div>
+              <label htmlFor="edit-discount" className="block text-sm font-medium text-gray-700 mb-2">
+                Desconto (%)
+              </label>
+              <input
+                type="number"
+                id="edit-discount"
+                min="0"
+                max="100"
+                step="0.01"
+                value={formData.discount_percentage}
+                onChange={(e) => setFormData(prev => ({ ...prev, discount_percentage: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              />
+              <p className="mt-1 text-xs text-gray-500">
+                Este desconto será aplicado a todos os produtos para este parceiro.
+              </p>
+            </div>
+
             <div className="flex justify-end space-x-3 pt-4">
               <button
                 type="button"
@@ -88,7 +109,7 @@ const EditPartnerModal = ({
           </form>
         </Dialog.Panel>
       </div>
-    </Dialog>
+    </Dialog >
   );
 };
 

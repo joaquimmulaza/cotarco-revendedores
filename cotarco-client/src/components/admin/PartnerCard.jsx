@@ -1,12 +1,12 @@
 import React from 'react';
 
 // Sub-componente para renderizar os botões de ação
-const RenderActionButtons = ({ 
-  partner, 
-  actionLoading, 
-  onUpdateStatus, 
-  onEdit, 
-  onViewAlvara 
+const RenderActionButtons = ({
+  partner,
+  actionLoading,
+  onUpdateStatus,
+  onEdit,
+  onViewAlvara
 }) => {
   return (
     <div className="flex flex-col sm:flex-row gap-2 mt-4 lg:mt-0 lg:ml-6">
@@ -41,7 +41,7 @@ const RenderActionButtons = ({
           Sem Alvará
         </div>
       )}
-      
+
       {/* Botões de ação baseados no status atual */}
       {partner.status === 'pending_approval' && (
         <>
@@ -64,7 +64,7 @@ const RenderActionButtons = ({
               </>
             )}
           </button>
-          
+
           <button
             onClick={() => onUpdateStatus(partner, 'rejected')}
             disabled={actionLoading[partner.id]}
@@ -86,7 +86,7 @@ const RenderActionButtons = ({
           </button>
         </>
       )}
-      
+
       {partner.status === 'active' && (
         <button
           onClick={() => onUpdateStatus(partner, 'inactive')}
@@ -130,7 +130,7 @@ const RenderActionButtons = ({
           )}
         </button>
       )}
-      
+
       {partner.status === 'rejected' && (
         <button
           onClick={() => onUpdateStatus(partner, 'pending_approval')}
@@ -156,12 +156,12 @@ const RenderActionButtons = ({
   );
 };
 
-const PartnerCard = ({ 
-  partner, 
-  actionLoading, 
-  onUpdateStatus, 
-  onEdit, 
-  onViewAlvara 
+const PartnerCard = ({
+  partner,
+  actionLoading,
+  onUpdateStatus,
+  onEdit,
+  onViewAlvara
 }) => {
   const formatDate = (dateString) => {
     console.log('Data recebida para formatação:', dateString);
@@ -185,7 +185,7 @@ const PartnerCard = ({
       return 'Data inválida';
     }
   };
-  
+
   const formatBusinessModel = (businessModel) => {
     if (!businessModel) return 'Não definido';
     return businessModel;
@@ -200,53 +200,58 @@ const PartnerCard = ({
               {partner.name}
             </h4>
             {/* Status Badge */}
-            <span className={`text-xs font-medium px-2 py-1 rounded-full ${
-              partner.status === 'pending_approval' ? 'bg-gray-100 text-gray-500' :
-              partner.status === 'active' ? 'bg-green-50 text-green-800' :
-              partner.status === 'rejected' ? 'bg-red-100 text-red-800' :
-              partner.status === 'inactive' ? 'bg-gray-100 text-gray-800' :
-              'bg-gray-100 text-gray-800'
-            }`}>
+            <span className={`text-xs font-medium px-2 py-1 rounded-full ${partner.status === 'pending_approval' ? 'bg-gray-100 text-gray-500' :
+                partner.status === 'active' ? 'bg-green-50 text-green-800' :
+                  partner.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                    partner.status === 'inactive' ? 'bg-gray-100 text-gray-800' :
+                      'bg-gray-100 text-gray-800'
+              }`}>
               {partner.status === 'pending_approval' ? 'Pendente' :
-               partner.status === 'active' ? 'Ativo' :
-               partner.status === 'rejected' ? 'Rejeitado' :
-               partner.status === 'inactive' ? 'Desativado' :
-               partner.status}
+                partner.status === 'active' ? 'Ativo' :
+                  partner.status === 'rejected' ? 'Rejeitado' :
+                    partner.status === 'inactive' ? 'Desativado' :
+                      partner.status}
             </span>
-            
+
             {/* Role Badge */}
             {partner.role ? (
-              <span className={`text-xs font-medium px-2 py-1 rounded-full ${
-                partner.role === 'revendedor' ? 'bg-tags' :
-                partner.role === 'distribuidor' ? 'bg-tags' :
-                'bg-gray-100 text-gray-800'
-              }`}>
+              <span className={`text-xs font-medium px-2 py-1 rounded-full ${partner.role === 'revendedor' ? 'bg-tags' :
+                  partner.role === 'distribuidor' ? 'bg-tags' :
+                    'bg-gray-100 text-gray-800'
+                }`}>
                 {partner.role === 'revendedor' ? 'Revendedor' :
-                 partner.role === 'distribuidor' ? 'Distribuidor' :
-                 partner.role}
+                  partner.role === 'distribuidor' ? 'Distribuidor' :
+                    partner.role}
               </span>
             ) : (
               <span className="hidden bg-yellow-200 text-yellow-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded">
                 A classificar
               </span>
             )}
-            
+
+            {/* Discount Badge */}
+            {partner.partner_profile?.discount_percentage > 0 && (
+              <span className="text-xs font-medium px-2 py-1 rounded-full bg-green-50 text-green-700 border border-green-100">
+                -{Number(partner.partner_profile.discount_percentage)}% Desconto
+              </span>
+            )}
+
           </div>
           <span className="text-sm text-gray-500 ">
-              Registado em {formatDate(partner.created_at)}
-            </span>
+            Registado em {formatDate(partner.created_at)}
+          </span>
         </div>
-        
+
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-y-6 gap-x-26 text-sm">
             <div className="flex items-start space-x-3">
               <span className="font-medium text-gray-700 w-20 flex-shrink-0">Email:</span>
               <span className="text-gray-600 break-all">{partner.email}</span>
             </div>
-            
+
             <div className="flex items-start space-x-3">
-            
+
               <span className="font-medium text-gray-700 w-20 flex-shrink-0">Empresa:</span>
               <span className="text-gray-600">{partner.partner_profile?.company_name || 'N/A'}</span>
             </div>
@@ -259,8 +264,8 @@ const PartnerCard = ({
               <span className="text-gray-600">{formatBusinessModel(partner.partner_profile?.business_model)}</span>
             </div>
           </div>
-          
-          <RenderActionButtons 
+
+          <RenderActionButtons
             partner={partner}
             actionLoading={actionLoading}
             onUpdateStatus={onUpdateStatus}

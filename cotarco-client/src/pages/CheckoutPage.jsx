@@ -51,18 +51,20 @@ export default function CheckoutPage() {
     };
     try {
       const response = await api.post('/orders/create-payment', payload);
+
+      // Como o backend agora é síncrono, este bloco será executado de imediato
       if (response?.data?.entity && response?.data?.reference) {
         setPaymentData(response.data);
         clearCart();
         return;
       }
 
-      // Se a API retornar 202 com merchantTransactionId, iniciar polling até o webhook preencher a referência
+      // Fallback de polling (mantido conforme o seu código original)
       if (response?.status === 202 && response?.data?.merchantTransactionId) {
         const tx = response.data.merchantTransactionId;
         const start = Date.now();
-        const timeoutMs = 60000; // 60s
-        const pollIntervalMs = 3000; // 3s
+        const timeoutMs = 60000;
+        const pollIntervalMs = 3000;
 
         const poll = async () => {
           try {
@@ -73,7 +75,6 @@ export default function CheckoutPage() {
               return true;
             }
           } catch (e) {
-            // Se 202, continuar a tentar; outros erros mostram toast e param
             if (e?.response?.status && e.response.status !== 202) {
               toast.error(e?.response?.data?.message || 'Erro ao consultar referência.');
               return true;
@@ -88,17 +89,15 @@ export default function CheckoutPage() {
             if (done) return;
             await new Promise(r => setTimeout(r, pollIntervalMs));
           }
-          toast.error('Tempo de espera excedido ao obter a referência. Tente novamente.');
+          toast.error('Tempo de espera excedido. Tente novamente.');
         };
 
         await loop();
         return;
       }
 
-      console.error('Resposta inesperada da API:', response?.data);
-      toast.error('Não foi possível iniciar o pagamento. Tente novamente.');
+      toast.error('Não foi possível iniciar o pagamento.');
     } catch (error) {
-      console.error('Erro ao criar pagamento:', error);
       toast.error(error?.response?.data?.message || 'Erro ao criar pagamento.');
     } finally {
       setIsLoading(false);
@@ -140,18 +139,18 @@ export default function CheckoutPage() {
                       </div>
                       <div>
                         <Label htmlFor="shippingAddress">Endereço</Label>
-                        <Input id="shippingAddress" placeholder="Rua, número, bairro" aria-invalid={errors.shippingAddress ? 'true' : 'false'} {...register('shippingAddress', { required: true })} />
+                        <Input id="shippingAddress" placeholder="Rua, número, bairro" {...register('shippingAddress', { required: true })} />
                         {errors.shippingAddress && <p className="text-sm text-red-600 mt-1">O endereço é obrigatório.</p>}
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                           <Label htmlFor="city">Cidade</Label>
-                          <Input id="city" placeholder="Cidade" aria-invalid={errors.city ? 'true' : 'false'} {...register('city', { required: true })} />
+                          <Input id="city" placeholder="Cidade" {...register('city', { required: true })} />
                           {errors.city && <p className="text-sm text-red-600 mt-1">A cidade é obrigatória.</p>}
                         </div>
                         <div>
                           <Label htmlFor="phoneNumber">Telefone</Label>
-                          <Input id="phoneNumber" placeholder="Telefone" aria-invalid={errors.phoneNumber ? 'true' : 'false'} {...register('phoneNumber', { required: true })} />
+                          <Input id="phoneNumber" placeholder="Telefone" {...register('phoneNumber', { required: true })} />
                           {errors.phoneNumber && <p className="text-sm text-red-600 mt-1">O telefone é obrigatório.</p>}
                         </div>
                       </div>
@@ -159,19 +158,15 @@ export default function CheckoutPage() {
                   </div>
 
                   <div className="bg-white rounded-md border p-6">
-                     <h2 className="text-lg font-medium mb-4">Pagamento</h2>
-                     <RadioGroup defaultValue="reference" className="gap-4">
-                        <div>
-                          
-                           <Label htmlFor="ref" className="flex flex-row items-center justify-start gap-x-4 rounded-md border-1 p-4 hover:bg-accent hover:text-accent-foreground  [&:has([data-state=checked])]:border-gray-200 custom-radio bg-gray-50">
-                           <RadioGroupItem value="reference" id="ref" className="my-bg-red my-stroke-red" />
-                              <span>Pagamento Por Referência</span>
-                           
-                           </Label>
-                        </div>
-                     </RadioGroup>
+                    <h2 className="text-lg font-medium mb-4">Pagamento</h2>
+                    <RadioGroup defaultValue="reference" className="gap-4">
+                      <Label htmlFor="ref" className="flex flex-row items-center justify-start gap-x-4 rounded-md border-1 p-4 hover:bg-accent bg-gray-50 cursor-pointer">
+                        <RadioGroupItem value="reference" id="ref" className="my-bg-red my-stroke-red" />
+                        <span>Pagamento Por Referência</span>
+                      </Label>
+                    </RadioGroup>
                   </div>
-                  
+
                   <Button type="submit" disabled={isLoading} className="w-full text-base my-bg-red py-6">
                     {isLoading ? <LoaderCircle className="animate-spin" /> : 'Finalizar Encomenda'}
                   </Button>
@@ -187,7 +182,7 @@ export default function CheckoutPage() {
                 <Alert>
                   <AlertTitle className="text-xl font-bold">Pagamento Gerado com Sucesso!</AlertTitle>
                   <AlertDescription className="mt-4 space-y-4">
-                    <p>Utilize os dados abaixo para efetuar o pagamento. A sua encomenda será processada após a confirmação.</p>
+                    <p>Utilize os dados abaixo para efetuar o pagamento.</p>
                     <div className="border rounded-md p-4 space-y-3 bg-muted/50">
                       <div className="flex justify-between items-center">
                         <div>
@@ -212,7 +207,7 @@ export default function CheckoutPage() {
                           <span className="text-sm text-gray-600">Valor</span>
                           <p className="font-mono text-lg font-semibold">{formatCurrency(paymentData.amount)}</p>
                         </div>
-                         <Button variant="ghost" size="icon" onClick={() => copyToClipboard(paymentData.amount, 'Valor')}>
+                        <Button variant="ghost" size="icon" onClick={() => copyToClipboard(paymentData.amount, 'Valor')}>
                           <Clipboard className="h-5 w-5" />
                         </Button>
                       </div>
@@ -224,25 +219,27 @@ export default function CheckoutPage() {
           </AnimatePresence>
         </div>
 
+        {/* Resumo (Visual Inalterado) */}
         <div className="md:col-span-5 lg:col-span-4 bg-white rounded-md border p-6 h-fit">
           <h2 className="text-lg font-medium mb-4">Resumo da Encomenda</h2>
           <div className="space-y-4 max-h-[60vh] overflow-auto pr-2">
-            {items.length === 0 && !paymentData ? (
-              <p className="text-sm text-gray-600">O seu carrinho está vazio.</p>
-            ) : items.length === 0 && paymentData ? (
-               <p className="text-sm text-gray-600">Carrinho finalizado.</p>
-            ) : (
-              items.map((it) => (
-                <div key={it.id} className="flex items-center gap-3 border-b pb-3">
-                  <img src={it.images?.[0]?.src || it.image || ''} alt={it.name} className="h-14 w-14 object-cover rounded" />
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium truncate">{it.name}</p>
-                    <p className="text-sm text-gray-600">{formatCurrency(it.price)} x {it.quantity}</p>
-                  </div>
-                  <div className="text-right font-medium">{formatCurrency((Number(it.price) || 0) * (Number(it.quantity) || 0))}</div>
+            {items.map((it) => (
+              <div key={it.id} className="flex items-center gap-3 border-b pb-3">
+                <img src={it.images?.[0]?.src || it.image || ''} alt={it.name} className="h-14 w-14 object-cover rounded" />
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium truncate">{it.name}</p>
+                  <p className="text-sm text-gray-600">
+                    {formatCurrency(it.price)} x {it.quantity}
+                    {it.discount_percentage > 0 && (
+                      <span className="ml-2 text-xs font-semibold text-green-800 bg-green-100 px-1.5 py-0.5 rounded">
+                        -{it.discount_percentage}%
+                      </span>
+                    )}
+                  </p>
                 </div>
-              ))
-            )}
+                <div className="text-right font-medium">{formatCurrency(it.price * it.quantity)}</div>
+              </div>
+            ))}
           </div>
           <div className="mt-4 flex items-center justify-between">
             <span className="text-sm text-gray-600">Subtotal</span>

@@ -5,7 +5,7 @@ Foi confirmado um pagamento proveniente de **{{ $order->user->name }}** referent
 
 A encomenda encontra-se agora disponível para verificação e processamento.
 
-<x-mail::button :url="env('FRONTEND_URL') . '/admin/dashboard'">
+<x-mail::button :url="env('FRONTEND_URL')">
 Ver Encomenda
 </x-mail::button>
 

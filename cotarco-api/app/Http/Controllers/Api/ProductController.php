@@ -68,15 +68,34 @@ class ProductController extends Controller
             if ($businessModel && $stockFileIsActive) {
                 $localPrices = ProductPrice::whereIn('product_sku', $allSkus)->get()->keyBy('product_sku');
 
+                // Obter percentagem de desconto do parceiro
+                $discountPercentage = auth()->user()->partnerProfile->discount_percentage ?? 0;
+
                 foreach ($products as &$product) {
                     $sku = $product['sku'] ?? null;
                     if ($sku && $localPrices->has($sku)) {
                         $priceData = $localPrices[$sku];
-                        $product['local_price'] = match ($businessModel) {
+                        $basePrice = match ($businessModel) {
                             'B2C' => $priceData->price_b2c,
                             'B2B' => $priceData->price_b2b,
                             default => null,
                         };
+
+                        if ($basePrice !== null) {
+                            $product['original_price'] = (float) $basePrice; // Preço original
+                            
+                            // Aplicar desconto se houver
+                            if ($discountPercentage > 0) {
+                                $discountAmount = $basePrice * ($discountPercentage / 100);
+                                $product['local_price'] = $basePrice - $discountAmount;
+                                $product['discount_percentage'] = $discountPercentage;
+                            } else {
+                                $product['local_price'] = $basePrice;
+                                $product['discount_percentage'] = 0;
+                            }
+                        } else {
+                            $product['local_price'] = null;
+                        }
                     }
                 }
                 unset($product);

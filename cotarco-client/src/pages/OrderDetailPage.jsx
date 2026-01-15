@@ -3,7 +3,6 @@ import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import api from '@/services/api';
-import { config } from '@/config/config';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -64,30 +63,15 @@ export const OrderDetailPage = () => {
   const items = order?.items || [];
 
   const handleDownloadInvoice = async () => {
-    const token = localStorage.getItem(config.AUTH.TOKEN_KEY);
-    if (!token) {
-      toast.error("Sessão inválida. Por favor, faça login novamente.");
-      return;
-    }
-
     setIsDownloading(true);
     const toastId = toast.loading("A iniciar o download da fatura...");
 
     try {
-      const apiUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
-      const invoiceUrl = `${apiUrl}/api/admin/orders/${orderId}/invoice`;
-
-      const response = await fetch(invoiceUrl, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
+      const response = await api.get(`/admin/orders/${orderId}/invoice`, {
+        responseType: 'blob', // Importante para lidar com a resposta como um ficheiro
       });
 
-      if (!response.ok) {
-        throw new Error('A resposta da rede não foi bem-sucedida');
-      }
-
-      const blob = await response.blob();
+      const blob = response.data;
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.style.display = 'none';
@@ -102,7 +86,8 @@ export const OrderDetailPage = () => {
 
     } catch (error) {
       console.error('Error downloading the invoice:', error);
-      toast.error("Ocorreu um erro ao descarregar a fatura.", { id: toastId });
+      const errorMessage = error.response?.data?.message || "Ocorreu um erro ao descarregar a fatura.";
+      toast.error(errorMessage, { id: toastId });
     } finally {
       setIsDownloading(false);
     }

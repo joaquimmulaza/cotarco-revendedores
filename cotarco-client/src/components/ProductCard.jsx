@@ -3,14 +3,13 @@ import React from 'react';
 const ProductCard = ({ product, onViewDetails }) => {
   const getStockStatusBadge = (status) => {
     const isInStock = status === 'instock';
-    
+
     return (
       <span
-        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-          isInStock
-            ? 'bg-green-100 text-green-800'
-            : 'bg-red-100 text-red-800'
-        }`}
+        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${isInStock
+          ? 'bg-green-100 text-green-800'
+          : 'bg-red-100 text-red-800'
+          }`}
       >
         {isInStock ? 'Em stock' : 'Fora de stock'}
       </span>
@@ -32,10 +31,9 @@ const ProductCard = ({ product, onViewDetails }) => {
             }}
           />
         ) : null}
-        <div 
-          className={`w-full h-full flex items-center justify-center ${
-            product.image_url ? 'hidden' : 'flex'
-          }`}
+        <div
+          className={`w-full h-full flex items-center justify-center ${product.image_url ? 'hidden' : 'flex'
+            }`}
         >
           <svg
             className="w-16 h-16 text-gray-400"
@@ -62,6 +60,15 @@ const ProductCard = ({ product, onViewDetails }) => {
             Ver Detalhes
           </button>
         </div>
+
+        {/* Badge de Desconto */}
+        {product.discount_percentage > 0 && (
+          <div className="absolute top-2 left-2 z-20">
+            <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-bold text-green-800 bg-green-100 border border-green-200 rounded">
+              -{product.discount_percentage}%
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Área de Conteúdo */}
@@ -72,7 +79,12 @@ const ProductCard = ({ product, onViewDetails }) => {
         </h3>
 
         {/* Preço */}
-        <div className="mb-3">
+        <div className="mb-3 flex items-center gap-2">
+          {product.discount_percentage > 0 && product.formatted_original_price && (
+            <span className="text-sm text-gray-500 line-through">
+              {product.formatted_original_price}
+            </span>
+          )}
           <span className="text-lg font-semibold text-gray-900">
             {product.formatted_price}
           </span>
