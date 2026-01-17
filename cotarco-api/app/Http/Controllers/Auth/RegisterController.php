@@ -24,6 +24,7 @@ class RegisterController extends Controller
             'company_name' => 'required|string|max:255',
             'password' => 'required|string|min:8|confirmed',
             'alvara' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048',
+            'business_model' => 'required|string|in:B2B,B2C',
         ], [
             'alvara.required' => 'O arquivo do alvará é obrigatório.',
             'alvara.file' => 'O alvará deve ser um arquivo válido.',

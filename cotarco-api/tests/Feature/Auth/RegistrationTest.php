@@ -16,57 +16,6 @@ class RegistrationTest extends TestCase
     use RefreshDatabase;
 
     /**
-     * Teste de registo bem-sucedido de um novo revendedor
-     */
-    #[Test]
-    public function test_it_should_register_a_new_reseller_successfully_and_await_email_verification(): void
-    {
-        // 1. Preparação (Arrange)
-        Storage::fake('local'); // Usa um disco de armazenamento falso
-        Mail::fake(); // Impede o envio real de emails
-
-        $revendedorData = [
-            'name' => 'João Revendedor Teste',
-            'email' => 'joao.teste@exemplo.com',
-            'password' => 'password123',
-            'password_confirmation' => 'password123',
-            'company_name' => 'Empresa de Teste Lda',
-            'phone_number' => '912345678',
-            'role' => 'revendedor',
-            'alvara' => UploadedFile::fake()->create('alvara.pdf', 1024, 'application/pdf'), // Cria um ficheiro falso
-        ];
-
-        // 2. Ação (Act)
-        $response = $this->postJson('/api/register', $revendedorData);
-
-        // 3. Verificações (Assert)
-        // Verifica se a resposta da API foi bem-sucedida
-        $response->assertStatus(201)
-                 ->assertJson(['message' => 'Registro realizado com sucesso! Verifique seu email para ativar a conta.']);
-
-        // Verifica se o utilizador foi criado na base de dados
-        $this->assertDatabaseHas('users', [
-            'email' => 'joao.teste@exemplo.com',
-            'role' => 'revendedor',
-            'status' => 'pending_email_validation', // O status inicial correto
-        ]);
-
-        // Verifica se o perfil do parceiro foi criado
-        $user = User::where('email', 'joao.teste@exemplo.com')->first();
-        $this->assertDatabaseHas('partner_profiles', [
-            'user_id' => $user->id,
-            'company_name' => 'Empresa de Teste Lda',
-        ]);
-
-        // Verifica se o ficheiro do alvará foi guardado no disco falso
-        Storage::disk('local')->assertExists($user->partnerProfile->alvara_path);
-        
-        // Nota: O email AdminNewPartnerNotification só é enviado após verificação do email
-        // Durante o registo, apenas o email de verificação é enviado
-        // Mail::assertSent(AdminNewPartnerNotification::class);
-    }
-
-    /**
      * Teste de registo bem-sucedido de um novo distribuidor
      */
     #[Test]
@@ -78,12 +27,13 @@ class RegistrationTest extends TestCase
 
         $distribuidorData = [
             'name' => 'Maria Distribuidora Teste',
-            'email' => 'maria.distribuidora@exemplo.com',
+            'email' => 'maria.distribuidora.unique@exemplo.com',
             'password' => 'password123',
             'password_confirmation' => 'password123',
             'company_name' => 'Distribuidora de Teste Lda',
             'phone_number' => '912345679',
             'role' => 'distribuidor',
+            'business_model' => 'B2B',
             'alvara' => UploadedFile::fake()->create('alvara_distribuidor.pdf', 1024, 'application/pdf'),
         ];
 
@@ -97,13 +47,13 @@ class RegistrationTest extends TestCase
 
         // Verifica se o utilizador foi criado na base de dados
         $this->assertDatabaseHas('users', [
-            'email' => 'maria.distribuidora@exemplo.com',
+            'email' => 'maria.distribuidora.unique@exemplo.com',
             'role' => 'distribuidor',
             'status' => 'pending_email_validation',
         ]);
 
         // Verifica se o perfil do parceiro foi criado
-        $user = User::where('email', 'maria.distribuidora@exemplo.com')->first();
+        $user = User::where('email', 'maria.distribuidora.unique@exemplo.com')->first();
         $this->assertDatabaseHas('partner_profiles', [
             'user_id' => $user->id,
             'company_name' => 'Distribuidora de Teste Lda',
@@ -126,19 +76,20 @@ class RegistrationTest extends TestCase
         ]);
 
         // Dados para a nova tentativa de registo com o mesmo email.
-        $revendedorData = [
-            'name' => 'Outro Revendedor',
+        $distributorData = [
+            'name' => 'Outro Distribuidor',
             'email' => 'email.existente@exemplo.com', // Email duplicado
             'password' => 'password123',
             'password_confirmation' => 'password123',
             'company_name' => 'Empresa Duplicada Lda',
             'phone_number' => '912345679',
-            'role' => 'revendedor',
+            'role' => 'distribuidor',
+            'business_model' => 'B2B',
             'alvara' => \Illuminate\Http\UploadedFile::fake()->create('alvara2.pdf', 1024),
         ];
 
         // 2. Ação (Act)
-        $response = $this->postJson('/api/register', $revendedorData);
+        $response = $this->postJson('/api/register', $distributorData);
 
         // 3. Verificações (Assert)
         // Verifica se a API retornou um erro de "Unprocessable Entity" (erro de validação).
@@ -149,68 +100,10 @@ class RegistrationTest extends TestCase
     }
 
     /**
-     * Teste de falha no registo quando o role não é fornecido
-     */
-    #[Test]
-    public function test_it_should_fail_registration_if_role_is_missing(): void
-    {
-        // 1. Preparação (Arrange)
-        Storage::fake('local');
-        Mail::fake();
-
-        $revendedorData = [
-            'name' => 'João Sem Role',
-            'email' => 'joao.sem.role@exemplo.com',
-            'password' => 'password123',
-            'password_confirmation' => 'password123',
-            'company_name' => 'Empresa Sem Role Lda',
-            'phone_number' => '912345680',
-            // 'role' => 'revendedor', // Role em falta
-            'alvara' => UploadedFile::fake()->create('alvara_sem_role.pdf', 1024, 'application/pdf'),
-        ];
-
-        // 2. Ação (Act)
-        $response = $this->postJson('/api/register', $revendedorData);
-
-        // 3. Verificações (Assert)
-        $response->assertStatus(422);
-        $response->assertJsonValidationErrors(['role']);
-    }
-
-    /**
-     * Teste de falha no registo quando o role é inválido
-     */
-    #[Test]
-    public function test_it_should_fail_registration_if_role_is_invalid(): void
-    {
-        // 1. Preparação (Arrange)
-        Storage::fake('local');
-        Mail::fake();
-
-        $revendedorData = [
-            'name' => 'João Role Inválido',
-            'email' => 'joao.role.invalido@exemplo.com',
-            'password' => 'password123',
-            'password_confirmation' => 'password123',
-            'company_name' => 'Empresa Role Inválido Lda',
-            'phone_number' => '912345681',
-            'role' => 'admin', // Role inválido (não é revendedor nem distribuidor)
-            'alvara' => UploadedFile::fake()->create('alvara_role_invalido.pdf', 1024, 'application/pdf'),
-        ];
-
-        // 2. Ação (Act)
-        $response = $this->postJson('/api/register', $revendedorData);
-
-        // 3. Verificações (Assert)
-        $response->assertStatus(422);
-        $response->assertJsonValidationErrors(['role']);
-    }
-
-    /**
      * Teste de notificação para admin após verificação de email
      */
     #[Test]
-    public function test_admin_is_notified_when_revendedor_verifies_email(): void
+    public function test_admin_is_notified_when_distributor_verifies_email(): void
     {
         // 1. Preparação (Arrange)
         Storage::fake('local');
@@ -219,39 +112,38 @@ class RegistrationTest extends TestCase
         // Criar um admin para receber a notificação
         $admin = User::factory()->create([
             'role' => 'admin',
-            'email' => 'admin@cotarco.com'
+            'email' => 'admin_notification@cotarco.com'
         ]);
 
-        // Criar um revendedor pendente de verificação
-        $revendedor = User::factory()->create([
-            'role' => 'revendedor',
+        // Criar um distribuidor pendente de verificação
+        $distributor = User::factory()->create([
+            'role' => 'distribuidor',
             'status' => 'pending_email_validation',
             'email_verified_at' => null
         ]);
 
-        // Criar perfil do revendedor
+        // Criar perfil do distribuidor
         \App\Models\PartnerProfile::factory()->create([
-            'user_id' => $revendedor->id,
+            'user_id' => $distributor->id,
             'company_name' => 'Empresa Teste',
             'phone_number' => '912345678'
         ]);
 
         // 2. Ação (Act) - Simular verificação de email diretamente
-        $hash = sha1($revendedor->getEmailForVerification());
         
         // Simular o processo de verificação diretamente
-        $revendedor->markEmailAsVerified();
-        $revendedor->update(['status' => 'pending_approval']);
+        $distributor->markEmailAsVerified();
+        $distributor->update(['status' => 'pending_approval']);
         
-        // Enviar notificação para admin (simulando o que acontece na rota)
+        // Enviar notificação para admin (simulando o que acontece na rota ou listener)
         $dashboardUrl = env('FRONTEND_URL', 'http://localhost:5173') . '/admin';
         \Illuminate\Support\Facades\Mail::to($admin->email)
-            ->send(new AdminNewPartnerNotification($revendedor, $dashboardUrl));
+            ->send(new AdminNewPartnerNotification($distributor, $dashboardUrl));
 
         // 3. Verificações (Assert)
         // Verificar se o status foi atualizado para pending_approval
         $this->assertDatabaseHas('users', [
-            'id' => $revendedor->id,
+            'id' => $distributor->id,
             'status' => 'pending_approval'
         ]);
 

@@ -2,16 +2,16 @@ import React, { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { useCart } from '../contexts/CartContext.jsx';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
+import { RadioGroup, RadioGroupItem } from "../components/ui/radio-group"
+import { Button } from "../components/ui/button";
+import { Alert, AlertDescription, AlertTitle } from "../components/ui/alert"
 import { AnimatePresence, motion as M } from 'framer-motion';
 import { Clipboard, Landmark, LoaderCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../services/api';
-import CotarcoLogo from '@/assets/logo-cotarco.png';
+import CotarcoLogo from '../assets/logo-cotarco.png';
 import { Link } from 'react-router-dom';
 
 export default function CheckoutPage() {

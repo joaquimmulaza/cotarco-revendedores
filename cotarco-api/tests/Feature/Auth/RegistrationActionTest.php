@@ -25,17 +25,17 @@ class RegistrationActionTest extends TestCase
     public function test_a_new_partner_can_be_registered_successfully(): void
     {
         // 1. Preparação (Arrange)
-        Storage::fake('private'); // Simular o armazenamento de ficheiros
+        Storage::fake('local'); // Simular o armazenamento de ficheiros (O controller usa 'local')
         Mail::fake(); // Simular o envio de emails
         Event::fake(); // Simular eventos
 
         // Criar um admin para receber notificações (se necessário)
         $admin = User::factory()->create([
             'role' => 'admin',
-            'email' => 'admin@cotarco.com'
+            'email' => 'unique_action_admin@cotarco.com'
         ]);
 
-        // Preparar dados de um parceiro falso
+        // Preparar dados de um parceiro falso (distribuidor)
         $partnerData = [
             'name' => 'João Parceiro Teste',
             'email' => 'joao.parceiro@exemplo.com',
@@ -43,7 +43,7 @@ class RegistrationActionTest extends TestCase
             'password_confirmation' => 'password123',
             'company_name' => 'Empresa de Teste Lda',
             'phone_number' => '912345678',
-            'role' => 'revendedor',
+            'role' => 'distribuidor',
             'business_model' => 'B2B',
             'alvara' => UploadedFile::fake()->create('alvara.pdf', 1024, 'application/pdf'), // Ficheiro de alvará falso
         ];
@@ -73,7 +73,7 @@ class RegistrationActionTest extends TestCase
         $this->assertDatabaseHas('users', [
             'name' => 'João Parceiro Teste',
             'email' => 'joao.parceiro@exemplo.com',
-            'role' => 'revendedor',
+            'role' => 'distribuidor',
             'status' => 'pending_email_validation',
         ]);
 
@@ -117,7 +117,7 @@ class RegistrationActionTest extends TestCase
     public function test_a_new_distributor_can_be_registered_successfully(): void
     {
         // 1. Preparação (Arrange)
-        Storage::fake('private');
+        Storage::fake('local');
         Mail::fake();
 
         // Preparar dados de um distribuidor falso

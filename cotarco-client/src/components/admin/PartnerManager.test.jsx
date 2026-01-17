@@ -19,7 +19,7 @@ vi.mock('../../contexts/AuthContext', () => ({
 vi.mock('./PartnerList', () => ({
   default: ({ partners, loading, error }) => {
     if (loading) return <div>A carregar...</div>
-    if (error) return <div>Erro: {error}</div>
+    if (error) return <div>Erro: {error.message || error}</div>
     return (
       <div>
         {partners.map(partner => (
@@ -71,16 +71,15 @@ describe('PartnerManager', () => {
 
     // Mock do usePartners retornando loading true
     usePartners.mockReturnValue({
-      partners: [],
-      pagination: null,
-      loading: true,
-      error: '',
+      data: undefined,
+      isLoading: true,
+      error: null,
       refetch: vi.fn()
     })
 
     render(<PartnerManager />)
-    
-    expect(screen.getByText('A carregar...')).toBeInTheDocument()
+
+    expect(screen.getAllByTestId('skeleton').length).toBeGreaterThan(0)
   })
 
   it('deve renderizar mensagem de erro quando error existe', () => {
@@ -92,15 +91,15 @@ describe('PartnerManager', () => {
 
     // Mock do usePartners retornando erro
     usePartners.mockReturnValue({
-      partners: [],
-      pagination: null,
-      loading: false,
-      error: 'Erro de teste',
+      data: undefined,
+      isLoading: false,
+      isError: true,
+      error: { message: 'Erro de teste' },
       refetch: vi.fn()
     })
 
     render(<PartnerManager />)
-    
+
     expect(screen.getByText('Erro: Erro de teste')).toBeInTheDocument()
   })
 
@@ -119,15 +118,18 @@ describe('PartnerManager', () => {
     ]
 
     usePartners.mockReturnValue({
-      partners: mockPartners,
-      pagination: { current_page: 1, last_page: 1, total: 3 },
-      loading: false,
-      error: '',
+      data: {
+        data: mockPartners,
+        ...{ current_page: 1, last_page: 1, total: 3 }
+      },
+      isLoading: false,
+      isSuccess: true,
+      error: null,
       refetch: vi.fn()
     })
 
     render(<PartnerManager />)
-    
+
     // Verificar se os nomes dos parceiros são renderizados
     expect(screen.getByText('João Silva')).toBeInTheDocument()
     expect(screen.getByText('Maria Santos')).toBeInTheDocument()
@@ -143,15 +145,13 @@ describe('PartnerManager', () => {
 
     // Mock do usePartners (não deve ser chamado quando authLoading é true)
     usePartners.mockReturnValue({
-      partners: [],
-      pagination: null,
-      loading: false,
-      error: '',
+      data: undefined,
+      isLoading: false,
       refetch: vi.fn()
     })
 
     render(<PartnerManager />)
-    
+
     // Verificar se os skeletons são renderizados (pelo menos alguns)
     expect(screen.getAllByTestId('skeleton').length).toBeGreaterThan(0)
   })
@@ -165,15 +165,13 @@ describe('PartnerManager', () => {
 
     // Mock do usePartners
     usePartners.mockReturnValue({
-      partners: [],
-      pagination: null,
-      loading: false,
-      error: '',
+      data: { partners: [], pagination: null },
+      isLoading: false,
       refetch: vi.fn()
     })
 
     render(<PartnerManager />)
-    
+
     // Verificar se as tabs são renderizadas (mostram skeletons quando statsLoading é true)
     expect(screen.getAllByText(/Pendentes|Loading/).length).toBeGreaterThan(0)
     expect(screen.getAllByText(/Ativos|Loading/).length).toBeGreaterThan(0)
@@ -190,15 +188,16 @@ describe('PartnerManager', () => {
 
     // Mock do usePartners com paginação
     usePartners.mockReturnValue({
-      partners: [],
-      pagination: { current_page: 1, last_page: 3, total: 30 },
-      loading: false,
-      error: '',
+      data: {
+        partners: [],
+        pagination: { current_page: 1, last_page: 3, total: 30 }
+      },
+      isLoading: false,
       refetch: vi.fn()
     })
 
     render(<PartnerManager />)
-    
+
     expect(screen.getByText('Pagination Component')).toBeInTheDocument()
   })
 
@@ -211,21 +210,19 @@ describe('PartnerManager', () => {
 
     // Mock do usePartners
     usePartners.mockReturnValue({
-      partners: [],
-      pagination: null,
-      loading: false,
-      error: '',
+      data: { partners: [], pagination: null },
+      isLoading: false,
       refetch: vi.fn()
     })
 
     render(<PartnerManager />)
-    
+
     // Verificar se usePartners foi chamado com os parâmetros corretos
     expect(usePartners).toHaveBeenCalledWith(
-      'pending_approval', // currentStatus (primeira tab)
-      1, // currentPage
-      true, // isAdmin
-      false // authLoading
+      expect.objectContaining({
+        status: 'pending_approval',
+        page: 1
+      })
     )
   })
 })

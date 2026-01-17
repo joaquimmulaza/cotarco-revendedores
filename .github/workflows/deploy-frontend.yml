@@ -1,0 +1,67 @@
+name: Deploy Frontend to cPanel
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    paths:
+      - 'cotarco-client/**' # Só executa se houver mudanças no frontend
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    # Aqui usamos o conceito de Docker!
+    # Executamos todo este job DENTRO de um container Docker oficial do Node.js 20.
+    # Isso garante que o ambiente de build é IDÊNTICO, independente de onde roda.
+    container: node:20
+
+    steps:
+      - name: 🚚 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 📦 Instalar Dependências
+        working-directory: ./cotarco-client
+        run: npm ci
+
+      - name: 🧪 Executar Testes
+        working-directory: ./cotarco-client
+        run: npm test -- run # Garante que os testes passam antes de subir!
+
+      - name: 🏗️ Compilar (Build)
+        working-directory: ./cotarco-client
+        run: npm run build
+        # Isto gera a pasta 'dist' baseada no seu vite.config.js
+
+      # Como estamos num container, precisamos instalar o git-ftp ou usar uma action compatível.
+      # Para cPanel, a action SamKirkland/FTP-Deploy-Action é a mais robusta,
+      # mas ela roda no host, não dentro do container node.
+      # Então, vamos fazer o upload em um job separado ou passo separado fora do container?
+      # Simplificando: Vamos usar upload-artifact para passar o build para um job de deploy.
+      
+      - name: 📤 Guardar Artifact de Build
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build
+          path: ./cotarco-client/dist
+
+  deploy:
+    needs: build-and-deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Baixar Artifact de Build
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-build
+          path: ./dist-to-deploy
+
+      - name: 🚀 Deploy via FTP para cPanel
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          # O caminho no servidor onde estão os arquivos do frontend
+          # Como vamos configurar o FTP na raiz (public_html), apontamos para a pasta específica aqui.
+          server-dir: ./distribuidores/ 
+          local-dir: ./dist-to-deploy/

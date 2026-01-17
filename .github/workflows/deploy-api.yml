@@ -1,0 +1,77 @@
+name: Deploy API to cPanel
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    paths:
+      - 'cotarco-api/**' # Só executa se houver mudanças no backend
+
+jobs:
+  test-and-deploy:
+    runs-on: ubuntu-latest
+    
+    # Usamos container para garantir o ambiente PHP correto (igual ao Dockerfile)
+    container:
+      image: php:8.3-fpm
+      # Precisamos instalar as libs do sistema no container 'on-the-fly' ou 
+      # usar uma imagem que já tenha tudo. Para simplificar e ser rápido no GitHub,
+      # vamos usar uma imagem docker community que já vem com baterias inclusas para Laravel,
+      # ou instalamos manualmente no step.
+      # Opção robusta: Instalar as deps no step.
+
+    steps:
+      - name: 🚚 Checkout Code
+        uses: actions/checkout@v4
+
+      # Setup do ambiente Linux dentro do container (caso a imagem base seja limpa demais)
+      - name: 🔧 Instalar Dependências do Sistema
+        run: |
+          apt-get update
+          apt-get install -y git unzip libzip-dev libpng-dev
+          docker-php-ext-install pdo_mysql zip bcmath gd
+
+      - name: 📥 Instalar Composer
+        run: |
+          curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
+      - name: 📦 Instalar Dependências do Projeto
+        working-directory: ./cotarco-api
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: 🔑 Preparar Ambiente (.env)
+        working-directory: ./cotarco-api
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: 🧪 Executar Testes (Pest/PHPUnit)
+        working-directory: ./cotarco-api
+        # Cria um banco SQLite em memória para testes se necessário, ou usa o phpunit.xml
+        run: |
+          touch database/database.sqlite
+          php artisan test
+
+      # Se os testes passarem, preparamos para o deploy.
+      # IMPORTANTE: Para FTP, vamos querer enviar a pasta vendor também, 
+      # pois seu cPanel pode não rodar 'composer install' automaticamente via FTP.
+      # Então faremos um 'composer install --no-dev' para limpar pacotes de teste antes de enviar.
+      
+      - name: 🧹 Limpar Dependências de Desenvolvimento
+        working-directory: ./cotarco-api
+        run: composer install --prefer-dist --no-progress --no-interaction --no-dev --optimize-autoloader
+
+      - name: 🚀 Deploy via FTP para cPanel
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          # O caminho no servidor para onde a API vai
+          # Como o FTP aponta para 'public_html', colocamos './api/'
+          server-dir: ./api/ 
+          # O caminho local (dentro do GitHub) que queremos enviar
+          local-dir: ./cotarco-api/
+          # Otimização: Não apagar arquivos que não estão no git (como .env de produção, storage, etc)
+          # state-name: .ftp-deploy-sync-state.json

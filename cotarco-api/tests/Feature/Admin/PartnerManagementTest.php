@@ -14,8 +14,8 @@ class PartnerManagementTest extends TestCase
     use RefreshDatabase;
 
     protected $admin;
-    protected $partner1;
-    protected $partner2;
+    protected $distributor1;
+    protected $distributor2;
 
     protected function setUp(): void
     {
@@ -27,30 +27,30 @@ class PartnerManagementTest extends TestCase
             'status' => 'active'
         ]);
 
-        // Criar parceiro 1 (revendedor)
-        $this->partner1 = User::factory()->create([
-            'role' => 'revendedor',
-            'status' => 'active'
-        ]);
-
-        // Criar perfil do parceiro 1
-        PartnerProfile::factory()->create([
-            'user_id' => $this->partner1->id,
-            'company_name' => 'Empresa Parceira Teste 1',
-            'phone_number' => '912345678',
-            'business_model' => 'B2B'
-        ]);
-
-        // Criar parceiro 2 (distribuidor)
-        $this->partner2 = User::factory()->create([
+        // Criar distribuidor 1
+        $this->distributor1 = User::factory()->create([
             'role' => 'distribuidor',
             'status' => 'active'
         ]);
 
-        // Criar perfil do parceiro 2
+        // Criar perfil do distribuidor 1
         PartnerProfile::factory()->create([
-            'user_id' => $this->partner2->id,
-            'company_name' => 'Empresa Parceira Teste 2',
+            'user_id' => $this->distributor1->id,
+            'company_name' => 'Empresa Distribuidora Teste 1',
+            'phone_number' => '912345678',
+            'business_model' => 'B2B'
+        ]);
+
+        // Criar distribuidor 2
+        $this->distributor2 = User::factory()->create([
+            'role' => 'distribuidor',
+            'status' => 'active'
+        ]);
+
+        // Criar perfil do distribuidor 2
+        PartnerProfile::factory()->create([
+            'user_id' => $this->distributor2->id,
+            'company_name' => 'Empresa Distribuidora Teste 2',
             'phone_number' => '912345679',
             'business_model' => 'B2C'
         ]);
@@ -87,8 +87,7 @@ class PartnerManagementTest extends TestCase
                      ]
                  ]);
 
-        // Verificar se ambos os tipos de parceiros estão presentes
-        $response->assertJsonFragment(['role' => 'revendedor']);
+        // Verificar se os distribuidores estão presentes
         $response->assertJsonFragment(['role' => 'distribuidor']);
     }
 
@@ -98,16 +97,6 @@ class PartnerManagementTest extends TestCase
     #[Test]
     public function test_admin_can_filter_partners_by_role(): void
     {
-        // Filtrar apenas revendedores
-        $response = $this->getJson('/api/admin/partners?role=revendedor');
-        $response->assertStatus(200);
-        
-        $partners = $response->json('partners');
-        foreach ($partners as $partner) {
-            $this->assertEquals('revendedor', $partner['role']);
-        }
-        $this->assertGreaterThanOrEqual(1, count($partners)); // Verifica que pelo menos 1 revendedor foi retornado
-        
         // Filtrar apenas distribuidores
         $response = $this->getJson('/api/admin/partners?role=distribuidor');
         $response->assertStatus(200);
@@ -116,7 +105,7 @@ class PartnerManagementTest extends TestCase
         foreach ($partners as $partner) {
             $this->assertEquals('distribuidor', $partner['role']);
         }
-        $this->assertGreaterThanOrEqual(1, count($partners)); // Verifica que pelo menos 1 distribuidor foi retornado
+        $this->assertGreaterThanOrEqual(2, count($partners)); // Verifica que pelo menos 2 distribuidores foram retornados
     }
 
     /**
@@ -142,11 +131,11 @@ class PartnerManagementTest extends TestCase
     #[Test]
     public function test_admin_can_search_partners_by_text(): void
     {
-        $response = $this->getJson('/api/admin/partners?search=Revendedora');
+        $response = $this->getJson('/api/admin/partners?search=Distribuidora');
 
         $response->assertStatus(200);
-        $response->assertJsonFragment(['company_name' => 'Empresa Revendedora Teste']);
-        $response->assertJsonMissing(['company_name' => 'Empresa Distribuidora Teste']);
+        $response->assertJsonFragment(['company_name' => 'Empresa Distribuidora Teste 1']);
+        $response->assertJsonFragment(['company_name' => 'Empresa Distribuidora Teste 2']);
     }
 
     /**
@@ -155,14 +144,14 @@ class PartnerManagementTest extends TestCase
     #[Test]
     public function test_non_admin_users_cannot_access_partner_management(): void
     {
-        // Tentar aceder como revendedor
-        Sanctum::actingAs($this->revendedor);
+        // Tentar aceder como distribuidor
+        Sanctum::actingAs($this->distributor1);
         
         $response = $this->getJson('/api/admin/partners');
         $response->assertStatus(403);
 
-        $response = $this->putJson("/api/admin/partners/{$this->distribuidor->id}", [
-            'role' => 'revendedor',
+        $response = $this->putJson("/api/admin/partners/{$this->distributor2->id}", [
+            'role' => 'distribuidor',
             'business_model' => 'B2B'
         ]);
         $response->assertStatus(403);
@@ -180,7 +169,7 @@ class PartnerManagementTest extends TestCase
         $response = $this->getJson('/api/admin/partners');
         $response->assertStatus(401);
 
-        $response = $this->putJson("/api/admin/partners/{$this->revendedor->id}", [
+        $response = $this->putJson("/api/admin/partners/{$this->distributor1->id}", [
             'role' => 'distribuidor',
             'business_model' => 'B2C'
         ]);
@@ -196,7 +185,7 @@ class PartnerManagementTest extends TestCase
         // Criar mais parceiros para testar paginação
         for ($i = 0; $i < 20; $i++) {
             $user = User::factory()->create([
-                'role' => 'revendedor',
+                'role' => 'distribuidor',
                 'status' => 'active'
             ]);
             

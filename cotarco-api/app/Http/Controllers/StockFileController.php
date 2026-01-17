@@ -54,8 +54,8 @@ class StockFileController extends Controller
             $existingStockFile = StockFile::where('target_business_model', $request->input('target_business_model'))->first();
 
             // 2. Se um StockFile antigo for encontrado, apagar o ficheiro físico
-            if ($existingStockFile && Storage::exists($existingStockFile->file_path)) {
-                Storage::delete($existingStockFile->file_path);
+            if ($existingStockFile && Storage::disk('local')->exists($existingStockFile->file_path)) {
+                Storage::disk('local')->delete($existingStockFile->file_path);
             }
 
             // 3. Guardar novo ficheiro no armazenamento
@@ -217,8 +217,8 @@ class StockFileController extends Controller
 
         try {
             // Apagar ficheiro físico
-            if (Storage::exists($file->file_path)) {
-                Storage::delete($file->file_path);
+            if (Storage::disk('local')->exists($file->file_path)) {
+                Storage::disk('local')->delete($file->file_path);
             }
 
             // Apagar registo da BD
@@ -285,7 +285,7 @@ class StockFileController extends Controller
         }
 
         // Verificar se o ficheiro existe fisicamente
-        if (!Storage::exists($stockFile->file_path)) {
+        if (!Storage::disk('local')->exists($stockFile->file_path)) {
             return response()->json([
                 'message' => 'Ficheiro não encontrado no servidor.',
             ], 404);
@@ -293,7 +293,7 @@ class StockFileController extends Controller
 
         try {
             // Fazer download do ficheiro
-            $filePath = Storage::path($stockFile->file_path);
+            $filePath = Storage::disk('local')->path($stockFile->file_path);
             
             return response()->download(
                 $filePath,
@@ -335,7 +335,7 @@ class StockFileController extends Controller
         }
 
         // Verificar se o ficheiro existe fisicamente
-        if (!Storage::exists($file->file_path)) {
+        if (!Storage::disk('local')->exists($file->file_path)) {
             return response()->json([
                 'message' => 'Ficheiro não encontrado no servidor.',
             ], 404);
@@ -343,7 +343,7 @@ class StockFileController extends Controller
 
         try {
             // Fazer download do ficheiro
-            $filePath = Storage::path($file->file_path);
+            $filePath = Storage::disk('local')->path($file->file_path);
             
             return response()->download(
                 $filePath,

@@ -24,21 +24,21 @@ class AdminActionsTest extends TestCase
     }
 
     /**
-     * Teste de aprovação de um revendedor pendente
+     * Teste de aprovação de um distribuidor pendente
      */
     #[Test]
-    public function test_an_admin_can_approve_a_pending_reseller(): void
+    public function test_an_admin_can_approve_a_pending_distributor(): void
     {
-        // 1. Arrange: Cria um revendedor pendente
-        $revendedor = User::factory()->create([
-            'role' => 'revendedor',
+        // 1. Arrange: Cria um distribuidor pendente
+        $distribuidor = User::factory()->create([
+            'role' => 'distribuidor',
             'status' => 'pending_approval',
         ]);
 
         Mail::fake(); // Prepara o sistema de Mail falso
 
         // 2. Act: Atua como o admin e chama o endpoint de aprovação
-        $response = $this->actingAs($this->admin)->putJson("/api/admin/partners/{$revendedor->id}/status", [
+        $response = $this->actingAs($this->admin)->putJson("/api/admin/partners/{$distribuidor->id}/status", [
             'status' => 'active'
         ]);
 
@@ -48,32 +48,32 @@ class AdminActionsTest extends TestCase
 
         // Verifica se o status do utilizador na base de dados foi realmente atualizado
         $this->assertDatabaseHas('users', [
-            'id' => $revendedor->id,
+            'id' => $distribuidor->id,
             'status' => 'active',
         ]);
 
-        // Verifica se o email de aprovação foi enviado para o revendedor
-        Mail::assertSent(PartnerApproved::class, function ($mail) use ($revendedor) {
-            return $mail->hasTo($revendedor->email);
+        // Verifica se o email de aprovação foi enviado para o distribuidor
+        Mail::assertSent(PartnerApproved::class, function ($mail) use ($distribuidor) {
+            return $mail->hasTo($distribuidor->email);
         });
     }
 
     /**
-     * Teste de rejeição de um revendedor pendente
+     * Teste de rejeição de um distribuidor pendente
      */
     #[Test]
-    public function test_an_admin_can_reject_a_pending_reseller(): void
+    public function test_an_admin_can_reject_a_pending_distributor(): void
     {
-        // 1. Arrange: Cria um revendedor pendente
-        $revendedor = User::factory()->create([
-            'role' => 'revendedor',
+        // 1. Arrange: Cria um distribuidor pendente
+        $distribuidor = User::factory()->create([
+            'role' => 'distribuidor',
             'status' => 'pending_approval',
         ]);
 
         Mail::fake();
 
         // 2. Act: Atua como o admin e chama o endpoint de rejeição
-        $response = $this->actingAs($this->admin)->putJson("/api/admin/partners/{$revendedor->id}/status", [
+        $response = $this->actingAs($this->admin)->putJson("/api/admin/partners/{$distribuidor->id}/status", [
             'status' => 'rejected'
         ]);
 
@@ -82,13 +82,13 @@ class AdminActionsTest extends TestCase
                  ->assertJsonPath('partner.status', 'rejected');
 
         $this->assertDatabaseHas('users', [
-            'id' => $revendedor->id,
+            'id' => $distribuidor->id,
             'status' => 'rejected',
         ]);
 
         // Verifica se o email de rejeição foi enviado
-        Mail::assertSent(PartnerRejected::class, function ($mail) use ($revendedor) {
-            return $mail->hasTo($revendedor->email);
+        Mail::assertSent(PartnerRejected::class, function ($mail) use ($distribuidor) {
+            return $mail->hasTo($distribuidor->email);
         });
     }
 
@@ -99,10 +99,10 @@ class AdminActionsTest extends TestCase
     public function test_an_admin_cannot_change_status_to_an_invalid_one(): void
     {
         // 1. Arrange
-        $revendedor = User::factory()->create(['status' => 'pending_approval']);
+        $distribuidor = User::factory()->create(['role' => 'distribuidor', 'status' => 'pending_approval']);
 
         // 2. Act
-        $response = $this->actingAs($this->admin)->putJson("/api/admin/partners/{$revendedor->id}/status", [
+        $response = $this->actingAs($this->admin)->putJson("/api/admin/partners/{$distribuidor->id}/status", [
             'status' => 'invalid_status' // Um status que não existe
         ]);
 
@@ -114,7 +114,7 @@ class AdminActionsTest extends TestCase
     #[Test]
     public function an_admin_can_deactivate_an_active_partner_and_an_email_is_sent(): void
     {
-        $partner = User::factory()->create(['role' => 'revendedor', 'status' => 'active']);
+        $partner = User::factory()->create(['role' => 'distribuidor', 'status' => 'active']);
         Mail::fake();
 
         $this->actingAs($this->admin)->putJson("/api/admin/partners/{$partner->id}/status", [
@@ -146,5 +146,50 @@ class AdminActionsTest extends TestCase
 
         // E garante que o email de APROVAÇÃO (o antigo) NÃO foi enviado
         Mail::assertNotSent(\App\Mail\PartnerApproved::class);
+    }
+
+    #[Test]
+    public function test_an_admin_can_update_partner_discount(): void
+    {
+        $partner = User::factory()->create(['role' => 'distribuidor', 'status' => 'active']);
+        \App\Models\PartnerProfile::create([
+            'user_id' => $partner->id,
+            'company_name' => 'Test',
+            'business_model' => 'B2B',
+            'phone_number' => '123456789',
+            'alvara_path' => 'alvaras/test.pdf'
+        ]);
+
+        $this->actingAs($this->admin)->putJson("/api/admin/partners/{$partner->id}", [
+            'discount_percentage' => 15,
+        ])->assertStatus(200);
+
+        $this->assertDatabaseHas('partner_profiles', [
+            'user_id' => $partner->id,
+            'discount_percentage' => 15,
+        ]);
+    }
+
+    #[Test]
+    public function test_an_admin_can_download_partner_alvara(): void
+    {
+        \Illuminate\Support\Facades\Storage::fake('local');
+        $partner = User::factory()->create(['role' => 'distribuidor', 'status' => 'active']);
+        
+        $file = \Illuminate\Http\UploadedFile::fake()->create('alvara.pdf', 100);
+        $path = $file->store('alvaras');
+
+        \App\Models\PartnerProfile::create([
+            'user_id' => $partner->id,
+            'company_name' => 'Test',
+            'business_model' => 'B2B',
+            'alvara_path' => $path,
+            'phone_number' => '123456789'
+        ]);
+
+        $this->actingAs($this->admin)
+            ->getJson("/api/admin/partners/{$partner->id}/alvara")
+            ->assertStatus(200)
+            ->assertHeader('Content-Type', 'application/pdf');
     }
 }
