@@ -37,7 +37,10 @@ class TestAlvaraAccess extends Command
 
         $this->info("Testando acesso ao alvará do usuário: {$user->name} (ID: {$userId})");
         
-        $url = "http://localhost:8000/api/admin/revendedores/{$userId}/alvara?token={$token}";
+        // Use the route() helper if the route is named, or build it securely.
+        // Assuming there isn't a named route for this specific raw URL construction or it's an API route.
+        // Better to use config('app.url') . '/api/...' if specific.
+        $url = config('app.url') . "/api/admin/revendedores/{$userId}/alvara?token={$token}";
         
         $this->line("URL gerada: {$url}");
         $this->info("Copie esta URL e cole no navegador para testar.");

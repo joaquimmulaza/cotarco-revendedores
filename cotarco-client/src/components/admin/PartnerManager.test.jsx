@@ -15,6 +15,22 @@ vi.mock('../../contexts/AuthContext', () => ({
   useAuth: vi.fn()
 }))
 
+// Mock do adminService
+vi.mock('../../services/api', () => ({
+  adminService: {
+    getDashboardStats: vi.fn().mockResolvedValue({
+      data: {
+        parceiros: { pending_approval: 0, active: 0, rejected: 0, inactive: 0, total: 0 },
+        sales: { total_this_month: 0 },
+        orders: { active_count: 0 }
+      }
+    }),
+    updatePartner: vi.fn(),
+    downloadAlvara: vi.fn(),
+    updatePartnerStatus: vi.fn()
+  }
+}))
+
 // Mock dos componentes filhos
 vi.mock('./PartnerList', () => ({
   default: ({ partners, loading, error }) => {

@@ -238,7 +238,11 @@ class PartnerController extends Controller
         // Lógica de notificação por email (absorvida dos métodos antigos)
         $emailSent = false;
         $emailError = null;
-        $loginUrl = env('FRONTEND_URL', 'http://localhost:5173') . '/login';
+        $loginUrl = config('app.frontend_url');
+        // If not set, we might default to something safe or empty, but definitely not localhost
+        if ($loginUrl) {
+             $loginUrl .= '/login';
+        }
 
         try {
             if ($newStatus === 'active' && $oldStatus !== 'active') {

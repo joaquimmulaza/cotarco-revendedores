@@ -12,9 +12,9 @@ const ApiTestPage = () => {
             Use esta página para testar a conexão entre o frontend e o backend
           </p>
         </div>
-        
+
         <ApiTest />
-        
+
         <div className="mt-8 bg-white rounded-lg shadow-md p-6">
           <h3 className="text-xl font-semibold mb-4">Instruções de Teste</h3>
           <div className="space-y-2 text-sm text-gray-700">
@@ -23,12 +23,12 @@ const ApiTestPage = () => {
             <p>3. <strong>Verificar Console</strong>: Abra as ferramentas do desenvolvedor para ver detalhes</p>
             <p>4. <strong>Verificar Network</strong>: Na aba Network, veja as requisições sendo feitas</p>
           </div>
-          
+
           <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded">
             <h4 className="font-semibold text-yellow-800 mb-2">⚠️ Pré-requisitos</h4>
             <ul className="text-sm text-yellow-700 space-y-1">
-              <li>• Backend Laravel deve estar rodando em http://localhost:8000</li>
-              <li>• Frontend deve estar rodando em http://localhost:5173</li>
+              <li>• Backend Laravel deve estar rodando na porta definida (ex: 8000)</li>
+              <li>• Frontend deve estar rodando na porta definida (ex: 5173)</li>
               <li>• Banco de dados deve estar configurado e migrado</li>
             </ul>
           </div>

@@ -8,16 +8,20 @@ const ApiTest = () => {
   const testApiConnection = async () => {
     setLoading(true);
     setTestResult('');
-    
+
     try {
       // Teste direto sem proxy
-      const directResponse = await axios.get('http://localhost:8000/api/test');
+      const baseUrl = import.meta.env.VITE_API_BASE_URL;
+      if (!baseUrl) {
+        console.error('VITE_API_BASE_URL not set!');
+      }
+      const directResponse = await axios.get(`${baseUrl}/api/test`);
       console.log('Resposta direta:', directResponse.data);
-      
+
       // Teste através do proxy
       const proxyResponse = await axios.get('/api/test');
       console.log('Resposta via proxy:', proxyResponse.data);
-      
+
       setTestResult('✅ Conexão bem-sucedida! Verifique o console para detalhes.');
     } catch (error) {
       console.error('Erro no teste:', error);
@@ -30,7 +34,7 @@ const ApiTest = () => {
   const testRegister = async () => {
     setLoading(true);
     setTestResult('');
-    
+
     try {
       const testData = {
         name: 'Teste Usuário',
@@ -39,7 +43,7 @@ const ApiTest = () => {
         phone: '123456789',
         company: 'Empresa Teste'
       };
-      
+
       const response = await axios.post('/api/register', testData);
       console.log('Registro de teste:', response.data);
       setTestResult('✅ Registro de teste bem-sucedido! Verifique o console.');
@@ -58,7 +62,7 @@ const ApiTest = () => {
   return (
     <div className="p-6 bg-white rounded-lg shadow-md">
       <h2 className="text-2xl font-bold mb-4">Teste de Conexão com a API</h2>
-      
+
       <div className="space-y-4">
         <button
           onClick={testApiConnection}
@@ -67,7 +71,7 @@ const ApiTest = () => {
         >
           {loading ? 'Testando...' : 'Testar Conexão'}
         </button>
-        
+
         <button
           onClick={testRegister}
           disabled={loading}
@@ -75,16 +79,15 @@ const ApiTest = () => {
         >
           {loading ? 'Testando...' : 'Testar Registro'}
         </button>
-        
+
         {testResult && (
-          <div className={`p-3 rounded ${
-            testResult.includes('✅') ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-          }`}>
+          <div className={`p-3 rounded ${testResult.includes('✅') ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+            }`}>
             {testResult}
           </div>
         )}
       </div>
-      
+
       <div className="mt-4 text-sm text-gray-600">
         <p>Este componente testa a conexão com a API do backend.</p>
         <p>Verifique o console do navegador para detalhes das requisições.</p>

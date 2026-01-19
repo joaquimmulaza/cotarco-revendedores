@@ -40,7 +40,12 @@ class TestEmailCommand extends Command
             'updated_at' => now()
         ]);
         
-        $dashboardUrl = env('FRONTEND_URL', 'http://localhost:5173') . '/admin';
+        $dashboardUrl = config('app.frontend_url');
+        if (!$dashboardUrl) {
+            $this->error('FRONTEND_URL not set in config/app.php');
+            return;
+        }
+        $dashboardUrl .= '/admin';
         
         try {
             Mail::to($email)->send(new AdminNewPartnerNotification($testUser, $dashboardUrl));

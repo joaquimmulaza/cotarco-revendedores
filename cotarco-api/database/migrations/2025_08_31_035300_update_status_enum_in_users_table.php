@@ -27,6 +27,9 @@ return new class extends Migration
 
             // Usa DB::statement para executar um comando ALTER TABLE que é compatível com MySQL
             // para modificar um ENUM.
+            if (DB::connection()->getDriverName() === 'sqlite') {
+                return;
+            }
             DB::statement("ALTER TABLE users MODIFY COLUMN status ENUM({$statusEnum}) NOT NULL DEFAULT 'pending_email_validation'");
         });
     }
@@ -45,6 +48,9 @@ return new class extends Migration
                 'rejected'
             ];
             $statusEnum = "'" . implode("','", $statusList) . "'";
+            if (DB::connection()->getDriverName() === 'sqlite') {
+                return;
+            }
             DB::statement("ALTER TABLE users MODIFY COLUMN status ENUM({$statusEnum}) NOT NULL DEFAULT 'pending_email_validation'");
         });
     }
