@@ -35,77 +35,83 @@ class ProductController extends Controller
         $perPage = (int) $request->query('per_page', 10);
 
         $cacheKey = sprintf(
-            'products_page_%d_per_%d_cat_%s',
+            'products_raw_page_%d_per_%d_cat_%s',
             $page,
             $perPage,
             $categoryId !== null ? (string) $categoryId : 'all'
         );
 
-        $data = Cache::remember($cacheKey, now()->addMinutes(15), function () use ($categoryId, $page, $perPage) {
-            // 1. Obter produtos do WooCommerce (já processados com variações separadas)
-            $result = $this->wooCommerceService->getProducts($categoryId, $page, $perPage);
-            $products = $result['products'];
+        // 1. Obter produtos do WooCommerce (Cacheada pois é a parte pesada e comum a todos)
+        $result = Cache::remember($cacheKey, now()->addMinutes(15), function () use ($categoryId, $page, $perPage) {
+            return $this->wooCommerceService->getProducts($categoryId, $page, $perPage);
+        });
 
-            // 2. Criar array para guardar todos os SKUs
-            $allSkus = [];
+        $products = $result['products'];
 
-            // 3. Percorrer a lista de produtos para recolher todos os SKUs
-            foreach ($products as $product) {
-                if (isset($product['sku']) && !empty($product['sku'])) {
-                    $allSkus[] = $product['sku'];
-                }
+        // 2. Criar array para guardar todos os SKUs
+        $allSkus = [];
+
+        // 3. Percorrer a lista de produtos para recolher todos os SKUs
+        foreach ($products as $product) {
+            if (isset($product['sku']) && !empty($product['sku'])) {
+                $allSkus[] = $product['sku'];
             }
+        }
 
-            // 4. Obter o business model do utilizador autenticado (via partnerProfile)
-            $businessModel = auth()->user()->partnerProfile->business_model ?? null;
+        // 4. Obter o business model do utilizador autenticado (via partnerProfile)
+        // Recarregar a relação para garantir que temos os dados mais recentes (discount_percentage pode ter mudado)
+        $user = auth()->user();
+        if ($user) {
+            $user->load('partnerProfile');
+        }
+        $businessModel = $user->partnerProfile->business_model ?? null;
 
-            // 5. Verificar se existe mapa de stock ativo para este business model
-            $stockFileIsActive = $businessModel
-                ? StockFile::where('target_business_model', $businessModel)->where('is_active', true)->exists()
-                : false;
+        // 5. Verificar se existe mapa de stock ativo para este business model
+        $stockFileIsActive = $businessModel
+            ? StockFile::where('target_business_model', $businessModel)->where('is_active', true)->exists()
+            : false;
 
-            // 6. Apenas anexar preços locais se houver mapa ativo para o business model
-            if ($businessModel && $stockFileIsActive) {
-                $localPrices = ProductPrice::whereIn('product_sku', $allSkus)->get()->keyBy('product_sku');
+        // 6. Apenas anexar preços locais se houver mapa ativo para o business model
+        if ($businessModel && $stockFileIsActive) {
+            $localPrices = ProductPrice::whereIn('product_sku', $allSkus)->get()->keyBy('product_sku');
 
-                // Obter percentagem de desconto do parceiro
-                $discountPercentage = auth()->user()->partnerProfile->discount_percentage ?? 0;
+            // Obter percentagem de desconto do parceiro
+            $discountPercentage = auth()->user()->partnerProfile->discount_percentage ?? 0;
 
-                foreach ($products as &$product) {
-                    $sku = $product['sku'] ?? null;
-                    if ($sku && $localPrices->has($sku)) {
-                        $priceData = $localPrices[$sku];
-                        $basePrice = match ($businessModel) {
-                            'B2C' => $priceData->price_b2c,
-                            'B2B' => $priceData->price_b2b,
-                            default => null,
-                        };
+            foreach ($products as &$product) {
+                $sku = $product['sku'] ?? null;
+                if ($sku && $localPrices->has($sku)) {
+                    $priceData = $localPrices[$sku];
+                    $basePrice = match ($businessModel) {
+                        'B2C' => $priceData->price_b2c,
+                        'B2B' => $priceData->price_b2b,
+                        default => null,
+                    };
 
-                        if ($basePrice !== null) {
-                            $product['original_price'] = (float) $basePrice; // Preço original
-                            
-                            // Aplicar desconto se houver
-                            if ($discountPercentage > 0) {
-                                $discountAmount = $basePrice * ($discountPercentage / 100);
-                                $product['local_price'] = $basePrice - $discountAmount;
-                                $product['discount_percentage'] = $discountPercentage;
-                            } else {
-                                $product['local_price'] = $basePrice;
-                                $product['discount_percentage'] = 0;
-                            }
+                    if ($basePrice !== null) {
+                        $product['original_price'] = (float) $basePrice; // Preço original
+                        
+                        // Aplicar desconto se houver
+                        if ($discountPercentage > 0) {
+                            $discountAmount = $basePrice * ($discountPercentage / 100);
+                            $product['local_price'] = $basePrice - $discountAmount;
+                            $product['discount_percentage'] = $discountPercentage;
                         } else {
-                            $product['local_price'] = null;
+                            $product['local_price'] = $basePrice;
+                            $product['discount_percentage'] = 0;
                         }
+                    } else {
+                        $product['local_price'] = null;
                     }
                 }
-                unset($product);
             }
+            unset($product);
+        }
 
-            return [
-                'products' => $products,
-                'pagination' => $result['pagination'] ?? null,
-            ];
-        });
+        $data = [
+            'products' => $products,
+            'pagination' => $result['pagination'] ?? null,
+        ];
 
         return response()->json([
             'success' => true,

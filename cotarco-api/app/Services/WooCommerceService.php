@@ -37,7 +37,7 @@ class WooCommerceService
                 return $response->json();
             }
 
-            error('Erro ao buscar categorias do WooCommerce', [
+            Log::error('Erro ao buscar categorias do WooCommerce', [
                 'status' => $response->status(),
                 'body' => $response->body()
             ]);
@@ -45,7 +45,7 @@ class WooCommerceService
             return [];
 
         } catch (\Exception $e) {
-            error('Exceção ao buscar categorias do WooCommerce', [
+            Log::error('Exceção ao buscar categorias do WooCommerce', [
                 'message' => $e->getMessage(),
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
