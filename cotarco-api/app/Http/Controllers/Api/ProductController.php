@@ -22,7 +22,7 @@ class ProductController extends Controller
     }
 
     /**
-     * Retorna a lista de produtos do WooCommerce com paginação e filtro de categoria
+     * Retorna a lista de produtos do WooCommerce (via BD Local) com paginação e filtro de categoria
      * Integra preços locais da tabela product_prices baseado no role do usuário
      *
      * @param Request $request
@@ -33,96 +33,136 @@ class ProductController extends Controller
         $categoryId = $request->query('category_id');
         $page = (int) $request->query('page', 1);
         $perPage = (int) $request->query('per_page', 10);
+        $search = $request->query('search');
 
-        $cacheKey = sprintf(
-            'products_raw_page_%d_per_%d_cat_%s',
-            $page,
-            $perPage,
-            $categoryId !== null ? (string) $categoryId : 'all'
-        );
+        // 1. Query Local DB (Parents only)
+        // Grouped view: We select simple products (no parent) and variable parents.
+        // We exclude variations from the top-level list, as they are nested under parents.
+        $query = \App\Models\Product::with(['categories', 'variations'])
+            ->where('status', 'publish')
+            ->where('parent_id', 0);
 
-        // 1. Obter produtos do WooCommerce (Cacheada pois é a parte pesada e comum a todos)
-        $result = Cache::remember($cacheKey, now()->addMinutes(15), function () use ($categoryId, $page, $perPage) {
-            return $this->wooCommerceService->getProducts($categoryId, $page, $perPage);
-        });
-
-        $products = $result['products'];
-
-        // 2. Criar array para guardar todos os SKUs
-        $allSkus = [];
-
-        // 3. Percorrer a lista de produtos para recolher todos os SKUs
-        foreach ($products as $product) {
-            if (isset($product['sku']) && !empty($product['sku'])) {
-                $allSkus[] = $product['sku'];
-            }
+        // Filters
+        if ($categoryId) {
+            $query->whereHas('categories', function ($q) use ($categoryId) {
+                $q->where('categories.id', $categoryId);
+            });
+        }
+        
+        if ($search) {
+             $query->where(function($q) use ($search) {
+                 $q->where('name', 'like', "%{$search}%")
+                   ->orWhere('sku', 'like', "%{$search}%");
+             });
         }
 
-        // 4. Obter o business model do utilizador autenticado (via partnerProfile)
-        // Recarregar a relação para garantir que temos os dados mais recentes (discount_percentage pode ter mudado)
+        $query->orderBy('created_at', 'desc');
+        $paginator = $query->paginate($perPage, ['*'], 'page', $page);
+        $products = $paginator->getCollection();
+
+        // 2. Collect all SKUs (Parents + Variations)
+        $allSkus = [];
+        foreach ($products as $product) {
+            if ($product->sku) {
+                $allSkus[] = $product->sku;
+            }
+            if ($product->relationLoaded('variations')) {
+                foreach ($product->variations as $variation) {
+                    if ($variation->sku) {
+                        $allSkus[] = $variation->sku;
+                    }
+                }
+            }
+        }
+        $allSkus = array_unique($allSkus);
+
+        // 3. Setup Business Model & Stock File Status
         $user = auth()->user();
         if ($user) {
             $user->load('partnerProfile');
         }
         $businessModel = $user->partnerProfile->business_model ?? null;
-
-        // 5. Verificar se existe mapa de stock ativo para este business model
         $stockFileIsActive = $businessModel
             ? StockFile::where('target_business_model', $businessModel)->where('is_active', true)->exists()
             : false;
 
-        // 6. Apenas anexar preços locais se houver mapa ativo para o business model
+        // 4. Anexar Preços
         if ($businessModel && $stockFileIsActive) {
             $localPrices = ProductPrice::whereIn('product_sku', $allSkus)->get()->keyBy('product_sku');
-
-            // Obter percentagem de desconto do parceiro
             $discountPercentage = auth()->user()->partnerProfile->discount_percentage ?? 0;
 
-            foreach ($products as &$product) {
-                $sku = $product['sku'] ?? null;
-                if ($sku && $localPrices->has($sku)) {
-                    $priceData = $localPrices[$sku];
-                    $basePrice = match ($businessModel) {
-                        'B2C' => $priceData->price_b2c,
-                        'B2B' => $priceData->price_b2b,
-                        default => null,
-                    };
+            // Helper closure to apply price logic
+            $applyPrice = function ($product) use ($localPrices, $businessModel, $discountPercentage) {
+                 if (!$product->sku || !$localPrices->has($product->sku)) {
+                     $product->local_price = null;
+                     return;
+                 }
+                 
+                 $priceData = $localPrices[$product->sku];
+                 $basePrice = match ($businessModel) {
+                    'B2C' => $priceData->price_b2c,
+                    'B2B' => $priceData->price_b2b,
+                    default => null,
+                 };
 
-                    if ($basePrice !== null) {
-                        $product['original_price'] = (float) $basePrice; // Preço original
-                        
-                        // Aplicar desconto se houver
-                        if ($discountPercentage > 0) {
-                            $discountAmount = $basePrice * ($discountPercentage / 100);
-                            $product['local_price'] = $basePrice - $discountAmount;
-                            $product['discount_percentage'] = $discountPercentage;
-                        } else {
-                            $product['local_price'] = $basePrice;
-                            $product['discount_percentage'] = 0;
-                        }
+                if ($basePrice !== null) {
+                    $product->original_price = (float) $basePrice; 
+                    if ($discountPercentage > 0) {
+                        $discountAmount = $basePrice * ($discountPercentage / 100);
+                        $product->local_price = $basePrice - $discountAmount;
+                        $product->discount_percentage = $discountPercentage;
                     } else {
-                        $product['local_price'] = null;
+                        $product->local_price = $basePrice;
+                        $product->discount_percentage = 0;
+                    }
+                } else {
+                    $product->local_price = null;
+                }
+            };
+
+            foreach ($products as $product) {
+                // Apply to Parent (if it has its own price, though usually it's a container)
+                $applyPrice($product);
+
+                // Apply to Variations
+                if ($product->relationLoaded('variations')) {
+                    foreach ($product->variations as $variation) {
+                        $applyPrice($variation);
+                    }
+
+                    // If Parent has no price but variations do, assume From/First price
+                    if ($product->local_price === null && $product->variations->isNotEmpty()) {
+                        // Use the first variation's price as the "default" for the card
+                        $firstVar = $product->variations->first();
+                        if ($firstVar->local_price !== null) {
+                            $product->local_price = $firstVar->local_price;
+                            $product->original_price = $firstVar->original_price ?? null;
+                            $product->discount_percentage = $firstVar->discount_percentage ?? 0;
+                            // Also ensure stock status reflects
+                            $product->stock_status = $firstVar->stock_status; 
+                        }
                     }
                 }
             }
-            unset($product);
         }
 
-        $data = [
-            'products' => $products,
-            'pagination' => $result['pagination'] ?? null,
+        $paginationData = [
+            'total_items' => $paginator->total(),
+            'total_pages' => $paginator->lastPage(),
+            'current_page' => $paginator->currentPage(),
+            'per_page' => $paginator->perPage(),
         ];
 
         return response()->json([
             'success' => true,
-            'data' => ProductResource::collection($data['products'] ?? []),
-            'pagination' => $data['pagination'] ?? null,
-            'message' => 'Produtos obtidos com sucesso'
+            'data' => ProductResource::collection($products),
+            'pagination' => $paginationData,
+            'message' => 'Produtos obtidos com sucesso (Local DB)'
         ]);
     }
 
     /**
-     * Retorna a lista de produtos para administradores, incluindo preços B2B e B2C
+     * Retorna a lista de produtos para administradores, incluindo preços B2B e B2C (Via Local DB)
      *
      * @param Request $request
      * @return JsonResponse
@@ -134,67 +174,89 @@ class ProductController extends Controller
         $page = (int) $request->query('page', 1);
         $perPage = (int) $request->query('per_page', 10);
 
-        $cacheKey = sprintf(
-            'products_admin_page_%d_per_%d_cat_%s_search_%s',
-            $page,
-            $perPage,
-            $categoryId !== null ? (string) $categoryId : 'all',
-            ($search !== null && $search !== '') ? (string) $search : 'all'
-        );
+        // 1. Query Local DB (Simple + Variations)
+        // Grouped view: We select Parents and include variations.
+        $query = \App\Models\Product::with(['categories', 'variations'])
+            ->where('status', 'publish')
+            ->where('parent_id', 0);
 
-        $paginatedProducts = Cache::remember($cacheKey, now()->addMinutes(15), function () use ($categoryId, $page, $perPage, $request, $search) {
-            // 1. Obter produtos do WooCommerce (já processados com variações separadas)
-            $result = $this->wooCommerceService->getProducts($categoryId, $page, $perPage, $search);
-            $products = $result['products'];
+        // Filter by Category
+        if ($categoryId) {
+             $query->whereHas('categories', function ($q) use ($categoryId) {
+                 $q->where('categories.id', $categoryId);
+             });
+        }
 
-            // 2. Recolher todos os SKUs não vazios
-            $allSkus = [];
-            foreach ($products as $product) {
-                if (isset($product['sku']) && !empty($product['sku'])) {
-                    $allSkus[] = $product['sku'];
+        // Filter by Search
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('sku', 'like', "%{$search}%");
+            });
+        }
+
+        // Sort
+        $query->orderBy('created_at', 'desc');
+
+        // Paginate
+        $paginator = $query->paginate($perPage, ['*'], 'page', $page);
+        $products = $paginator->getCollection();
+        
+        // 2. Collect all SKUs (Parents + Variations)
+        $allSkus = [];
+        foreach ($products as $product) {
+            if ($product->sku) {
+                $allSkus[] = $product->sku;
+            }
+            if ($product->relationLoaded('variations')) {
+                foreach ($product->variations as $variation) {
+                     if ($variation->sku) {
+                        $allSkus[] = $variation->sku;
+                    }
                 }
             }
+        }
+        $allSkus = array_unique($allSkus);
 
-			// 3. Verificar se existem mapas de stock ativos para B2B e B2C antes de buscar preços
-			$b2bFileIsActive = StockFile::where('target_business_model', 'B2B')->where('is_active', true)->exists();
-			$b2cFileIsActive = StockFile::where('target_business_model', 'B2C')->where('is_active', true)->exists();
+        // 3. Verificar mapas de stock
+        $b2bFileIsActive = StockFile::where('target_business_model', 'B2B')->where('is_active', true)->exists();
+        $b2cFileIsActive = StockFile::where('target_business_model', 'B2C')->where('is_active', true)->exists();
 
-			// 4. Buscar preços locais para os SKUs (sempre, para obter stock_quantity)
-			$localPrices = empty($allSkus)
-				? collect([])
-				: ProductPrice::whereIn('product_sku', $allSkus)->get()->keyBy('product_sku');
+        // 4. Buscar preços locais
+        $localPrices = empty($allSkus)
+            ? collect([])
+            : ProductPrice::whereIn('product_sku', $allSkus)->get()->keyBy('product_sku');
 
-			// 5. Anexar preços condicionais e o stock para cada produto
-            foreach ($products as &$product) {
-                $sku = $product['sku'] ?? null;
-                if ($sku && $localPrices->has($sku)) {
-                    $priceData = $localPrices[$sku];
-					$product['price_b2b'] = $b2bFileIsActive ? ($priceData->price_b2b ?? null) : null;
-					$product['price_b2c'] = $b2cFileIsActive ? ($priceData->price_b2c ?? null) : null;
-					$product['stock_quantity'] = $priceData->stock_quantity ?? null;
-                } else {
-                    $product['price_b2b'] = null;
-                    $product['price_b2c'] = null;
-                    $product['stock_quantity'] = null;
+        // Helper to attach admin prices
+        $attachAdminPrices = function ($product) use ($localPrices, $b2bFileIsActive, $b2cFileIsActive) {
+             $priceData = null;
+             if ($product->sku && $localPrices->has($product->sku)) {
+                 $priceData = $localPrices[$product->sku];
+             }
+
+             if ($priceData) {
+                 $product->setAttribute('price_b2b', $b2bFileIsActive ? ($priceData->price_b2b ?? null) : null);
+                 $product->setAttribute('price_b2c', $b2cFileIsActive ? ($priceData->price_b2c ?? null) : null);
+                 $product->setAttribute('stock_quantity', $priceData->stock_quantity ?? null);
+             } else {
+                 $product->setAttribute('price_b2b', null);
+                 $product->setAttribute('price_b2c', null);
+                 $product->setAttribute('stock_quantity', null);
+             }
+        };
+
+        // 5. Anexar preços
+        foreach ($products as $product) {
+            $attachAdminPrices($product);
+
+            if ($product->relationLoaded('variations')) {
+                foreach ($product->variations as $variation) {
+                    $attachAdminPrices($variation);
                 }
             }
-            unset($product);
+        }
 
-            $totalItems = (int)($result['pagination']['total_items'] ?? count($products));
-            $paginated = new LengthAwarePaginator(
-                $products,
-                $totalItems,
-                $perPage,
-                $page,
-                [
-                    'path' => $request->url(),
-                    'query' => $request->query(),
-                ]
-            );
-
-            return $paginated;
-        });
-
-        return response()->json($paginatedProducts);
+        // Return pagination object directly as it transforms to standard JSON structure
+        return response()->json($paginator);
     }
 }

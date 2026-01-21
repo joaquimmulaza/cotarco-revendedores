@@ -6,7 +6,6 @@ use App\Models\User;
 use App\Models\PartnerProfile;
 use App\Models\ProductPrice;
 use App\Models\StockFile;
-use App\Services\WooCommerceService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
@@ -74,29 +73,21 @@ class ProductPricingTest extends TestCase
             'stock_quantity' => 10,
         ]);
 
-        // Mock WooCommerce service
-        $this->mock(WooCommerceService::class, function ($mock) {
-            $mock->shouldReceive('getProducts')
-                ->andReturn([
-                    'products' => [
-                        [
-                            'id' => 1,
-                            'name' => 'Test Product',
-                            'sku' => 'TEST-SKU-001',
-                            'regular_price' => '1500',
-                            'stock_status' => 'instock',
-                            'images' => [],
-                            'type' => 'simple',
-                        ],
-                    ],
-                    'pagination' => [
-                        'current_page' => 1,
-                        'per_page' => 10,
-                        'total_items' => 1,
-                        'total_pages' => 1,
-                    ],
-                ]);
-        });
+        // Create local product
+        \App\Models\Product::create([
+            'id' => 1,
+            'name' => 'Test Product',
+            'sku' => 'TEST-SKU-001',
+            'regular_price' => '1500',
+            'stock_status' => 'instock',
+            'images' => [],
+            'type' => 'simple',
+            'status' => 'publish',
+            'parent_id' => 0,
+            'price' => '1500', // Needed as default
+            'slug' => 'test-product',
+            'permalink' => 'http://example.com/product',
+        ]);
 
         $this->actingAs($partner, 'sanctum');
 
@@ -143,29 +134,21 @@ class ProductPricingTest extends TestCase
             'stock_quantity' => 10,
         ]);
 
-        // Mock WooCommerce service
-        $this->mock(WooCommerceService::class, function ($mock) {
-            $mock->shouldReceive('getProducts')
-                ->andReturn([
-                    'products' => [
-                        [
-                            'id' => 2,
-                            'name' => 'Test Product 2',
-                            'sku' => 'TEST-SKU-002',
-                            'regular_price' => '1500',
-                            'stock_status' => 'instock',
-                            'images' => [],
-                            'type' => 'simple',
-                        ],
-                    ],
-                    'pagination' => [
-                        'current_page' => 1,
-                        'per_page' => 10,
-                        'total_items' => 1,
-                        'total_pages' => 1,
-                    ],
-                ]);
-        });
+        // Create local product
+        \App\Models\Product::create([
+            'id' => 2,
+            'name' => 'Test Product 2',
+            'sku' => 'TEST-SKU-002',
+            'regular_price' => '1500',
+            'stock_status' => 'instock',
+            'images' => [],
+            'type' => 'simple',
+            'status' => 'publish',
+            'parent_id' => 0,
+            'price' => '1500',
+            'slug' => 'test-product-2',
+            'permalink' => 'http://example.com/product-2',
+        ]);
 
         $this->actingAs($partner, 'sanctum');
 
@@ -202,29 +185,21 @@ class ProductPricingTest extends TestCase
             'stock_quantity' => 10,
         ]);
 
-        // Mock WooCommerce service
-        $this->mock(WooCommerceService::class, function ($mock) {
-            $mock->shouldReceive('getProducts')
-                ->andReturn([
-                    'products' => [
-                        [
-                            'id' => 3,
-                            'name' => 'Test Product 3',
-                            'sku' => 'TEST-SKU-003',
-                            'regular_price' => '1500',
-                            'stock_status' => 'instock',
-                            'images' => [],
-                            'type' => 'simple',
-                        ],
-                    ],
-                    'pagination' => [
-                        'current_page' => 1,
-                        'per_page' => 10,
-                        'total_items' => 1,
-                        'total_pages' => 1,
-                    ],
-                ]);
-        });
+        // Create local product
+        \App\Models\Product::create([
+            'id' => 3,
+            'name' => 'Test Product 3',
+            'sku' => 'TEST-SKU-003',
+            'regular_price' => '1500',
+            'stock_status' => 'instock',
+            'images' => [],
+            'type' => 'simple',
+            'status' => 'publish',
+            'parent_id' => 0,
+            'price' => '1500',
+            'slug' => 'test-product-3',
+            'permalink' => 'http://example.com/product-3',
+        ]);
 
         $this->actingAs($partner, 'sanctum');
 
@@ -235,12 +210,8 @@ class ProductPricingTest extends TestCase
         $products = $response->json('data');
         $this->assertNotEmpty($products);
 
-        // Check that no local price is applied (price should be 0/null/Sob consulta or check structure)
+        // Check that no local price is applied
         $product = $products[0];
-        // If price is null/0, formatPrice returns 'Sob consulta'.
-        // Let's assert 'price' is null or 0 if that's what we expect.
-        // Actually, logic sets it to null if no stock file.
-        // getLocalPrice returns null.
         $this->assertNull($product['price']);
     }
 
@@ -274,29 +245,21 @@ class ProductPricingTest extends TestCase
             'stock_quantity' => 10,
         ]);
 
-        // Mock WooCommerce service
-        $this->mock(WooCommerceService::class, function ($mock) {
-            $mock->shouldReceive('getProducts')
-                ->andReturn([
-                    'products' => [
-                        [
-                            'id' => 4,
-                            'name' => 'Test Product 4',
-                            'sku' => 'TEST-SKU-004',
-                            'regular_price' => '1500',
-                            'stock_status' => 'instock',
-                            'images' => [],
-                            'type' => 'simple',
-                        ],
-                    ],
-                    'pagination' => [
-                        'current_page' => 1,
-                        'per_page' => 10,
-                        'total_items' => 1,
-                        'total_pages' => 1,
-                    ],
-                ]);
-        });
+        // Create local product
+        \App\Models\Product::create([
+            'id' => 4,
+            'name' => 'Test Product 4',
+            'sku' => 'TEST-SKU-004',
+            'regular_price' => '1500',
+            'stock_status' => 'instock',
+            'images' => [],
+            'type' => 'simple',
+            'status' => 'publish',
+            'parent_id' => 0,
+            'price' => '1500',
+            'slug' => 'test-product-4',
+            'permalink' => 'http://example.com/product-4',
+        ]);
 
         $this->actingAs($partner, 'sanctum');
 

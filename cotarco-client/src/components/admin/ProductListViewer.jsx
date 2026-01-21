@@ -1,10 +1,11 @@
 import React, { useEffect, useState, Fragment } from 'react';
 import { Listbox, ListboxButton, ListboxOptions, ListboxOption, Transition } from '@headlessui/react';
-import { CheckIcon, ChevronUpDownIcon } from '@heroicons/react/20/solid';
+import { CheckIcon, ChevronUpDownIcon, ChevronRightIcon, ChevronDownIcon } from '@heroicons/react/20/solid';
 import {
   useReactTable,
   getCoreRowModel,
   getPaginationRowModel,
+  getExpandedRowModel,
   flexRender,
 } from '@tanstack/react-table';
 import { useQuery } from '@tanstack/react-query';
@@ -12,6 +13,27 @@ import api from '../../services/api';
 
 // Definição das colunas
 const columns = [
+  {
+    id: 'expander',
+    header: () => null,
+    cell: ({ row }) => {
+      return row.getCanExpand() ? (
+        <button
+          {...{
+            onClick: row.getToggleExpandedHandler(),
+            style: { cursor: 'pointer' },
+          }}
+          className="p-1 text-gray-500 hover:text-gray-700"
+        >
+          {row.getIsExpanded() ? (
+            <ChevronDownIcon className="h-5 w-5" />
+          ) : (
+            <ChevronRightIcon className="h-5 w-5" />
+          )}
+        </button>
+      ) : null;
+    },
+  },
   {
     header: 'Imagem',
     accessorKey: 'image_url',
@@ -94,7 +116,7 @@ export default function ProductListViewer() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(searchQuery);
-  
+
   const { data: categories, isLoading: isLoadingCategories, error: categoriesError } = useQuery({
     queryKey: ['categories'],
     queryFn: () => api.get('/categories').then(res => res.data?.data),
@@ -138,6 +160,8 @@ export default function ProductListViewer() {
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
+    getExpandedRowModel: getExpandedRowModel(),
+    getRowCanExpand: (row) => row.original.variations?.length > 0,
     manualPagination: true,
     pageCount: pageCount,
     onPaginationChange: setPagination,
@@ -160,7 +184,7 @@ export default function ProductListViewer() {
       if (searchQuery !== debouncedSearchQuery) {
         setDebouncedSearchQuery(searchQuery);
         // Reset para a primeira página quando a pesquisa muda, somente se necessário
-        setPagination((prev) => 
+        setPagination((prev) =>
           prev.pageIndex === 0 ? prev : { ...prev, pageIndex: 0 }
         );
       }
@@ -171,7 +195,7 @@ export default function ProductListViewer() {
 
   // Reset da página ao mudar a categoria (somente se necessário)
   useEffect(() => {
-    setPagination((prev) => 
+    setPagination((prev) =>
       prev.pageIndex === 0 ? prev : { ...prev, pageIndex: 0 }
     );
   }, [selectedCategory]);
@@ -258,8 +282,8 @@ export default function ProductListViewer() {
                   {(selectedCategory === null || selectedCategory === '')
                     ? 'Todas as Categorias'
                     : (Array.isArray(categories)
-                        ? (categories.find((c) => (c.id ?? c.slug ?? '') === selectedCategory)?.name ?? 'Categoria')
-                        : 'Categoria')}
+                      ? (categories.find((c) => (c.id ?? c.slug ?? '') === selectedCategory)?.name ?? 'Categoria')
+                      : 'Categoria')}
                 </span>
                 <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
                   {isLoadingCategories ? (
@@ -349,9 +373,9 @@ export default function ProductListViewer() {
                       {header.isPlaceholder
                         ? null
                         : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
                     </th>
                   ))}
                 </tr>
@@ -359,19 +383,61 @@ export default function ProductListViewer() {
             </thead>
             <tbody className="bg-white divide-y divide-gray-100">
               {rows.map((row) => (
-                <tr key={row.id} className="hover:bg-gray-50">
-                  {row.getVisibleCells().map((cell) => (
-                    <td
-                      key={cell.id}
-                      className="px-4 py-3 text-sm text-gray-700"
-                    >
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </td>
-                  ))}
-                </tr>
+                <Fragment key={row.id}>
+                  <tr className="hover:bg-gray-50">
+                    {row.getVisibleCells().map((cell) => (
+                      <td
+                        key={cell.id}
+                        className="px-4 py-3 text-sm text-gray-700"
+                      >
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </td>
+                    ))}
+                  </tr>
+                  {row.getIsExpanded() && (
+                    <tr>
+                      <td colSpan={row.getVisibleCells().length} className="bg-gray-50 p-4">
+                        <div className="overflow-x-auto">
+                          <h4 className="mb-2 text-xs font-semibold uppercase text-gray-500">Variações do Produto</h4>
+                          <table className="min-w-full divide-y divide-gray-200 border bg-white text-sm">
+                            <thead className="bg-gray-100">
+                              <tr>
+                                <th className="px-4 py-2 text-left font-medium text-gray-600">Referencia</th>
+                                <th className="px-4 py-2 text-left font-medium text-gray-600">Nome da Variação</th>
+                                <th className="px-4 py-2 text-left font-medium text-gray-600">Preço B2C</th>
+                                <th className="px-4 py-2 text-left font-medium text-gray-600">Preço B2B</th>
+                                <th className="px-4 py-2 text-left font-medium text-gray-600">Qtd</th>
+                                <th className="px-4 py-2 text-left font-medium text-gray-600">Stock</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100">
+                              {row.original.variations?.map((variant) => {
+                                const formatMoney = (val) => {
+                                  if (val === null || val === undefined) return 'N/D';
+                                  const num = Number(val);
+                                  return Number.isNaN(num) ? 'N/D' : num.toLocaleString('pt-AO', { style: 'currency', currency: 'AOA' });
+                                };
+                                return (
+                                  <tr key={variant.id}>
+                                    <td className="px-4 py-2 text-gray-700">{variant.sku || '-'}</td>
+                                    <td className="px-4 py-2 text-gray-700">{variant.name}</td>
+                                    <td className="px-4 py-2 text-gray-700">{formatMoney(variant.price_b2c)}</td>
+                                    <td className="px-4 py-2 text-gray-700">{formatMoney(variant.price_b2b)}</td>
+                                    <td className="px-4 py-2 text-gray-700">{variant.stock_quantity ?? 'N/D'}</td>
+                                    <td className="px-4 py-2 text-gray-700">{variant.stock_status}</td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </Fragment>
               ))}
               {rows.length === 0 && (
                 <tr>

@@ -17,20 +17,20 @@ class CategoryController extends Controller
     }
 
     /**
-     * Retorna a lista de categorias ativas do WooCommerce
+     * Retorna a lista de categorias ativas do WooCommerce (via BD local)
      *
      * @return JsonResponse
      */
     public function index(): JsonResponse
     {
-        $categories = Cache::remember('product_categories', now()->addMinutes(60), function () {
-            return $this->wooCommerceService->getActiveCategories();
-        });
+        // Buscar do banco de dados local
+        // Ordenar por menu_order se desejar manter a ordem do WC
+        $categories = \App\Models\Category::orderBy('menu_order', 'asc')->get();
 
         return response()->json([
             'success' => true,
             'data' => $categories,
-            'message' => 'Categorias obtidas com sucesso'
+            'message' => 'Categorias obtidas com sucesso (Local DB)'
         ]);
     }
 }

@@ -20,14 +20,16 @@ class ProductResource extends JsonResource
             'name' => $this['name'],
             'price' => $this->getLocalPrice(),
             'formatted_price' => $this->formatPrice($this->getLocalPrice()),
-            'original_price' => $this['original_price'] ?? null,
-            'formatted_original_price' => $this->formatPrice($this['original_price'] ?? null),
-            'discount_percentage' => $this['discount_percentage'] ?? 0,
+            'original_price' => $this->resource->original_price ?? null,
+            'formatted_original_price' => $this->formatPrice($this->resource->original_price ?? null),
+            'discount_percentage' => $this->resource->discount_percentage ?? 0,
             'stock_status' => $this['stock_status'],
             'image_url' => $this->getFirstImageUrl(),
             'description' => $this['description'] ?? null,
             'short_description' => $this['short_description'] ?? null,
-            'custom_description_url' => $this['custom_description_url'] ?? null,
+            'custom_description_url' => $this['custom_description_url'] ?? $this->resource->parent?->custom_description_url ?? null,
+            'attributes' => $this['attributes'] ?? [],
+            'variations' => ProductResource::collection($this->whenLoaded('variations')),
             'images' => $this['images'] ?? [],
         ];
     }
@@ -39,8 +41,9 @@ class ProductResource extends JsonResource
      */
     private function getLocalPrice(): ?float
     {
-        if (isset($this['local_price']) && $this['local_price'] !== null) {
-            return (float) $this['local_price'];
+        // Check dynamic property first
+        if (isset($this->resource->local_price) && $this->resource->local_price !== null) {
+            return (float) $this->resource->local_price;
         }
 
         return null;

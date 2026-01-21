@@ -356,4 +356,169 @@ class WooCommerceService
         // Agora retornamos diretamente a URL do iframe
         return $iframeUrl;
     }
+    /**
+     * Sync categories from WooCommerce to local database
+     */
+    public function syncCategories()
+    {
+        Log::info('Iniciando sincronização de categorias...');
+        $categories = $this->getActiveCategories();
+        
+        $count = 0;
+        foreach ($categories as $catData) {
+            \App\Models\Category::updateOrCreate(
+                ['id' => $catData['id']],
+                [
+                    'name' => $catData['name'],
+                    'slug' => $catData['slug'],
+                    'parent' => $catData['parent'],
+                    'image' => $catData['image'],
+                    'menu_order' => $catData['menu_order'],
+                    'count' => $catData['count']
+                ]
+            );
+            $count++;
+        }
+        
+        Log::info("Sincronização de categorias concluída. $count categorias processadas.");
+        return $count;
+    }
+
+    /**
+     * Sync all products from WooCommerce to local database
+     */
+    public function syncProducts()
+    {
+        Log::info('Iniciando sincronização de produtos...');
+        
+        $page = 1;
+        $perPage = 50; // Fetch in larger chunks for sync
+        $totalProcessed = 0;
+        
+        do {
+            // Fetch raw data from existing logic, but force 'active' status loop internally handled by getProducts
+            // Actually, getProducts logic is complex (merging variable + sku search).
+            // For SYNC, we want simple iteration over ALL products.
+            // We'll write a dedicated loop here to avoid the complexity of 'getProducts' which does display logic.
+            
+            $response = Http::withBasicAuth($this->consumerKey, $this->consumerSecret)
+                ->get($this->storeUrl . '/wp-json/wc/v3/products', [
+                    'page' => $page,
+                    'per_page' => $perPage,
+                    'status' => 'publish'
+                ]);
+
+            if (!$response->successful()) {
+                Log::error('Erro ao buscar página de produtos para sync', ['page' => $page, 'status' => $response->status()]);
+                break;
+            }
+
+            $products = $response->json();
+            if (empty($products)) {
+                break; // No more products
+            }
+
+            foreach ($products as $productData) {
+                $this->upsertProduct($productData);
+                $totalProcessed++;
+
+                // If variable, we must fetch variations too?
+                // The current getProducts fetches variations eagerly.
+                // It is better if we fetch variations here too to have a complete database.
+                if (isset($productData['type']) && $productData['type'] === 'variable') {
+                    $variations = $this->getProductVariations($productData['id']);
+                    foreach ($variations as $variation) {
+                        // Transform variation to look like a product for unification, 
+                        // OR save it as a product with parent_id.
+                        // Our Product model supports parent_id.
+                        $variationProductData = $this->prepareVariationData($productData, $variation);
+                        $this->upsertProduct($variationProductData);
+                    }
+                }
+            }
+            
+            $page++;
+            // Safety break
+            if ($page > 100) break;
+            
+        } while (count($products) > 0);
+
+        Log::info("Sincronização de produtos concluída. $totalProcessed produtos principais processados.");
+        return $totalProcessed;
+    }
+
+    /**
+     * Helper to upsert a signle product/variation
+     */
+    private function upsertProduct(array $data)
+    {
+        // Extract Custom Description URL if present
+        $customDescUrl = $this->fetchCustomDescription($data);
+        
+        $mappedData = [
+            'name' => $data['name'],
+            'slug' => $data['slug'],
+            'permalink' => $data['permalink'],
+            'type' => $data['type'],
+            'status' => $data['status'],
+            'sku' => $data['sku'] ?? null,
+            'price' => $data['price'],
+            'regular_price' => $data['regular_price'],
+            'sale_price' => $data['sale_price'],
+            'stock_status' => $data['stock_status'],
+            'images' => $data['images'] ?? [],
+            'description' => $data['description'],
+            'short_description' => $data['short_description'],
+            'custom_description_url' => $customDescUrl,
+            'attributes' => $data['attributes'] ?? [], // Add attributes sync
+            'parent_id' => $data['parent_id'] ?? 0,
+        ];
+
+        // Upsert do produto
+        $product = \App\Models\Product::updateOrCreate(
+            ['id' => $data['id']],
+            $mappedData
+        );
+
+        // Sync Categories
+        if (isset($data['categories']) && is_array($data['categories'])) {
+            $categoryIds = array_column($data['categories'], 'id');
+            // Sync categories. We assume categories have been synced prior to products.
+            $product->categories()->sync($categoryIds);
+        }
+
+        return $product;
+    }
+
+    /**
+     * Prepare variation data to match product structure for saving
+     */
+    private function prepareVariationData(array $parent, array $variation): array
+    {
+        // Build name (similar to createVariationProduct but purely data)
+        $variationName = $this->buildVariationName($parent['name'], $variation);
+        
+        return [
+            'id' => $variation['id'],
+            'name' => $variationName,
+            'slug' => $parent['slug'] . '-v-' . $variation['id'], // synthetic slug
+            'permalink' => $variation['permalink'],
+            'type' => 'variation',
+            'status' => $variation['status'],
+            'sku' => ($variation['sku'] ?? null) ?: ($parent['sku'] ?? null),
+            'price' => $variation['price'],
+            'regular_price' => $variation['regular_price'],
+            'sale_price' => $variation['sale_price'],
+            'stock_status' => $variation['stock_status'] ?? $parent['stock_status'],
+            'images' => !empty($variation['image']) ? [$variation['image']] : ($parent['images'] ?? []),
+            'description' => $variation['description'],
+            'short_description' => '',
+            'parent_id' => $parent['id'],
+            // Variations might inherit custom desc? usually no, but we can check if needed.
+            // For now, let's say no, or inherit parent's meta if we want.
+            // But fetchCustomDescription works on meta_data, so we pass variation data.
+            'meta_data' => $variation['meta_data'] ?? [],
+            'attributes' => $variation['attributes'] ?? [], // Add attributes sync for variations
+        ];
+    }
 }

@@ -1,9 +1,63 @@
-import React from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import ColorSwatch from './swatches/ColorSwatch';
+import ButtonSwatch from './swatches/ButtonSwatch';
+import { useCart } from '../contexts/CartContext';
 
 const ProductCard = ({ product, onViewDetails }) => {
+  // --- Variation Logic ---
+  const hasVariations = product.variations && product.variations.length > 0;
+
+  // Initialize selection with the first variation's attributes or defaults
+  const [selectedAttributes, setSelectedAttributes] = useState({});
+
+  useEffect(() => {
+    if (hasVariations) {
+      // Default to the first variation
+      const firstVar = product.variations[0];
+      if (firstVar && firstVar.attributes) {
+        const initialAttrs = {};
+        firstVar.attributes.forEach(attr => {
+          initialAttrs[attr.name] = attr.option;
+        });
+        setSelectedAttributes(initialAttrs);
+      }
+    }
+  }, [product.id, hasVariations]); // Reset when product changes
+
+  // Find valid variation based on current selection
+  const currentVariation = useMemo(() => {
+    if (!hasVariations) return null;
+    return product.variations.find(v => {
+      // Check if all selected attributes match this variation
+      return v.attributes.every(attr => selectedAttributes[attr.name] === attr.option);
+    }) || product.variations[0]; // Fallback to first if perfect match not found (e.g. invalid combo)
+  }, [product.variations, selectedAttributes, hasVariations]);
+
+  // Display Values (Use Variation if available, else Parent)
+  const displayProduct = currentVariation || product;
+  const displayImage = displayProduct.image_url || product.image_url;
+  const displayPrice = displayProduct.formatted_price; // Resource handles formatting
+  const displayOriginalPrice = displayProduct.formatted_original_price;
+  const displayDiscount = displayProduct.discount_percentage;
+  const displayStockStatus = displayProduct.stock_status;
+
+  const { addToCart } = useCart();
+
+  const cleanName = (name) => {
+    if (!name) return '';
+    return name.split(' - ')[0];
+  };
+
+  // Handler for attribute selection
+  const handleAttributeSelect = (name, value) => {
+    setSelectedAttributes(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
   const getStockStatusBadge = (status) => {
     const isInStock = status === 'instock';
-
     return (
       <span
         className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${isInStock
@@ -17,14 +71,14 @@ const ProductCard = ({ product, onViewDetails }) => {
   };
 
   return (
-    <div className="group bg-white border border-gray-200 rounded-lg shadow-md hover:shadow-xl hover:transform hover:-translate-y-1 transition-all duration-300 overflow-hidden">
+    <div className="group bg-white border border-gray-200 rounded-lg shadow-md hover:shadow-xl hover:transform hover:-translate-y-1 transition-all duration-300 overflow-hidden flex flex-col h-full">
       {/* Área da Imagem */}
-      <div className="relative aspect-square bg-gray-100 flex items-center justify-center overflow-hidden">
-        {product.image_url ? (
+      <div className="relative aspect-square bg-gray-50 p-4 flex items-center justify-center overflow-hidden">
+        {displayImage ? (
           <img
-            src={product.image_url}
-            alt={product.name}
-            className="w-full h-full object-cover transition-transform duration-300 transform group-hover:scale-105"
+            src={displayImage}
+            alt={displayProduct.name || product.name}
+            className="w-full h-full object-contain transition-transform duration-300 transform group-hover:scale-105"
             onError={(e) => {
               e.target.style.display = 'none';
               e.target.nextSibling.style.display = 'flex';
@@ -32,7 +86,7 @@ const ProductCard = ({ product, onViewDetails }) => {
           />
         ) : null}
         <div
-          className={`w-full h-full flex items-center justify-center ${product.image_url ? 'hidden' : 'flex'
+          className={`w-full h-full flex items-center justify-center ${displayImage ? 'hidden' : 'flex'
             }`}
         >
           <svg
@@ -49,51 +103,99 @@ const ProductCard = ({ product, onViewDetails }) => {
             />
           </svg>
         </div>
-        {/* Overlay e Botão "Ver Detalhes" */}
-        <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-        <div className="absolute inset-0 z-10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          <button
-            type="button"
-            onClick={() => onViewDetails && onViewDetails(product)}
-            className="px-4 py-2 rounded-md bg-white/90 text-gray-900 font-medium shadow hover:bg-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-          >
-            Ver Detalhes
-          </button>
-        </div>
+
+        {/* Helper Action (Optional: View Details on Hover over image) */}
+        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300 cursor-pointer"
+          onClick={() => onViewDetails && onViewDetails(product)}
+        />
 
         {/* Badge de Desconto */}
-        {product.discount_percentage > 0 && (
+        {displayDiscount > 0 && (
           <div className="absolute top-2 left-2 z-20">
             <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-bold text-green-800 bg-green-100 border border-green-200 rounded">
-              -{product.discount_percentage}%
+              -{displayDiscount}%
             </span>
           </div>
         )}
       </div>
 
       {/* Área de Conteúdo */}
-      <div className="p-4">
+      <div className="p-4 flex flex-col flex-grow">
         {/* Nome do Produto */}
-        <h3 className="text-sm font-bold text-gray-900 mb-2 line-clamp-2 leading-tight">
-          {product.name}
+        <h3 className="text-sm font-bold text-gray-900 mb-2 line-clamp-2 leading-tight min-h-[2.5em]"
+          title={product.name}>
+          {cleanName(product.name)}
         </h3>
 
-        {/* Preço */}
-        <div className="mb-3 flex items-center gap-2">
-          {product.discount_percentage > 0 && product.formatted_original_price && (
-            <span className="text-sm text-gray-500 line-through">
-              {product.formatted_original_price}
+        {/* Swatches Area */}
+        {hasVariations && product.attributes && (
+          <div className="mb-4 space-y-3">
+            {product.attributes.map(attr => (
+              <div key={attr.id || attr.name} className="flex flex-col gap-1">
+                {/* <span className="text-xs font-semibold text-gray-500 uppercase">{attr.name}:</span> */}
+                <div className="flex flex-wrap gap-2">
+                  {attr.options && attr.options.map(option => {
+                    const isSelected = selectedAttributes[attr.name] === option;
+                    const isColor = attr.name.toLowerCase().includes('color') || attr.name.toLowerCase().includes('cor');
+
+                    if (isColor) {
+                      return (
+                        <ColorSwatch
+                          key={option}
+                          colorName={option}
+                          selected={isSelected}
+                          onClick={(e) => { e.stopPropagation(); handleAttributeSelect(attr.name, option); }}
+                        />
+                      );
+                    }
+                    return (
+                      <ButtonSwatch
+                        key={option}
+                        label={option}
+                        selected={isSelected}
+                        onClick={(e) => { e.stopPropagation(); handleAttributeSelect(attr.name, option); }}
+                      />
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="mt-auto">
+          {/* Preço */}
+          <div className="mb-3 flex items-center flex-wrap gap-2">
+            {displayDiscount > 0 && displayOriginalPrice && (
+              <span className="text-sm text-gray-500 line-through">
+                {displayOriginalPrice}
+              </span>
+            )}
+            <span className="text-lg font-semibold text-gray-900">
+              {displayPrice}
             </span>
-          )}
-          <span className="text-lg font-semibold text-gray-900">
-            {product.formatted_price}
-          </span>
+          </div>
+
+          {/* Footer: Stock & Action */}
+          <div className="flex items-center justify-between mt-2">
+            {getStockStatusBadge(displayStockStatus)}
+
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                const priceNumber = Number(displayProduct.price || displayProduct.regular_price || 0);
+                const item = { ...displayProduct, price: priceNumber, sku: displayProduct.sku };
+                addToCart(item, 1);
+              }}
+              disabled={displayStockStatus !== 'instock'}
+              className="cursor-pointer px-3 py-1.5 rounded bg-slate-900 text-white text-xs font-medium hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Adicionar
+            </button>
+          </div>
         </div>
 
-        {/* Status do Stock */}
-        <div className="flex justify-start">
-          {getStockStatusBadge(product.stock_status)}
-        </div>
       </div>
     </div>
   );

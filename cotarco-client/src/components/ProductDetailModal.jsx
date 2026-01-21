@@ -5,6 +5,9 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 import { Button } from '@/components/ui/button';
 import { useCart } from '../contexts/CartContext.jsx';
 import QuantityInput from './QuantityInput.jsx';
+import ColorSwatch from './swatches/ColorSwatch.jsx';
+import ButtonSwatch from './swatches/ButtonSwatch.jsx';
+import { useMemo } from 'react';
 
 const backdrop = {
   hidden: { opacity: 0 },
@@ -33,10 +36,56 @@ const ProductDetailModal = ({ isOpen, onClose, product }) => {
   }, [product?.custom_description_url]);
   const { addToCart } = useCart();
 
+  // --- Variation Logic ---
+  const hasVariations = product?.variations && product.variations.length > 0;
+  const [selectedAttributes, setSelectedAttributes] = useState({});
+
+  useEffect(() => {
+    if (hasVariations) {
+      const firstVar = product.variations[0];
+      if (firstVar && firstVar.attributes) {
+        const initialAttrs = {};
+        firstVar.attributes.forEach(attr => {
+          initialAttrs[attr.name] = attr.option;
+        });
+        setSelectedAttributes(initialAttrs);
+      }
+    } else if (product?.attributes) {
+      const initialAttrs = {};
+      product.attributes.forEach(attr => {
+        if (attr.option) {
+          initialAttrs[attr.name] = attr.option;
+        }
+      });
+      setSelectedAttributes(initialAttrs);
+    }
+  }, [product, hasVariations]);
+
+  const currentVariation = useMemo(() => {
+    if (!hasVariations) return null;
+    return product.variations.find(v => {
+      return v.attributes.every(attr => selectedAttributes[attr.name] === attr.option);
+    }) || product.variations[0];
+  }, [product?.variations, selectedAttributes, hasVariations]);
+
+  const displayProduct = currentVariation || product;
+
+  const cleanName = (name) => {
+    if (!name) return '';
+    return name.split(' - ')[0];
+  };
+
+  const handleAttributeSelect = (name, value) => {
+    setSelectedAttributes(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
   const handleAddToCart = () => {
     if (!product) return;
-    const priceNumber = Number(product.price || product.regular_price || 0);
-    const item = { ...product, price: priceNumber, sku: product.sku };
+    const priceNumber = Number(displayProduct.price || displayProduct.regular_price || 0);
+    const item = { ...displayProduct, price: priceNumber, sku: displayProduct.sku };
     addToCart(item, quantity);
   };
   return (
@@ -95,26 +144,63 @@ const ProductDetailModal = ({ isOpen, onClose, product }) => {
                           </Carousel>
 
                           <div className="mt-4">
-                            <h2 className="mb-3 text-2xl font-bold text-gray-900">{product.name}</h2>
+                            <h2 className="mb-3 text-2xl font-bold text-gray-900">{cleanName(product.name)}</h2>
                             <div className="mb-4 flex flex-col items-start">
-                              {product.discount_percentage > 0 && product.formatted_original_price ? (
+                              {displayProduct.discount_percentage > 0 && displayProduct.formatted_original_price ? (
                                 <div className="flex items-center gap-2 mb-1">
                                   <span className="text-lg text-gray-500 line-through">
-                                    {product.formatted_original_price}
+                                    {displayProduct.formatted_original_price}
                                   </span>
                                   <span className="text-sm font-semibold text-green-800 bg-green-100 px-2 py-0.5 rounded">
-                                    -{product.discount_percentage}%
+                                    -{displayProduct.discount_percentage}%
                                   </span>
                                 </div>
                               ) : null}
-                              <p className="text-xl font-bold text-gray-900">{product.formatted_price}</p>
+                              <p className="text-xl font-bold text-gray-900">{displayProduct.formatted_price}</p>
                             </div>
+
+                            {/* Swatches Area */}
+                            {hasVariations && product.attributes && (
+                              <div className="mb-6 space-y-4">
+                                {product.attributes.map(attr => (
+                                  <div key={attr.id || attr.name} className="flex flex-col gap-2">
+                                    <span className="text-xs font-semibold text-gray-500 uppercase">{attr.name}:</span>
+                                    <div className="flex flex-wrap gap-2">
+                                      {attr.options && attr.options.map(option => {
+                                        const isSelected = selectedAttributes[attr.name] === option;
+                                        const isColor = attr.name.toLowerCase().includes('color') || attr.name.toLowerCase().includes('cor');
+
+                                        if (isColor) {
+                                          return (
+                                            <ColorSwatch
+                                              key={option}
+                                              colorName={option}
+                                              selected={isSelected}
+                                              onClick={() => handleAttributeSelect(attr.name, option)}
+                                            />
+                                          );
+                                        }
+                                        return (
+                                          <ButtonSwatch
+                                            key={option}
+                                            label={option}
+                                            selected={isSelected}
+                                            onClick={() => handleAttributeSelect(attr.name, option)}
+                                          />
+                                        );
+                                      })}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+
                             <div className="flex items-center gap-4">
                               <QuantityInput value={quantity} onChange={setQuantity} min={1} />
                               <Button
                                 type="button"
                                 size="lg"
-                                disabled={product.stock_status !== 'instock'}
+                                disabled={displayProduct.stock_status !== 'instock'}
                                 onClick={handleAddToCart}
                               >
                                 Adicionar ao Carrinho
@@ -166,27 +252,63 @@ const ProductDetailModal = ({ isOpen, onClose, product }) => {
 
                         {/* Coluna Direita: Título, preço, botão e descrição fallback */}
                         <div>
-                          <h2 className="mb-3 text-2xl font-bold text-gray-900">{product.name}</h2>
+                          <h2 className="mb-3 text-2xl font-bold text-gray-900">{cleanName(product.name)}</h2>
                           <div className="mb-4 flex flex-col items-start">
-                            {product.discount_percentage > 0 && product.formatted_original_price ? (
+                            {displayProduct.discount_percentage > 0 && displayProduct.formatted_original_price ? (
                               <div className="flex items-center gap-2 mb-1">
                                 <span className="text-lg text-gray-500 line-through">
-                                  {product.formatted_original_price}
+                                  {displayProduct.formatted_original_price}
                                 </span>
                                 <span className="text-sm font-semibold text-green-800 bg-green-100 px-2 py-0.5 rounded">
-                                  -{product.discount_percentage}%
+                                  -{displayProduct.discount_percentage}%
                                 </span>
                               </div>
                             ) : null}
-                            <p className="text-xl font-bold text-gray-900">{product.formatted_price}</p>
+                            <p className="text-xl font-bold text-gray-900">{displayProduct.formatted_price}</p>
                           </div>
+
+                          {/* Swatches Area */}
+                          {hasVariations && product.attributes && (
+                            <div className="mb-6 space-y-4">
+                              {product.attributes.map(attr => (
+                                <div key={attr.id || attr.name} className="flex flex-col gap-2">
+                                  <span className="text-xs font-semibold text-gray-500 uppercase">{attr.name}:</span>
+                                  <div className="flex flex-wrap gap-2">
+                                    {attr.options && attr.options.map(option => {
+                                      const isSelected = selectedAttributes[attr.name] === option;
+                                      const isColor = attr.name.toLowerCase().includes('color') || attr.name.toLowerCase().includes('cor');
+
+                                      if (isColor) {
+                                        return (
+                                          <ColorSwatch
+                                            key={option}
+                                            colorName={option}
+                                            selected={isSelected}
+                                            onClick={() => handleAttributeSelect(attr.name, option)}
+                                          />
+                                        );
+                                      }
+                                      return (
+                                        <ButtonSwatch
+                                          key={option}
+                                          label={option}
+                                          selected={isSelected}
+                                          onClick={() => handleAttributeSelect(attr.name, option)}
+                                        />
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
 
                           <div className="mt-6 flex items-center gap-4">
                             <QuantityInput value={quantity} onChange={setQuantity} min={1} />
                             <Button
                               type="button"
                               size="lg"
-                              disabled={product.stock_status !== 'instock'}
+                              disabled={displayProduct.stock_status !== 'instock'}
                               onClick={handleAddToCart}
                             >
                               Adicionar ao Carrinho

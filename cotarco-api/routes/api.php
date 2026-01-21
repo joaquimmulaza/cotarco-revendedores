@@ -57,6 +57,7 @@ Route::get('/test-product/{id}', function ($id, App\Services\WooCommerceService 
 // Rotas de verificação de email
 Route::get('/email/verify/{id}/{hash}', function ($id, $hash, Request $request) {
     \Illuminate\Support\Facades\Log::info('=== VERIFICAÇÃO DE EMAIL INICIADA ===', [
+
         'id' => $id,
         'hash' => $hash,
         'url' => $request->fullUrl(),

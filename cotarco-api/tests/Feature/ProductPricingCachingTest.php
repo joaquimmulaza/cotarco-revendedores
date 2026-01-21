@@ -6,7 +6,6 @@ use App\Models\User;
 use App\Models\PartnerProfile;
 use App\Models\ProductPrice;
 use App\Models\StockFile;
-use App\Services\WooCommerceService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
@@ -69,29 +68,21 @@ class ProductPricingCachingTest extends TestCase
             'stock_quantity' => 10,
         ]);
 
-        // Mock WooCommerce to ensure we are hitting the controller logic
-        $this->mock(WooCommerceService::class, function ($mock) {
-            $mock->shouldReceive('getProducts')
-                ->andReturn([
-                    'products' => [
-                        [
-                            'id' => 1,
-                            'name' => 'Cached Product',
-                            'sku' => 'CACHE-SKU-001',
-                            'regular_price' => '100',
-                            'stock_status' => 'instock',
-                            'images' => [],
-                            'type' => 'simple',
-                        ],
-                    ],
-                    'pagination' => [
-                        'current_page' => 1,
-                        'per_page' => 10,
-                        'total_items' => 1,
-                        'total_pages' => 1,
-                    ],
-                ]);
-        });
+        // Create local product
+        \App\Models\Product::create([
+            'id' => 1,
+            'name' => 'Cached Product',
+            'sku' => 'CACHE-SKU-001',
+            'regular_price' => '100',
+            'stock_status' => 'instock',
+            'images' => [],
+            'type' => 'simple',
+            'status' => 'publish',
+            'parent_id' => 0,
+            'price' => '100',
+            'slug' => 'cached-product',
+            'permalink' => 'http://example.com/cached-product',
+        ]);
 
         // 2. Create Partner with 10% discount
         $partner = $this->createPartner('partner@test.com', 10);
@@ -109,7 +100,6 @@ class ProductPricingCachingTest extends TestCase
         $partner->partnerProfile()->update(['discount_percentage' => 0]);
 
         // 5. Second Request: Should immediately have 0% discount (Price 100)
-        // This validates that the user-specific logic is NOT cached
         $response2 = $this->getJson('/api/products');
         $response2->assertStatus(200);
 
@@ -118,7 +108,7 @@ class ProductPricingCachingTest extends TestCase
         $this->assertEquals(0, $product2['discount_percentage']);
     }
 
-    public function test_different_users_see_different_prices_with_same_cache()
+    public function test_different_users_see_different_prices()
     {
         // Create an admin user for the stock file ownership
         $admin = User::factory()->create(['role' => 'admin']);
@@ -142,22 +132,21 @@ class ProductPricingCachingTest extends TestCase
             'stock_quantity' => 10,
         ]);
 
-        $this->mock(WooCommerceService::class, function ($mock) {
-            $mock->shouldReceive('getProducts')->withAnyArgs()->times(1) // Should only be called ONCE due to caching
-                ->andReturn([
-                    'products' => [
-                        [
-                            'id' => 1,
-                            'name' => 'Multi User Product',
-                            'sku' => 'MULTI-USER-SKU',
-                            'regular_price' => '100',
-                            'stock_status' => 'instock',
-                            'type' => 'simple',
-                        ],
-                    ],
-                    'pagination' => ['current_page' => 1, 'per_page' => 10, 'total_items' => 1, 'total_pages' => 1],
-                ]);
-        });
+        // Create local product
+        \App\Models\Product::create([
+            'id' => 1,
+            'name' => 'Multi User Product',
+            'sku' => 'MULTI-USER-SKU',
+            'regular_price' => '100',
+            'stock_status' => 'instock',
+            'images' => [],
+            'type' => 'simple',
+            'status' => 'publish',
+            'parent_id' => 0,
+            'price' => '100',
+            'slug' => 'multi-user-product',
+            'permalink' => 'http://example.com/multi-user-product',
+        ]);
 
         // User A: 20% Discount
         $userA = $this->createPartner('userA@test.com', 20);
@@ -165,14 +154,14 @@ class ProductPricingCachingTest extends TestCase
         // User B: 0% Discount
         $userB = $this->createPartner('userB@test.com', 0);
 
-        // Request 1 (User A) - Triggers Cache Population
+        // Request 1 (User A)
         $this->actingAs($userA, 'sanctum');
         $responseA = $this->getJson('/api/products');
         $responseA->assertStatus(200);
         $priceA = $responseA->json('data')[0]['price'];
         $this->assertEquals(80.00, $priceA);
 
-        // Request 2 (User B) - Uses Cache for Products, but calculates own price
+        // Request 2 (User B)
         $this->actingAs($userB, 'sanctum');
         $responseB = $this->getJson('/api/products');
         $responseB->assertStatus(200);
