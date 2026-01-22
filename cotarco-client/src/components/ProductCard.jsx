@@ -50,13 +50,52 @@ const ProductCard = ({ product, onViewDetails }) => {
 
   // Handler for attribute selection
   const handleAttributeSelect = (name, value) => {
-    setSelectedAttributes(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    let nextAttributes = { ...selectedAttributes, [name]: value };
+
+    const isColorAttr = name.toLowerCase().includes('color') || name.toLowerCase().includes('cor');
+
+    // If changing a color, ensure other selected attributes are valid for this new color
+    if (isColorAttr) {
+      // Get all variations that match this new color
+      const possibleVariations = product.variations.filter(v =>
+        v.attributes.some(a => a.name === name && a.option === value)
+      );
+
+      // For each *other* attribute currently selected
+      Object.keys(nextAttributes).forEach(key => {
+        const isKeyColor = key.toLowerCase().includes('color') || key.toLowerCase().includes('cor');
+        if (key !== name && !isKeyColor) {
+          const currentVal = nextAttributes[key];
+
+          // Check if the current value for this attribute exists in the new color's variations
+          const isValid = possibleVariations.some(v =>
+            v.attributes.some(a => a.name === key && a.option === currentVal)
+          );
+
+          // If not valid, switch to the first available option for this attribute
+          if (!isValid && possibleVariations.length > 0) {
+            const fallbackAttr = possibleVariations[0].attributes.find(a => a.name === key);
+            if (fallbackAttr) {
+              nextAttributes[key] = fallbackAttr.option;
+            }
+          }
+        }
+      });
+    }
+
+    setSelectedAttributes(nextAttributes);
   };
 
   const getStockStatusBadge = (status) => {
+    if (displayPrice === 'Sob consulta') {
+      return (
+        <span
+          className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
+        >
+          Sob consulta
+        </span>
+      );
+    }
     const isInStock = status === 'instock';
     return (
       <span
@@ -138,6 +177,25 @@ const ProductCard = ({ product, onViewDetails }) => {
                     const isSelected = selectedAttributes[attr.name] === option;
                     const isColor = attr.name.toLowerCase().includes('color') || attr.name.toLowerCase().includes('cor');
 
+                    // Filter Logic: If this is NOT a color, check if it's available for the currently selected color
+                    if (!isColor) {
+                      // Find the currently selected color
+                      const selectedColorEntry = Object.entries(selectedAttributes).find(([k]) =>
+                        k.toLowerCase().includes('color') || k.toLowerCase().includes('cor')
+                      );
+
+                      if (selectedColorEntry) {
+                        const [colorName, colorVal] = selectedColorEntry;
+                        // Check if a variation exists with (Color=SelectedColor AND CurrentAttr=Option)
+                        const exists = product.variations.some(v =>
+                          v.attributes.some(a => a.name === colorName && a.option === colorVal) &&
+                          v.attributes.some(a => a.name === attr.name && a.option === option)
+                        );
+
+                        if (!exists) return null; // Hide unavailable option
+                      }
+                    }
+
                     if (isColor) {
                       return (
                         <ColorSwatch
@@ -172,7 +230,7 @@ const ProductCard = ({ product, onViewDetails }) => {
               </span>
             )}
             <span className="text-lg font-semibold text-gray-900">
-              {displayPrice}
+              {displayPrice === 'Sob consulta' ? null : displayPrice}
             </span>
           </div>
 
@@ -180,19 +238,20 @@ const ProductCard = ({ product, onViewDetails }) => {
           <div className="flex items-center justify-between mt-2">
             {getStockStatusBadge(displayStockStatus)}
 
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                const priceNumber = Number(displayProduct.price || displayProduct.regular_price || 0);
-                const item = { ...displayProduct, price: priceNumber, sku: displayProduct.sku };
-                addToCart(item, 1);
-              }}
-              disabled={displayStockStatus !== 'instock'}
-              className="cursor-pointer px-3 py-1.5 rounded bg-slate-900 text-white text-xs font-medium hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Adicionar
-            </button>
+            {displayStockStatus === 'instock' && displayPrice !== 'Sob consulta' && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const priceNumber = Number(displayProduct.price || displayProduct.regular_price || 0);
+                  const item = { ...displayProduct, price: priceNumber, sku: displayProduct.sku };
+                  addToCart(item, 1);
+                }}
+                className="cursor-pointer px-3 py-1.5 rounded my-bg-red text-white text-xs font-medium hover:bg-primary/90 transition-colors"
+              >
+                Adicionar
+              </button>
+            )}
           </div>
         </div>
 

@@ -30,6 +30,26 @@ class WebhookController extends Controller
             if (strtolower($status) === 'success' && $order->status !== 'success') {
                 $order->update(['status' => 'success']);
 
+                // --- ATUALIZAÇÃO DE STOCK ---
+                foreach ($order->items as $item) {
+                    $sku = $item->product_sku;
+                    $quantitySold = $item->quantity;
+
+                    // 1. Atualizar Stock Local (ProductPrice)
+                    $productPrice = \App\Models\ProductPrice::where('product_sku', $sku)->first();
+                    
+                    if ($productPrice) {
+                        $productPrice->decrement('stock_quantity', $quantitySold);
+                        $productPrice->refresh(); 
+
+                        // 2. Se o stock ficar a 0 ou menos, marcar como Fora de Stock na tabela de Produtos
+                        if ($productPrice->stock_quantity <= 0) {
+                             \App\Models\Product::where('sku', $sku)->update(['stock_status' => 'outofstock']);
+                        }
+                    }
+                }
+                // -----------------------------
+
                 Log::info("A enviar e-mails de pagamento confirmado para a encomenda ID: {$order->id}");
                 try {
                     // Enviar e-mail para o cliente

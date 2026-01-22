@@ -76,11 +76,49 @@ const ProductDetailModal = ({ isOpen, onClose, product }) => {
   };
 
   const handleAttributeSelect = (name, value) => {
-    setSelectedAttributes(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    let nextAttributes = { ...selectedAttributes, [name]: value };
+    const isColorAttr = name.toLowerCase().includes('color') || name.toLowerCase().includes('cor');
+
+    if (isColorAttr) {
+      const possibleVariations = product.variations.filter(v =>
+        v.attributes.some(a => a.name === name && a.option === value)
+      );
+
+      Object.keys(nextAttributes).forEach(key => {
+        const isKeyColor = key.toLowerCase().includes('color') || key.toLowerCase().includes('cor');
+        if (key !== name && !isKeyColor) {
+          const currentVal = nextAttributes[key];
+          const isValid = possibleVariations.some(v =>
+            v.attributes.some(a => a.name === key && a.option === currentVal)
+          );
+          if (!isValid && possibleVariations.length > 0) {
+            const fallbackAttr = possibleVariations[0].attributes.find(a => a.name === key);
+            if (fallbackAttr) nextAttributes[key] = fallbackAttr.option;
+          }
+        }
+      });
+    }
+    setSelectedAttributes(nextAttributes);
   };
+
+  const displayImages = useMemo(() => {
+    let images = product?.images ? [...product.images] : [];
+    if (currentVariation && (currentVariation.image_url || currentVariation.image)) {
+      const varSrc = currentVariation.image_url || currentVariation.image?.src || currentVariation.image;
+      if (varSrc) {
+        const existingIdx = images.findIndex(img => (img.src || img.url) === varSrc);
+        if (existingIdx > -1) {
+          const [item] = images.splice(existingIdx, 1);
+          images.unshift(item);
+        } else {
+          images.unshift({ src: varSrc });
+        }
+      }
+    }
+    return images.filter((img, index, self) =>
+      index === self.findIndex((t) => (t.src || t.url) === (img.src || img.url))
+    );
+  }, [product, currentVariation]);
 
   const handleAddToCart = () => {
     if (!product) return;
@@ -129,7 +167,7 @@ const ProductDetailModal = ({ isOpen, onClose, product }) => {
                         <div>
                           <Carousel className="relative w-full overflow-hidden rounded-lg bg-gray-50">
                             <CarouselContent>
-                              {(product.images || []).map((image, index) => (
+                              {(displayImages || []).map((image, index) => (
                                 <CarouselItem key={index} className="flex items-center justify-center">
                                   <img
                                     src={image?.src || image?.url || ''}
@@ -156,7 +194,9 @@ const ProductDetailModal = ({ isOpen, onClose, product }) => {
                                   </span>
                                 </div>
                               ) : null}
-                              <p className="text-xl font-bold text-gray-900">{displayProduct.formatted_price}</p>
+                              <p className="text-xl font-bold text-gray-900">
+                                {displayProduct.formatted_price === 'Sob consulta' ? null : displayProduct.formatted_price}
+                              </p>
                             </div>
 
                             {/* Swatches Area */}
@@ -169,6 +209,20 @@ const ProductDetailModal = ({ isOpen, onClose, product }) => {
                                       {attr.options && attr.options.map(option => {
                                         const isSelected = selectedAttributes[attr.name] === option;
                                         const isColor = attr.name.toLowerCase().includes('color') || attr.name.toLowerCase().includes('cor');
+
+                                        if (!isColor) {
+                                          const selectedColorEntry = Object.entries(selectedAttributes).find(([k]) =>
+                                            k.toLowerCase().includes('color') || k.toLowerCase().includes('cor')
+                                          );
+                                          if (selectedColorEntry) {
+                                            const [colorName, colorVal] = selectedColorEntry;
+                                            const exists = product.variations.some(v =>
+                                              v.attributes.some(a => a.name === colorName && a.option === colorVal) &&
+                                              v.attributes.some(a => a.name === attr.name && a.option === option)
+                                            );
+                                            if (!exists) return null;
+                                          }
+                                        }
 
                                         if (isColor) {
                                           return (
@@ -195,17 +249,26 @@ const ProductDetailModal = ({ isOpen, onClose, product }) => {
                               </div>
                             )}
 
-                            <div className="flex items-center gap-4">
-                              <QuantityInput value={quantity} onChange={setQuantity} min={1} />
-                              <Button
-                                type="button"
-                                size="lg"
-                                disabled={displayProduct.stock_status !== 'instock'}
-                                onClick={handleAddToCart}
-                              >
-                                Adicionar ao Carrinho
-                              </Button>
-                            </div>
+                            {displayProduct.formatted_price !== 'Sob consulta' ? (
+                              <div className="flex items-center gap-4">
+                                <QuantityInput value={quantity} onChange={setQuantity} min={1} />
+                                <Button
+                                  type="button"
+                                  size="lg"
+                                  disabled={displayProduct.stock_status !== 'instock'}
+                                  onClick={handleAddToCart}
+                                  className="cursor-pointer my-bg-red"
+                                >
+                                  Adicionar ao Carrinho
+                                </Button>
+                              </div>
+                            ) : (
+                              <div className="mt-4">
+                                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800">
+                                  Sob Consulta
+                                </span>
+                              </div>
+                            )}
                           </div>
                         </div>
 
@@ -235,7 +298,7 @@ const ProductDetailModal = ({ isOpen, onClose, product }) => {
                         <div>
                           <Carousel className="relative w-full overflow-hidden rounded-lg bg-gray-50">
                             <CarouselContent>
-                              {(product.images || []).map((image, index) => (
+                              {(displayImages || []).map((image, index) => (
                                 <CarouselItem key={index} className="flex items-center justify-center">
                                   <img
                                     src={image?.src || image?.url || ''}
@@ -264,7 +327,9 @@ const ProductDetailModal = ({ isOpen, onClose, product }) => {
                                 </span>
                               </div>
                             ) : null}
-                            <p className="text-xl font-bold text-gray-900">{displayProduct.formatted_price}</p>
+                            <p className="text-xl font-bold text-gray-900">
+                              {displayProduct.formatted_price === 'Sob consulta' ? null : displayProduct.formatted_price}
+                            </p>
                           </div>
 
                           {/* Swatches Area */}
@@ -277,6 +342,20 @@ const ProductDetailModal = ({ isOpen, onClose, product }) => {
                                     {attr.options && attr.options.map(option => {
                                       const isSelected = selectedAttributes[attr.name] === option;
                                       const isColor = attr.name.toLowerCase().includes('color') || attr.name.toLowerCase().includes('cor');
+
+                                      if (!isColor) {
+                                        const selectedColorEntry = Object.entries(selectedAttributes).find(([k]) =>
+                                          k.toLowerCase().includes('color') || k.toLowerCase().includes('cor')
+                                        );
+                                        if (selectedColorEntry) {
+                                          const [colorName, colorVal] = selectedColorEntry;
+                                          const exists = product.variations.some(v =>
+                                            v.attributes.some(a => a.name === colorName && a.option === colorVal) &&
+                                            v.attributes.some(a => a.name === attr.name && a.option === option)
+                                          );
+                                          if (!exists) return null;
+                                        }
+                                      }
 
                                       if (isColor) {
                                         return (
@@ -303,17 +382,26 @@ const ProductDetailModal = ({ isOpen, onClose, product }) => {
                             </div>
                           )}
 
-                          <div className="mt-6 flex items-center gap-4">
-                            <QuantityInput value={quantity} onChange={setQuantity} min={1} />
-                            <Button
-                              type="button"
-                              size="lg"
-                              disabled={displayProduct.stock_status !== 'instock'}
-                              onClick={handleAddToCart}
-                            >
-                              Adicionar ao Carrinho
-                            </Button>
-                          </div>
+                          {displayProduct.formatted_price !== 'Sob consulta' ? (
+                            <div className="flex items-center gap-4">
+                              <QuantityInput value={quantity} onChange={setQuantity} min={1} />
+                              <Button
+                                type="button"
+                                size="lg"
+                                disabled={displayProduct.stock_status !== 'instock'}
+                                onClick={handleAddToCart}
+                                className="cursor-pointer my-bg-red"
+                              >
+                                Adicionar ao Carrinho
+                              </Button>
+                            </div>
+                          ) : (
+                            <div className="mt-4">
+                              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800">
+                                Sob Consulta
+                              </span>
+                            </div>
+                          )}
 
                           <div className="mt-6">
                             <h3 className="text-lg font-medium text-gray-800 mb-2">Descrição do Produto</h3>
