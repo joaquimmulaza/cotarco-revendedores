@@ -4,6 +4,9 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
+// Porta da API: usa 8001 para testes (--env=testing), 8000 para desenvolvimento
+const apiPort = process.env.VITE_API_PORT || '8000';
+
 // https://vite.dev/config/
 export default defineConfig({
   base: '/distribuidores/', 
@@ -17,7 +20,7 @@ export default defineConfig({
     port: 5173,
     proxy: {
       '/api': {
-        target: 'http://localhost:8000',
+        target: `http://localhost:${apiPort}`,
         changeOrigin: true,
         secure: false,
         rewrite: (path) => path.replace(/^\/api/, '/api'),
