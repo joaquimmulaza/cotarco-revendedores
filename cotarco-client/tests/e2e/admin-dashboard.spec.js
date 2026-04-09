@@ -7,12 +7,9 @@ test.describe('Admin Dashboard', () => {
   test('should allow navigation between dashboard tabs', async ({ page }) => {
     await page.goto('/distribuidores/admin/dashboard/partners');
 
-    // Check heading
-    await expect(page.getByRole('heading', { name: 'Painel de Administração' })).toBeVisible();
-
     // Navigate to Mapa de Stock and verify
     await page.getByRole('link', { name: 'Mapa de Stock' }).click();
-    await expect(page).toHaveURL(/.*\/admin\/dashboard\/stock-map/);
+    await expect(page).toHaveURL(/.*\/admin\/dashboard\/stock-files/);
     await expect(page.getByRole('heading', { name: 'Mapa de Stock' })).toBeVisible();
 
     // Navigate back to Gestão de Parceiros

@@ -15,8 +15,10 @@ class DatabaseSeeder extends Seeder
     {
         // Executar seeders específicos
         $this->call([
+            RealDataSeeder::class,
             AdminUserSeeder::class,
             TestPartnerSeeder::class,
+            PlaywrightAuthSeeder::class,
         ]);
     }
 }

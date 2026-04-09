@@ -8,7 +8,7 @@ import { ShoppingCart } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useCart } from '../contexts/CartContext.jsx';
 
-const Header = ({ user, onLogout, isAdmin = false, showStockMap = false, onStockMapClick, onLogoClick, loading = false, onCartClick }) => {
+const Header = ({ user, onLogout, isAdmin = false, showStockMap = false, onStockMapClick, onLogoClick, loading = false, onCartClick, title }) => {
   const navigate = useNavigate();
   const { totalItems } = useCart();
 
@@ -82,9 +82,21 @@ const Header = ({ user, onLogout, isAdmin = false, showStockMap = false, onStock
             )}
           </div>
 
+          {/* Title in Center */}
+          {title && (
+            <div className="flex flex-1 justify-center">
+              <h1 
+                className="text-lg md:text-xl font-bold text-gray-800 tracking-tight text-center"
+                data-testid="header-title"
+              >
+                {title}
+              </h1>
+            </div>
+          )}
+
           {/* Carrinho (apenas parceiros), informações do usuário e logout */}
           <div className="flex items-center space-x-4">
-            {!isAdmin && user?.role === 'distribuidor' && (
+            {!isAdmin && (user?.role === 'distribuidor' || user?.role === 'revendedor') && (
               <div className="relative">
                 <button
                   type="button"

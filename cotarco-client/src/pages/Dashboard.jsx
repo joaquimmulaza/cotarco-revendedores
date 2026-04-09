@@ -145,7 +145,6 @@ const Dashboard = () => {
       <Header 
         user={user}
         onLogout={logout}
-        title="Dashboard do Revendedor"
         isAdmin={false}
         showStockMap={showStockMap}
         onStockMapClick={handleStockMapClick}

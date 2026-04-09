@@ -2,11 +2,11 @@
   "cookies": [],
   "origins": [
     {
-      "origin": "http://127.0.0.1:5174",
+      "origin": "http://127.0.0.1:5173",
       "localStorage": [
         {
           "name": "auth_token",
-          "value": "443|qA70upAzlan99q1ENDsRmRvif0op2T1VTXkXWtEF154ba6ef"
+          "value": "633|CLjCuDzVfA6I2sIJUn0sk8v8n5KFCpXfBy8RU6yw9afa1ec0"
         },
         {
           "name": "user",

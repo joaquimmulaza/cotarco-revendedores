@@ -70,6 +70,11 @@ class CreateAppyPayChargeJob implements ShouldQueue
                 ?? ($chargeResponse['responseStatus']['reference'] ?? null);
 
             if ($referenceData && isset($referenceData['entity']) && isset($referenceData['referenceNumber'])) {
+                // UPDATE the order's shipping_details with the payment reference so the frontend can poll it!
+                $details = is_array($order->shipping_details) ? $order->shipping_details : (json_decode($order->shipping_details, true) ?: []);
+                $details['payment_reference'] = $referenceData;
+                $order->update(['shipping_details' => $details]);
+
                 Log::info('AppyPay charge created successfully via Job', [
                     'order_id' => $this->orderId,
                     'reference' => $referenceData['referenceNumber'],

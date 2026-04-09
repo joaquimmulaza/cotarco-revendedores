@@ -114,7 +114,10 @@ export const OrderDetailPage = () => {
         <Link to="/admin/dashboard/orders" className="p-2 rounded-md hover:bg-muted">
             <ArrowLeft className="h-5 w-5" />
         </Link>
-        <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
+        <h1 
+          className="text-2xl md:text-3xl font-bold tracking-tight"
+          data-testid="order-details-heading"
+        >
           Detalhes da Encomenda <span className="text-muted-foreground">#{order.id.substring(0, 8)}</span>
         </h1>
         <Button 

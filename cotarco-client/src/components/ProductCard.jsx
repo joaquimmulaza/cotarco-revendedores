@@ -110,7 +110,7 @@ const ProductCard = ({ product, onViewDetails }) => {
   };
 
   return (
-    <div className="group bg-white border border-gray-200 rounded-lg shadow-md hover:shadow-xl hover:transform hover:-translate-y-1 transition-all duration-300 overflow-hidden flex flex-col h-full">
+    <div className="product-card group bg-white border border-gray-200 rounded-lg shadow-md hover:shadow-xl hover:transform hover:-translate-y-1 transition-all duration-300 overflow-hidden flex flex-col h-full">
       {/* Área da Imagem */}
       <div className="relative aspect-square bg-gray-50 p-4 flex items-center justify-center overflow-hidden">
         {displayImage ? (

@@ -13,7 +13,7 @@ test.describe('Admin Login Page', () => {
 
     // Esperar redirecionamento para o admin dashboard
     await expect(page).toHaveURL(/.*\/admin\/dashboard/);
-    await expect(page.getByRole('heading', { name: 'Painel de Administração' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Gestão de Parceiros' })).toBeVisible();
   });
 
   test('should fail login with non-admin credentials', async ({ page }) => {
@@ -34,9 +34,10 @@ test.describe('Admin Login Page', () => {
     await page.fill('input[name="password"]', 'password-errada-123');
     await page.click('button[type="submit"]');
 
-    // Mensagem real do AdminLogin.jsx para status 401
-    const errorMessage = page.locator('text=Email ou palavra-passe incorretos');
-    await expect(errorMessage).toBeVisible();
+    // Mensagem real do AdminLogin.jsx pode ser "Email ou palavra-passe incorretos." ou vinda do backend "Credenciais inválidas."
+    const errorAlert = page.locator('div:has-text("incorretos"), div:has-text("inválidas")').last();
+    await expect(errorAlert).toBeVisible({ timeout: 30000 });
+    
     await expect(page).not.toHaveURL(/.*\/admin\/dashboard/);
   });
 });

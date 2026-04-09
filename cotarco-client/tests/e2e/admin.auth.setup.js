@@ -8,10 +8,11 @@ setup('authenticate as admin', async ({ page }) => {
   // Usar seletores por name (mais robustos com animações Framer Motion)
   await page.fill('input[name="email"]', 'joaquimmulazadev@gmail.com');
   await page.fill('input[name="password"]', 'cotarco.2025');
-  await page.click('button[type="submit"]');
-
-  // Aguardar redirecionamento para o dashboard de admin
-  await page.waitForURL(/.*\/admin\/dashboard/, { timeout: 15000 });
+  // Clicar no botão e aguardar a resposta da rede e a navegação
+  await Promise.all([
+    page.waitForURL(/\/distribuidores\/admin\/dashboard/, { timeout: 15000 }),
+    page.click('button[type="submit"]')
+  ]);
 
   // Guardar estado de autenticação
   await page.context().storageState({ path: adminFile });

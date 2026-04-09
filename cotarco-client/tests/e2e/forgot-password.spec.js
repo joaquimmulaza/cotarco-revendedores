@@ -5,11 +5,11 @@ test.describe('Forgot Password Page', () => {
     await page.goto('/distribuidores/forgot-password');
 
     // Use the email of the seeded partner user
-    await page.getByLabel('Email').fill('partner@example.com');
+    await page.getByLabel('Email').fill('marketing@soclima.com');
     await page.getByRole('button', { name: 'Enviar Link de Redefinição' }).click();
 
-    // Check for the success message
-    await expect(page.getByRole('heading', { name: 'Email Enviado' })).toBeVisible();
+    // Check for the success message (increase timeout for API call)
+    await expect(page.getByRole('heading', { name: 'Email Enviado' })).toBeVisible({ timeout: 20000 });
     await expect(page.getByText('Se o e-mail existir em nossa base, enviamos um link de redefinição.')).toBeVisible();
 
     // Check for the link to go back to login

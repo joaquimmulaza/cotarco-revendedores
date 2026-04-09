@@ -78,7 +78,7 @@ class RegisterPartnerAction
                 'company_name' => $validatedData['company_name'],
                 'phone_number' => $validatedData['phone_number'],
                 'alvara_path' => $alvaraPath,
-                'business_model' => $validatedData['business_model'],
+                'business_model' => $validatedData['business_model'] ?? null,
             ]);
 
             // Verificar se o PartnerProfile foi criado com sucesso

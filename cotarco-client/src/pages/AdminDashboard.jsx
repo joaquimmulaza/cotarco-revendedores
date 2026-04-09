@@ -36,7 +36,6 @@ const AdminDashboard = () => {
       <Header 
         user={user}
         onLogout={logout}
-        title="Painel de Administração"
         isAdmin={true}
         loading={authLoading}
       />

@@ -191,7 +191,6 @@ const Register = () => {
               </div>
             </div>
 
-
             <div>
               <label htmlFor="alvara" className="block text-sm font-medium text-gray-700">
                 Alvará (PDF, JPG, PNG)
