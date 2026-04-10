@@ -35,10 +35,17 @@ test.describe('Checkout Page', () => {
 
     // Click on finalize order
     const finalizeButton = page.getByRole('button', { name: 'Finalizar Encomenda' });
-    await finalizeButton.click();
+    
+    // Wait for the payment creation request to be sent and accepted
+    const [response] = await Promise.all([
+      page.waitForResponse(response => 
+        response.url().includes('/orders/create-payment') && response.status() === 202,
+        { timeout: 30000 }
+      ),
+      finalizeButton.click()
+    ]);
 
-    // The backend might take time to generate references (polling up to 60s in UI)
-    // We increase timeout to 100s to allow for full polling cycle under load
+    // The backend might take time to generate references (polling up to 120s in UI)
     await expect(page.getByText('Pagamento Gerado com Sucesso!')).toBeVisible({ timeout: 100000 });
     await expect(page.getByText('Entidade')).toBeVisible();
     await expect(page.getByText('Referência')).toBeVisible();

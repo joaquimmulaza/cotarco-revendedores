@@ -18,7 +18,7 @@ const PartnerManager = () => {
   const [selectedTabIndex, setSelectedTabIndex] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [actionLoading, setActionLoading] = useState({});
-  const [searchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm);
   
   // Estados para o modal de edição
@@ -304,9 +304,26 @@ const PartnerManager = () => {
   return (
     <div className="bg-white shadow rounded-lg">
       <div className="px-6 py-4 border-b border-gray-200">
-        <h3 className="text-lg font-medium text-gray-700 mb-4">
-          Gestão de Parceiros
-        </h3>
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
+          <h3 className="text-lg font-medium text-gray-700">
+            Gestão de Parceiros
+          </h3>
+          
+          <div className="relative w-full md:w-96">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            <input
+              type="text"
+              placeholder="Pesquisar por nome, email ou empresa..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="block w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-red-500 focus:border-red-500 sm:text-sm transition-all"
+            />
+          </div>
+        </div>
         
         {/* Headless UI Tabs */}
         <TabGroup selectedIndex={selectedTabIndex} onChange={handleTabChange}>

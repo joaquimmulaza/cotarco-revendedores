@@ -3,7 +3,7 @@ import { execSync } from 'child_process';
 async function globalSetup() {
   console.log('Preparando a base de dados de teste...');
   try {
-    execSync('php artisan migrate:fresh --seed --env=testing', {
+    execSync('npx cross-env APP_ENV=testing DB_DATABASE=cotarco_revendedores_test php artisan migrate:fresh --seed', {
       stdio: 'inherit',
       cwd: 'c:/cotarco-revendedores/cotarco-api'
     });

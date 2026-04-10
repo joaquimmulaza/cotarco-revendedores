@@ -6,11 +6,11 @@
       "localStorage": [
         {
           "name": "auth_token",
-          "value": "633|CLjCuDzVfA6I2sIJUn0sk8v8n5KFCpXfBy8RU6yw9afa1ec0"
+          "value": "3|iEcH5Wfb6tEqJl9vxV70HLDnpy5AZQ342KBbiLz5dffcfac6"
         },
         {
           "name": "user",
-          "value": "{\"id\":2,\"name\":\"Márcio Charata\",\"email\":\"joaquimmulazadev@gmail.com\",\"role\":\"admin\",\"status\":\"active\"}"
+          "value": "{\"id\":2,\"name\":\"Admin Playwright\",\"email\":\"joaquimmulazadev@gmail.com\",\"role\":\"admin\",\"status\":\"active\"}"
         }
       ]
     }

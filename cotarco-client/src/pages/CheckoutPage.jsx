@@ -63,7 +63,7 @@ export default function CheckoutPage() {
       if (response?.status === 202 && response?.data?.merchantTransactionId) {
         const tx = response.data.merchantTransactionId;
         const start = Date.now();
-        const timeoutMs = 60000;
+        const timeoutMs = 120000; // Aumentado para 120s para acomodar ambiente de teste
         const pollIntervalMs = 3000;
 
         const poll = async () => {
