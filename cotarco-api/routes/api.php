@@ -252,6 +252,9 @@ Route::middleware('auth:sanctum')->group(function () {
             if (!$order) {
                 return response()->json(['message' => 'Order not found'], 404);
             }
+            if ($order->status === 'failed') {
+                return response()->json(['message' => 'Falha ao gerar o pagamento. Por favor, tente novamente.'], 400);
+            }
             $details = is_array($order->shipping_details) ? $order->shipping_details : (json_decode($order->shipping_details, true) ?: []);
             $ref = $details['payment_reference'] ?? null;
             if ($ref && isset($ref['entity']) && isset($ref['referenceNumber'])) {

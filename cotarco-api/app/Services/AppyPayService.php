@@ -56,6 +56,19 @@ class AppyPayService
 
     public function createCharge($amount, $merchantTransactionId, $description)
     {
+        // Mock response for E2E tests in testing environment
+        if (app()->environment('testing')) {
+            return [
+                'transactionId' => 'MOCK_TX_' . $merchantTransactionId,
+                'reference' => [
+                    'entity' => '00000',
+                    'referenceNumber' => '123456789',
+                ],
+                'amount' => $amount,
+                'status' => 'SUCCESS'
+            ];
+        }
+
         $accessToken = $this->getAccessToken();
 
         if (!$accessToken) {

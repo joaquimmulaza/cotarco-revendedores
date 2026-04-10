@@ -44,6 +44,9 @@ class PartnerController extends Controller
         
         if ($request->has('status') && in_array($request->status, ['pending_approval', 'active', 'rejected', 'inactive', 'suspended'])) {
             $query->where('status', $request->status);
+        } else {
+            // Se nenhum status fornecido, retorna apenas os pendentes por padrão (alinhado com AdminController)
+            $query->where('status', 'pending_approval');
         }
 
         if ($request->has('search')) {

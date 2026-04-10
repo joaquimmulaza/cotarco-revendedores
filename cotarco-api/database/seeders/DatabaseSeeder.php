@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
             AdminUserSeeder::class,
             TestPartnerSeeder::class,
             PlaywrightAuthSeeder::class,
+            AdminE2ETestSeeder::class,
         ]);
     }
 }

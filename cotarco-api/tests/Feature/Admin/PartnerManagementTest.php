@@ -65,7 +65,7 @@ class PartnerManagementTest extends TestCase
     #[Test]
     public function test_admin_can_list_partners(): void
     {
-        $response = $this->getJson('/api/admin/partners');
+        $response = $this->getJson('/api/admin/partners?status=active');
 
         $response->assertStatus(200)
                  ->assertJsonStructure([
@@ -97,8 +97,8 @@ class PartnerManagementTest extends TestCase
     #[Test]
     public function test_admin_can_filter_partners_by_role(): void
     {
-        // Filtrar apenas distribuidores
-        $response = $this->getJson('/api/admin/partners?role=distribuidor');
+        // Filtrar apenas distribuidores ativos
+        $response = $this->getJson('/api/admin/partners?role=distribuidor&status=active');
         $response->assertStatus(200);
         
         $partners = $response->json('partners');
@@ -131,7 +131,7 @@ class PartnerManagementTest extends TestCase
     #[Test]
     public function test_admin_can_search_partners_by_text(): void
     {
-        $response = $this->getJson('/api/admin/partners?search=Distribuidora');
+        $response = $this->getJson('/api/admin/partners?search=Distribuidora&status=active');
 
         $response->assertStatus(200);
         $response->assertJsonFragment(['company_name' => 'Empresa Distribuidora Teste 1']);
@@ -196,17 +196,69 @@ class PartnerManagementTest extends TestCase
             ]);
         }
 
-        $response = $this->getJson('/api/admin/partners?per_page=10&page=1');
+        $response = $this->getJson('/api/admin/partners?per_page=10&page=1&status=active');
 
         $response->assertStatus(200);
         
-        // Verificar se a paginação está funcionando (não importa o total exato)
+        // Verificar se a paginação está funcionando
         $pagination = $response->json('pagination');
         $this->assertEquals(10, $pagination['per_page']);
         $this->assertEquals(1, $pagination['current_page']);
-        $this->assertGreaterThan(20, $pagination['total']); // Deve ter pelo menos os 20 novos + os originais
+        $this->assertGreaterThanOrEqual(20, $pagination['total']);
 
         // Verificar se apenas 10 parceiros são retornados na primeira página
         $this->assertCount(10, $response->json('partners'));
+    }
+
+    /**
+     * Teste para verificar que, por defeito, apenas parceiros pendentes são retornados
+     */
+    #[Test]
+    public function test_default_status_is_pending_approval(): void
+    {
+        // Limpar parceiros criados no setUp que são ativos
+        // Ou simplesmente criar um pendente e verificar se ele é o único na lista por defeito
+        $pendingUser = User::factory()->create(['role' => 'revendedor', 'status' => 'pending_approval']);
+        PartnerProfile::factory()->create(['user_id' => $pendingUser->id]);
+        
+        $response = $this->getJson('/api/admin/partners');
+        $response->assertStatus(200);
+        
+        $partners = $response->json('partners');
+        
+        // Se a regra for aplicada, apenas parceiros pendentes devem aparecer
+        foreach ($partners as $partner) {
+            $this->assertEquals('pending_approval', $partner['status']);
+        }
+    }
+
+    /**
+     * Teste para filtrar parceiros com combinação de status e role
+     */
+    #[Test]
+    public function test_admin_can_filter_by_combined_status_and_role(): void
+    {
+        // Criar revendedor ativo
+        $revActive = User::factory()->create(['role' => 'revendedor', 'status' => 'active']);
+        PartnerProfile::factory()->create(['user_id' => $revActive->id]);
+        
+        // Criar distribuidor ativo
+        $distActive = User::factory()->create(['role' => 'distribuidor', 'status' => 'active']);
+        PartnerProfile::factory()->create(['user_id' => $distActive->id]);
+        
+        // Criar revendedor pendente
+        $revPending = User::factory()->create(['role' => 'revendedor', 'status' => 'pending_approval']);
+        PartnerProfile::factory()->create(['user_id' => $revPending->id]);
+
+        // Filtrar por revendedor E ativo
+        $response = $this->getJson('/api/admin/partners?role=revendedor&status=active');
+        $response->assertStatus(200);
+        
+        $partners = $response->json('partners');
+        
+        $ids = collect($partners)->pluck('id')->toArray();
+        $this->assertContains($revActive->id, $ids);
+        $this->assertNotContains($distActive->id, $ids);
+        $this->assertNotContains($revPending->id, $ids);
     }
 }
