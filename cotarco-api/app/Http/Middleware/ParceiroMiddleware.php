@@ -15,8 +15,9 @@ class ParceiroMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        // Verificar se o usuário está autenticado via Sanctum
+
         if (!$request->user('sanctum')) {
+            \Illuminate\Support\Facades\Log::warning('ParceiroMiddleware: No user found for sanctum guard');
             return response()->json([
                 'message' => 'Não autenticado.',
             ], 401);
@@ -37,6 +38,7 @@ class ParceiroMiddleware
                 'message' => 'Acesso negado. Sua conta de parceiro não está ativa.',
             ], 403);
         }
+
 
         return $next($request);
     }

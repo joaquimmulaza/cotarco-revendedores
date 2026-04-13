@@ -112,16 +112,34 @@ class PartnerController extends Controller
     /**
      * Display the specified partner.
      */
-    public function show(User $partner): JsonResponse
+    public function show($id): JsonResponse
     {
-        $partner->load('partnerProfile');
+        $partner = User::with('partnerProfile')->findOrFail($id);
 
+        // Verificar se o usuário é um parceiro (revendedor, distribuidor ou null)
         if (!in_array($partner->role, ['revendedor', 'distribuidor']) && $partner->role !== null) {
             return response()->json(['message' => 'Utilizador não é um parceiro.'], 404);
         }
 
         return response()->json([
-            'partner' => $partner
+            'partner' => [
+                'id' => $partner->id,
+                'name' => $partner->name,
+                'email' => $partner->email,
+                'role' => $partner->role,
+                'status' => $partner->status,
+                'created_at' => $partner->created_at,
+                'updated_at' => $partner->updated_at,
+                'partner_profile' => $partner->partnerProfile ? [
+                    'id' => $partner->partnerProfile->id,
+                    'user_id' => $partner->partnerProfile->user_id,
+                    'company_name' => $partner->partnerProfile->company_name,
+                    'phone_number' => $partner->partnerProfile->phone_number,
+                    'business_model' => $partner->partnerProfile->business_model,
+                    'discount_percentage' => $partner->partnerProfile->discount_percentage,
+                    'alvara_path' => $partner->partnerProfile->alvara_path
+                ] : null
+            ]
         ]);
     }
 
@@ -193,7 +211,8 @@ class PartnerController extends Controller
     public function updateStatus(Request $request, User $user): JsonResponse
     {
         $validated = $request->validate([
-            'status' => 'required|in:active,suspended,pending_approval,rejected,inactive'
+            'status' => 'required|in:active,suspended,pending_approval,rejected,inactive',
+            'reason' => 'required_if:status,rejected|string|max:1000'
         ]);
     
         // Verificar se o usuário é um parceiro (revendedor, distribuidor ou null - não classificado)
@@ -257,7 +276,7 @@ class PartnerController extends Controller
                 }
                 $emailSent = true;
             } elseif ($newStatus === 'rejected') {
-                Mail::to($user->email)->send(new \App\Mail\PartnerRejected($user));
+                Mail::to($user->email)->send(new \App\Mail\PartnerRejected($user, $validated['reason']));
                 $emailSent = true;
             } elseif ($newStatus === 'inactive') {
                 Mail::to($user->email)->send(new \App\Mail\PartnerDeactivated($user));

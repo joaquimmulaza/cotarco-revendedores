@@ -16,6 +16,12 @@ class TokenFromQuery
      */
     public function handle(Request $request, Closure $next)
     {
+        \Illuminate\Support\Facades\Log::info('Global API Request Tracer', [
+            'method' => $request->method(),
+            'path' => $request->path(),
+            'auth_header' => $request->header('Authorization') ? 'Present (length ' . strlen($request->header('Authorization')) . ')' : 'Missing',
+        ]);
+
         // Se existe token na query string, adicionar ao header Authorization
         if ($request->has('token') && !$request->hasHeader('Authorization')) {
             $token = $request->query('token');

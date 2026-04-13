@@ -268,3 +268,9 @@ Route::middleware('auth:sanctum')->group(function () {
         });
     });
 });
+
+// Test Seeding Routes (Only enabled in testing environment)
+if (app()->environment('testing')) {
+    Route::post('/testing/seed-partner', [\App\Http\Controllers\Testing\SeedPartnerController::class, 'store']);
+    Route::delete('/testing/seed-partner/{id}', [\App\Http\Controllers\Testing\SeedPartnerController::class, 'destroy']);
+}

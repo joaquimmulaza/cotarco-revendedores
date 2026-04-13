@@ -39,24 +39,32 @@ class AdminE2ETestSeeder extends Seeder
 
     private function createPartner($name, $email, $status)
     {
-        $user = User::create([
-            'name' => $name,
-            'email' => $email,
-            'password' => Hash::make('password123'),
-            'role' => 'revendedor',
-            'status' => $status,
-            'email_verified_at' => now(),
-        ]);
+        // updateOrCreate prevents duplicate-key errors when the seeder is run
+        // without a preceding migrate:fresh (e.g. during local debugging).
+        $user = User::updateOrCreate(
+            ['email' => $email],
+            [
+                'name'               => $name,
+                'password'           => Hash::make('password123'),
+                // 'distribuidor' matches what RegisterPartnerAction and
+                // SeedPartnerController assign, keeping test data consistent.
+                'role'               => 'distribuidor',
+                'status'             => $status,
+                'email_verified_at'  => now(),
+            ]
+        );
 
-        PartnerProfile::create([
-            'user_id' => $user->id,
-            'company_name' => $name . ' Ltd',
-            'phone_number' => '+351912345678',
-            'alvara_path' => 'alvaras/dummy.pdf',
-            'business_model' => 'B2B',
-            'discount_percentage' => 10.00
-        ]);
-        
+        PartnerProfile::updateOrCreate(
+            ['user_id' => $user->id],
+            [
+                'company_name'        => $name . ' Ltd',
+                'phone_number'        => '+351912345678',
+                'alvara_path'         => 'alvaras/dummy.pdf',
+                'business_model'      => 'B2B',
+                'discount_percentage' => 10.00,
+            ]
+        );
+
         return $user;
     }
 }

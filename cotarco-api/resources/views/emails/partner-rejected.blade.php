@@ -10,7 +10,7 @@
         .header { background-color: #f44336; color: white; padding: 20px; text-align: center; }
         .content { padding: 20px; background-color: #f9f9f9; }
         .footer { text-align: center; color: #666; font-size: 12px; padding: 20px; }
-        .contact-info { background-color: #e3f2fd; padding: 15px; border-radius: 5px; margin: 15px 0; }
+        .reason-box { background-color: #fff3cd; border-left: 4px solid #f44336; padding: 15px; border-radius: 4px; margin: 15px 0; }
     </style>
 </head>
 <body>
@@ -26,12 +26,12 @@
             
             <p>Após uma análise cuidadosa da sua solicitação, informamos que <strong>não foi possível aprovar</strong> seu registro como parceiro neste momento.</p>
             
-            <p>Esta decisão pode ter sido baseada em diversos fatores, incluindo:</p>
-            <ul>
-                <li>Documentação incompleta ou inadequada</li>
-                <li>Requisitos mínimos não atendidos</li>
-                <li>Outras questões específicas do processo de aprovação</li>
-            </ul>
+            <p><strong>Motivo da decisão:</strong></p>
+            <div class="reason-box">
+                {{ $reason }}
+            </div>
+            
+            <p>Se tiver alguma dúvida ou quiser submeter nova candidatura com as correções necessárias, não hesite em entrar em contacto connosco.</p>
             
             <p>Atenciosamente,<br>
             <strong>Cotarco Tecnologias, Lda.</strong></p>

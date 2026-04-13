@@ -1,4 +1,7 @@
 <?php
+// CREDENCIAIS DE TESTE (CONFORME SOLICITADO PELO UTILIZADOR):
+// Email: joaquimmulazadev@gmail.com
+// Senha: cotarco.2025
 
 namespace Database\Seeders;
 

@@ -22,7 +22,7 @@ class TestPartnerSeeder extends Seeder
                 'email' => 'teste@parceiro.com',
                 'password' => Hash::make('password123'),
                 'role' => 'revendedor',
-                'status' => 'active',
+                'status' => 'pending_approval',
                 'email_verified_at' => now(),
             ]);
 

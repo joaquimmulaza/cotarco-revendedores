@@ -14,10 +14,6 @@ class OrderController extends Controller
 {
     public function createPayment(Request $request, AppyPayService $appyPayService)
     {
-        if (!auth()->check()) {
-            return response()->json(['message' => 'Sessão inválida ou expirada. Por favor, faça login novamente.'], 401);
-        }
-
         $cartItems = $request->input('items', []);
         $shippingDetails = $request->input('details', []);
 
@@ -39,10 +35,10 @@ class OrderController extends Controller
         $description = 'Encomenda Cotarco #' . $reference;
 
         try {
-            $order = DB::transaction(function () use ($cartItems, $shippingDetails, $reference, $amount) {
+            $order = DB::transaction(function () use ($cartItems, $shippingDetails, $reference, $amount, $request) {
                 // 1. Create the order with 'pending' status
                 $order = Order::create([
-                    'user_id' => auth()->user()->id,
+                    'user_id' => $request->user('sanctum')->id,
                     'merchant_transaction_id' => $reference,
                     'total_amount' => $amount,
                     'shipping_details' => $shippingDetails,
