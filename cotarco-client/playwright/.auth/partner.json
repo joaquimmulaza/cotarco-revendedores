@@ -6,11 +6,11 @@
       "localStorage": [
         {
           "name": "auth_token",
-          "value": "3|MNJdAB4hfEFDrmnaEj1BNfLMOtlqjZUc31OG25TIad2963d7"
+          "value": "3|D688ixjbzuyQhQHqfD4FPb4BcnFLxtuoxAHkdHnY91846aac"
         },
         {
           "name": "user",
-          "value": "{\"id\":5,\"name\":\"Parceiro Playwright\",\"email\":\"marketing@soclima.com\",\"email_verified_at\":\"2026-04-13T08:05:57.000000Z\",\"created_at\":\"2025-09-03T07:44:57.000000Z\",\"updated_at\":\"2026-04-13T08:05:57.000000Z\",\"role\":\"revendedor\",\"status\":\"active\",\"partner_profile\":{\"id\":1,\"user_id\":5,\"company_name\":\"Soclima Teste Playwright\",\"phone_number\":\"+351210000000\",\"alvara_path\":\"alvaras/playwright.pdf\",\"created_at\":\"2026-04-13T08:05:57.000000Z\",\"updated_at\":\"2026-04-13T08:05:57.000000Z\",\"business_model\":\"B2B\",\"discount_percentage\":\"10.00\"}}"
+          "value": "{\"id\":5,\"name\":\"Parceiro Playwright\",\"email\":\"marketing@soclima.com\",\"email_verified_at\":\"2026-04-13T12:43:28.000000Z\",\"created_at\":\"2025-09-03T07:44:57.000000Z\",\"updated_at\":\"2026-04-13T12:43:28.000000Z\",\"role\":\"revendedor\",\"status\":\"active\",\"partner_profile\":{\"id\":1,\"user_id\":5,\"company_name\":\"Soclima Teste Playwright\",\"phone_number\":\"+351210000000\",\"alvara_path\":\"alvaras/playwright.pdf\",\"created_at\":\"2026-04-13T12:43:28.000000Z\",\"updated_at\":\"2026-04-13T12:43:28.000000Z\",\"business_model\":\"B2B\",\"discount_percentage\":\"10.00\"}}"
         }
       ]
     }

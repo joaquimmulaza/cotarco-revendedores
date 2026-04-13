@@ -30,9 +30,9 @@ class PartnerController extends Controller
     public function index(Request $request): JsonResponse
     {
         $query = User::with('partnerProfile')
-            ->where(function($q) {
+            ->where(function ($q) {
                 $q->whereIn('role', ['revendedor', 'distribuidor'])
-                  ->orWhereNull('role');
+                    ->orWhereNull('role');
             });
 
         // Filtros
@@ -41,7 +41,7 @@ class PartnerController extends Controller
         } elseif ($request->has('role') && $request->role === 'null') {
             $query->whereNull('role');
         }
-        
+
         if ($request->has('status') && in_array($request->status, ['pending_approval', 'active', 'rejected', 'inactive', 'suspended'])) {
             $query->where('status', $request->status);
         } else {
@@ -53,10 +53,10 @@ class PartnerController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhereHas('partnerProfile', function ($profileQuery) use ($search) {
-                      $profileQuery->where('company_name', 'like', "%{$search}%");
-                  });
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhereHas('partnerProfile', function ($profileQuery) use ($search) {
+                        $profileQuery->where('company_name', 'like', "%{$search}%");
+                    });
             });
         }
 
@@ -80,7 +80,7 @@ class PartnerController extends Controller
                 'updated_at' => $user->updated_at,
                 'partner_profile' => null
             ];
-            
+
             if ($user->partnerProfile) {
                 $transformed['partner_profile'] = [
                     'id' => $user->partnerProfile->id,
@@ -92,9 +92,9 @@ class PartnerController extends Controller
                     'alvara_path' => $user->partnerProfile->alvara_path
                 ];
             }
-            
 
-            
+
+
             return $transformed;
         });
 
@@ -191,7 +191,7 @@ class PartnerController extends Controller
         } catch (\Exception $e) {
             // Reverter a transação em caso de erro
             DB::rollBack();
-            
+
             \Log::error('Erro ao atualizar parceiro: ' . $e->getMessage(), [
                 'user_id' => $user->id,
                 'trace' => $e->getTraceAsString()
@@ -214,7 +214,7 @@ class PartnerController extends Controller
             'status' => 'required|in:active,suspended,pending_approval,rejected,inactive',
             'reason' => 'required_if:status,rejected|string|max:1000'
         ]);
-    
+
         // Verificar se o usuário é um parceiro (revendedor, distribuidor ou null - não classificado)
         if (!in_array($user->role, ['revendedor', 'distribuidor']) && $user->role !== null) {
             return response()->json([
@@ -253,18 +253,16 @@ class PartnerController extends Controller
                 'current_status' => $user->status,
             ], 400);
         }
-    
+
         // Atualizar o status
         $user->update(['status' => $newStatus]);
-    
+
         // Lógica de notificação por email (absorvida dos métodos antigos)
         $emailSent = false;
         $emailError = null;
-        $loginUrl = config('app.frontend_url');
-        // If not set, we might default to something safe or empty, but definitely not localhost
-        if ($loginUrl) {
-             $loginUrl .= '/login';
-        }
+        // Construir a URL de login de forma robusta
+        $frontendUrl = config('app.frontend_url') ?: config('app.url');
+        $loginUrl = rtrim($frontendUrl, '/') . '/login';
 
         try {
             if ($newStatus === 'active' && $oldStatus !== 'active') {
@@ -306,7 +304,7 @@ class PartnerController extends Controller
             $response['message'] .= ' Porém, houve erro no envio do email.';
             $response['email_error'] = $emailError;
         }
-    
+
         return response()->json($response, 200);
     }
 
@@ -346,22 +344,22 @@ class PartnerController extends Controller
                 status,
                 COUNT(*) as count
             ')
-            ->where(function($q) {
+            ->where(function ($q) {
                 $q->whereIn('role', ['revendedor', 'distribuidor'])
-                  ->orWhereNull('role');
+                    ->orWhereNull('role');
             })
             ->groupBy('role', 'status')
             ->get()
             ->groupBy('role');
 
-        $totalPartners = User::where(function($q) {
+        $totalPartners = User::where(function ($q) {
             $q->whereIn('role', ['revendedor', 'distribuidor'])
-              ->orWhereNull('role');
+                ->orWhereNull('role');
         })->count();
-        
-        $activePartners = User::where(function($q) {
+
+        $activePartners = User::where(function ($q) {
             $q->whereIn('role', ['revendedor', 'distribuidor'])
-              ->orWhereNull('role');
+                ->orWhereNull('role');
         })->where('status', 'active')->count();
 
         return response()->json([
@@ -409,10 +407,10 @@ class PartnerController extends Controller
             // Obter o caminho completo do arquivo
             $filePath = $profile->alvara_path;
             $fileName = basename($filePath);
-            
+
             // Detectar o tipo MIME baseado na extensão do arquivo
             $extension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
-            $mimeType = match($extension) {
+            $mimeType = match ($extension) {
                 'pdf' => 'application/pdf',
                 'jpg', 'jpeg' => 'image/jpeg',
                 'png' => 'image/png',
@@ -421,23 +419,23 @@ class PartnerController extends Controller
                 'webp' => 'image/webp',
                 default => 'application/octet-stream'
             };
-            
+
             // Obter o conteúdo do arquivo
             $fileContent = Storage::disk('local')->get($filePath);
-            
+
             // Retornar o arquivo com o Content-Type correto
             return response($fileContent, 200, [
                 'Content-Type' => $mimeType,
                 'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
                 'Content-Length' => strlen($fileContent)
             ]);
-            
+
         } catch (\Exception $e) {
             \Log::error('Erro ao baixar alvará: ' . $e->getMessage(), [
                 'user_id' => $user->id,
                 'file_path' => $profile->alvara_path ?? 'N/A'
             ]);
-            
+
             return response()->json([
                 'message' => 'Erro ao baixar o alvará. Tente novamente.',
             ], 500);
