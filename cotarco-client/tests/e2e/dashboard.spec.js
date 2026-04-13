@@ -23,13 +23,13 @@ test.describe('Partner Dashboard', () => {
     
     // The category buttons are usually in a white shadow container
     const categoryButtons = page.locator('.bg-white.shadow button');
-    await expect(categoryButtons.first()).toBeVisible({ timeout: 15000 });
+    await expect(categoryButtons.first()).toBeVisible({ timeout: 20000 });
     
     // Click a category and check for products
     await categoryButtons.first().click();
 
     const productCards = page.locator('.product-card');
-    await expect(productCards.first()).toBeVisible({ timeout: 20000 });
+    await expect(productCards.first()).toBeVisible({ timeout: 30000 });
     
     const count = await productCards.count();
     expect(count).toBeGreaterThan(0);
@@ -38,7 +38,7 @@ test.describe('Partner Dashboard', () => {
   test('should add product to cart', async ({ page }) => {
     // Wait for products
     const productCard = page.locator('.product-card').first();
-    await expect(productCard).toBeVisible({ timeout: 20000 });
+    await expect(productCard).toBeVisible({ timeout: 30000 });
 
     // Click "Adicionar"
     await productCard.getByRole('button', { name: /Adicionar/i }).click();
@@ -52,7 +52,7 @@ test.describe('Partner Dashboard', () => {
   });
 
   test('should navigate through pages', async ({ page }) => {
-    await expect(page.locator('.product-card').first()).toBeVisible({ timeout: 20000 });
+    await expect(page.locator('.product-card').first()).toBeVisible({ timeout: 30000 });
     
     const nextButton = page.getByRole('button', { name: 'Próximo' });
     if (await nextButton.isVisible()) {

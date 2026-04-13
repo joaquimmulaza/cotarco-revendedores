@@ -1,0 +1,316 @@
+﻿Preparando a base de dados de teste...
+
+  Dropping all tables .................................................................................. 185.59ms DONE
+
+   INFO  Preparing database.  
+
+  Creating migration table .............................................................................. 17.26ms DONE
+
+   INFO  Running migrations.  
+
+  0001_01_01_000000_create_users_table ................................................................. 121.24ms DONE
+  0001_01_01_000001_create_cache_table .................................................................. 17.04ms DONE
+  0001_01_01_000002_create_jobs_table .................................................................. 143.49ms DONE
+  2025_08_27_010318_create_personal_access_tokens_table ................................................ 104.46ms DONE
+  2025_08_27_012146_add_role_and_status_to_users_table .................................................. 68.47ms DONE
+  2025_08_27_012537_create_revendedor_profiles_table .................................................... 33.39ms DONE
+  2025_08_28_152534_create_stock_files_table ............................................................ 40.28ms DONE
+  2025_08_30_101757_rename_revendedor_profiles_to_partner_profiles_table ................................ 10.15ms DONE
+  2025_08_30_102526_add_business_model_to_partner_profiles_table ........................................ 30.82ms DONE
+  2025_08_30_102942_add_distribuidor_role_to_users_table ................................................ 16.49ms DONE
+  2025_08_31_035300_update_status_enum_in_users_table ................................................... 17.48ms DONE
+  2025_09_06_095241_add_target_role_to_stock_files_table ................................................ 28.25ms DONE
+  2025_09_11_091933_make_role_nullable_in_users_table ................................................... 80.98ms DONE
+  2025_09_16_124331_create_product_prices_table ......................................................... 58.11ms DONE
+  2025_09_19_000000_rename_target_role_in_stock_files_table ............................................. 27.70ms DONE
+  2025_09_19_000001_rename_price_columns_in_product_prices_table ........................................ 36.19ms DONE
+  2025_09_25_000100_add_stock_quantity_to_product_prices_table .......................................... 36.54ms DONE
+  2025_10_14_153424_create_orders_table ................................................................. 99.34ms DONE
+  2025_10_17_140500_create_order_items_table ........................................................... 121.20ms DONE
+  2026_01_13_094323_add_discount_percentage_to_partner_profiles_table ................................... 54.60ms DONE
+  2026_01_20_091534_create_products_table ............................................................... 81.73ms DONE
+  2026_01_20_091540_create_categories_table ............................................................. 23.65ms DONE
+  2026_01_20_092526_create_category_product_table ...................................................... 131.62ms DONE
+  2026_01_20_094000_update_products_table_text_columns .................................................. 88.17ms DONE
+  2026_01_20_095500_update_products_url_column .......................................................... 30.56ms DONE
+  2026_01_20_160000_add_attributes_to_products_table .................................................... 33.18ms DONE
+
+
+   INFO  Seeding database.  
+
+  Database\Seeders\RealDataSeeder ............................................................................ RUNNING  
+Syncing data from cotarco_revendedores to cotarco_revendedores_test...
+Synced categories.
+Synced stock files.
+Synced users.
+Synced products.
+Synced product-category relationships.
+Synced product prices.
+Synced orders.
+Synced order items.
+Real data synchronization completed successfully!
+  Database\Seeders\RealDataSeeder ......................................................................... 60 ms DONE  
+
+  Database\Seeders\AdminUserSeeder ........................................................................... RUNNING  
+Administrador já existe na base de dados.
+  Database\Seeders\AdminUserSeeder ......................................................................... 6 ms DONE  
+
+  Database\Seeders\TestPartnerSeeder ......................................................................... RUNNING  
+Parceiro de teste já existe.
+  Database\Seeders\TestPartnerSeeder ....................................................................... 2 ms DONE  
+
+  Database\Seeders\PlaywrightAuthSeeder ...................................................................... RUNNING  
+Admin para Playwright garantido (joaquimmulazadev@gmail.com).
+Parceiro para Playwright garantido (marketing@soclima.com).
+  Database\Seeders\PlaywrightAuthSeeder .................................................................. 537 ms DONE  
+
+  Database\Seeders\AdminE2ETestSeeder ........................................................................ RUNNING  
+  Database\Seeders\AdminE2ETestSeeder .................................................................. 1,053 ms DONE  
+
+Base de dados de teste pronta.
+{
+  "config": {
+    "configFile": "C:\\cotarco-revendedores\\cotarco-client\\playwright.config.js",
+    "rootDir": "C:/cotarco-revendedores/cotarco-client/tests/e2e",
+    "forbidOnly": false,
+    "fullyParallel": true,
+    "globalSetup": "C:\\cotarco-revendedores\\cotarco-client\\tests\\e2e\\global.setup.js",
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/cotarco-revendedores/cotarco-client/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "setup",
+        "name": "setup",
+        "testDir": "C:/cotarco-revendedores/cotarco-client/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "/auth\\.setup\\.js/"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "C:/cotarco-revendedores/cotarco-client/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "admin-setup",
+        "name": "admin-setup",
+        "testDir": "C:/cotarco-revendedores/cotarco-client/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "/admin\\.auth\\.setup\\.js/"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "C:/cotarco-revendedores/cotarco-client/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "partner-tests",
+        "name": "partner-tests",
+        "testDir": "C:/cotarco-revendedores/cotarco-client/tests/e2e",
+        "testIgnore": [
+          "/.*admin.*\\.spec\\.[jt]s/"
+        ],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "C:/cotarco-revendedores/cotarco-client/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "admin-tests",
+        "name": "admin-tests",
+        "testDir": "C:/cotarco-revendedores/cotarco-client/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "/.*admin.*\\.spec\\.[jt]s/"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.59.1",
+    "workers": 4,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "admin.auth.setup.js",
+      "file": "admin.auth.setup.js",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "authenticate as admin",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 60000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "admin-setup",
+              "projectName": "admin-setup",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2575,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-04-10T14:35:14.187Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0e759a30acf01456fed3-abfe1ef4f7ae16699e5e",
+          "file": "admin.auth.setup.js",
+          "line": 5,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "admin-email-partner-rejection.spec.ts",
+      "file": "admin-email-partner-rejection.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Fluxo (c): Rejeição de Distribuidor com Motivo Dinâmico no Email",
+          "file": "admin-email-partner-rejection.spec.ts",
+          "line": 28,
+          "column": 6,
+          "specs": [
+            {
+              "title": "admin rejeita com motivo, PartnerRejected contém motivo exacto submetido",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "admin-tests",
+                  "projectName": "admin-tests",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 3872,
+                      "error": {
+                        "message": "Error: expect: Property 'toBeDetached' not found.",
+                        "stack": "Error: expect: Property 'toBeDetached' not found.\n    at C:\\cotarco-revendedores\\cotarco-client\\tests\\e2e\\admin-email-partner-rejection.spec.ts:172:25",
+                        "location": {
+                          "file": "C:\\cotarco-revendedores\\cotarco-client\\tests\\e2e\\admin-email-partner-rejection.spec.ts",
+                          "column": 25,
+                          "line": 172
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 170 |\u001b[39m\n \u001b[90m 171 |\u001b[39m     \u001b[90m// --- SINAL POSITIVO (UI): Dialog deve fechar e card deve desaparecer ---\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 172 |\u001b[39m     \u001b[36mawait\u001b[39m expect(dialog)\u001b[33m.\u001b[39mtoBeDetached({ timeout\u001b[33m:\u001b[39m \u001b[35m10000\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                         \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 173 |\u001b[39m     \u001b[36mawait\u001b[39m expect(partnerCard)\u001b[33m.\u001b[39mtoBeHidden({ timeout\u001b[33m:\u001b[39m \u001b[35m15000\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m 174 |\u001b[39m\n \u001b[90m 175 |\u001b[39m     \u001b[90m// Verificar toast de sucesso\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\cotarco-revendedores\\cotarco-client\\tests\\e2e\\admin-email-partner-rejection.spec.ts",
+                            "column": 25,
+                            "line": 172
+                          },
+                          "message": "Error: expect: Property 'toBeDetached' not found.\n\n  170 |\n  171 |     // --- SINAL POSITIVO (UI): Dialog deve fechar e card deve desaparecer ---\n> 172 |     await expect(dialog).toBeDetached({ timeout: 10000 });\n      |                         ^\n  173 |     await expect(partnerCard).toBeHidden({ timeout: 15000 });\n  174 |\n  175 |     // Verificar toast de sucesso\n    at C:\\cotarco-revendedores\\cotarco-client\\tests\\e2e\\admin-email-partner-rejection.spec.ts:172:25"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [
+                        {
+                          "text": "[emailHelper] Encontrado(s) 1 matches para distribuidor.rejeicao1775831718299@exemplo.com no log.\n"
+                        }
+                      ],
+                      "retry": 0,
+                      "startTime": "2026-04-10T14:35:18.319Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\cotarco-revendedores\\cotarco-client\\test-results\\admin-email-partner-reject-a9c7e-tém-motivo-exacto-submetido-admin-tests\\error-context.md"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\cotarco-revendedores\\cotarco-client\\test-results\\admin-email-partner-reject-a9c7e-tém-motivo-exacto-submetido-admin-tests\\trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\cotarco-revendedores\\cotarco-client\\tests\\e2e\\admin-email-partner-rejection.spec.ts",
+                        "column": 25,
+                        "line": 172
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "5b3bae0e4ad7de18d529-f853c9f9ae1640d075aa",
+              "file": "admin-email-partner-rejection.spec.ts",
+              "line": 111,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-04-10T14:34:59.761Z",
+    "duration": 28445.334,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 1,
+    "flaky": 0
+  }
+}

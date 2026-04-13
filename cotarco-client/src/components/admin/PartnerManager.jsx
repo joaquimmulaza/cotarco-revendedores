@@ -30,6 +30,7 @@ const PartnerManager = () => {
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [confirmAction, setConfirmAction] = useState(null);
   const [confirmPartner, setConfirmPartner] = useState(null);
+  const [rejectionReason, setRejectionReason] = useState('');
   
   // Mapear índices de tabs para status
   const tabStatusMap = ['pending_approval', 'active', 'rejected', 'inactive'];
@@ -186,7 +187,11 @@ const PartnerManager = () => {
     try {
       setActionLoading(prev => ({ ...prev, [confirmPartner.id]: `updating-${confirmAction}` }));
       
-      await adminService.updatePartnerStatus(confirmPartner.id, confirmAction);
+        await adminService.updatePartnerStatus(
+          confirmPartner.id,
+          confirmAction,
+          confirmAction === 'rejected' ? rejectionReason : null
+        );
       
       // Atualizar dados
       await Promise.all([
@@ -217,6 +222,7 @@ const PartnerManager = () => {
       setShowConfirmDialog(false);
       setConfirmAction(null);
       setConfirmPartner(null);
+      setRejectionReason('');
     }
   };
 
@@ -465,6 +471,7 @@ const PartnerManager = () => {
           setShowConfirmDialog(false);
           setConfirmAction(null);
           setConfirmPartner(null);
+          setRejectionReason('');
         }}
         onConfirm={handleUpdateStatus}
         title={getConfirmTitle()}
@@ -472,7 +479,29 @@ const PartnerManager = () => {
         confirmText={getConfirmButtonText()}
         cancelText="Cancelar"
         type={getConfirmType()}
-      />
+        // Desabilitar o botão de confirmar enquanto o motivo obrigatório não é preenchido
+      >
+        {confirmAction === 'rejected' && (
+          <div>
+            <label
+              htmlFor="rejection-reason"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Motivo da rejeição <span className="text-red-500">*</span>
+            </label>
+            <textarea
+              id="rejection-reason"
+              name="rejection-reason"
+              rows={3}
+              required
+              value={rejectionReason}
+              onChange={(e) => setRejectionReason(e.target.value)}
+              placeholder="Indique o motivo da rejeição (ex: Documentação incompleta)..."
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500 resize-none"
+            />
+          </div>
+        )}
+      </ConfirmDialog>
     </div>
   );
 };

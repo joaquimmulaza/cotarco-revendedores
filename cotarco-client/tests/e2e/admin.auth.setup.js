@@ -1,3 +1,6 @@
+// CREDENCIAIS DE TESTE (CONFORME SOLICITADO PELO UTILIZADOR):
+// Email: joaquimmulazadev@gmail.com
+// Senha: cotarco.2025
 import { test as setup, expect } from '@playwright/test';
 
 const adminFile = 'playwright/.auth/admin.json';

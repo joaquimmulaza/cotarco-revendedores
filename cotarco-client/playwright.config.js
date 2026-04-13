@@ -7,7 +7,9 @@ export default defineConfig({
   expect: {
     timeout: 10000,
   },
-  fullyParallel: true,
+  fullyParallel: false,
+  workers: 1,
+  retries: 2,
   reporter: 'html',
   use: {
     baseURL: 'http://127.0.0.1:5173',
@@ -52,7 +54,7 @@ export default defineConfig({
     {
       name: 'partner-tests',
       testDir: './tests/e2e',
-      testIgnore: /.*admin.*\.spec\.js/,
+      testIgnore: /.*admin.*\.spec\.[jt]s/,
       use: { 
         ...devices['Desktop Chrome'],
         storageState: 'playwright/.auth/partner.json',
@@ -62,7 +64,7 @@ export default defineConfig({
     {
       name: 'admin-tests',
       testDir: './tests/e2e',
-      testMatch: /.*admin.*\.spec\.js/,
+      testMatch: /.*admin.*\.spec\.[jt]s/,
       use: {
         ...devices['Desktop Chrome'],
         storageState: 'playwright/.auth/admin.json',

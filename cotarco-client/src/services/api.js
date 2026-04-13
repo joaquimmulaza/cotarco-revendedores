@@ -63,13 +63,14 @@ api.interceptors.response.use(
         localStorage.removeItem(appConfig.AUTH.USER_KEY);
         
         // Detectar contexto atual para redirecionar corretamente
-        let redirectPath = appConfig.ROUTES.LOGIN; // padrão
+        let redirectPath = '/distribuidores' + appConfig.ROUTES.LOGIN; // padrão
         
         // Se estiver em contexto de admin, redirecionar para login de admin
         if (currentPath.includes('/admin')) {
-          redirectPath = appConfig.ROUTES.ADMIN_LOGIN;
+          redirectPath = '/distribuidores' + appConfig.ROUTES.ADMIN_LOGIN;
         }
         
+        console.log(`[API Interceptor] 401 Detected. Redirecting to: ${redirectPath}`);
         window.location.href = redirectPath;
       }
     }
@@ -217,16 +218,17 @@ export const adminService = {
   },
 
   // Atualizar status de um parceiro
-  async updatePartnerStatus(userId, status) {
+  async updatePartnerStatus(userId, status, reason = null) {
     try {
-      const response = await api.put(`/admin/partners/${userId}/status`, {
-        status: status
-      });
+      const payload = { status };
+      if (reason) payload.reason = reason;
+      const response = await api.put(`/admin/partners/${userId}/status`, payload);
       return response.data;
     } catch (error) {
       throw error.response?.data || { message: 'Erro ao atualizar status do parceiro' };
     }
   },
+
 
   // Atualizar parceiro (role e business_model)
   async updatePartner(userId, partnerData) {

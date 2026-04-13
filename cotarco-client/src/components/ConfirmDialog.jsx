@@ -10,7 +10,8 @@ const ConfirmDialog = ({
   description = "Tem a certeza que deseja continuar?",
   confirmText = "Confirmar",
   cancelText = "Cancelar",
-  type = "warning" // warning, danger, info
+  type = "warning", // warning, danger, info
+  children = null    // conteúdo extra a renderizar entre a descrição e os botões
 }) => {
   const getIconAndColors = () => {
     switch (type) {
@@ -68,6 +69,12 @@ const ConfirmDialog = ({
             </div>
           </div>
           
+          {children && (
+            <div className="mt-4">
+              {children}
+            </div>
+          )}
+
           <div className="mt-6 flex gap-3">
             <button
               type="button"
