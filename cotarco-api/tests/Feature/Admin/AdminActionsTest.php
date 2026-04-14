@@ -74,7 +74,8 @@ class AdminActionsTest extends TestCase
 
         // 2. Act: Atua como o admin e chama o endpoint de rejeição
         $response = $this->actingAs($this->admin)->putJson("/api/admin/partners/{$distribuidor->id}/status", [
-            'status' => 'rejected'
+            'status' => 'rejected',
+            'reason' => 'Documentação incompleta'
         ]);
 
         // 3. Assert

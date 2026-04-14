@@ -21,8 +21,11 @@ test.describe('Partner Dashboard', () => {
   test('should load categories and products', async ({ page }) => {
     await expect(page.getByText('Categorias')).toBeVisible({ timeout: 15000 });
     
-    // The category buttons are usually in a white shadow container
-    const categoryButtons = page.locator('.bg-white.shadow button');
+    // The category buttons are now explicitly tagged
+    const categoriesList = page.getByTestId('categories-list');
+    await expect(categoriesList).toBeVisible({ timeout: 15000 });
+    
+    const categoryButtons = categoriesList.locator('.category-button');
     await expect(categoryButtons.first()).toBeVisible({ timeout: 20000 });
     
     // Click a category and check for products

@@ -82,8 +82,8 @@ class StockFileController extends Controller
                 ]
             );
 
-            // Disparar o Job para processar o arquivo em segundo plano
-            ProcessStockFileJob::dispatch($filePath, $request->input('target_business_model'));
+            // Disparar o Job para processar o arquivo de forma síncrona para feedback imediato e suporte a testes E2E
+            ProcessStockFileJob::dispatchSync($filePath, $request->input('target_business_model'));
 
             return response()->json([
                 'message' => 'Ficheiro recebido. A importação dos preços foi iniciada em segundo plano.',

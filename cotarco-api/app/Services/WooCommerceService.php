@@ -29,8 +29,8 @@ class WooCommerceService
             $response = Http::withBasicAuth($this->consumerKey, $this->consumerSecret)
                 ->get($this->storeUrl . '/wp-json/wc/v3/products/categories', [
                     'hide_empty' => true,
-                    'per_page' => 100,
-                    'parent' => 0
+                    'per_page' => 100
+                    // Removing 'parent' => 0 to fetch all categories at once
                 ]);
 
             if ($response->successful()) {
@@ -481,10 +481,19 @@ class WooCommerceService
         );
 
         // Sync Categories
+        // Ensure categories are synced. Variations inherit parent categories if not explicitly set.
         if (isset($data['categories']) && is_array($data['categories'])) {
             $categoryIds = array_column($data['categories'], 'id');
-            // Sync categories. We assume categories have been synced prior to products.
             $product->categories()->sync($categoryIds);
+        } elseif ($product->parent_id > 0) {
+            // Inheritance for variations if they don't have their own categories
+            $parent = \App\Models\Product::find($product->parent_id);
+            if ($parent) {
+                $parentCategoryIds = $parent->categories()->pluck('categories.id')->toArray();
+                if (!empty($parentCategoryIds)) {
+                    $product->categories()->sync($parentCategoryIds);
+                }
+            }
         }
 
         return $product;
@@ -519,6 +528,7 @@ class WooCommerceService
             // But fetchCustomDescription works on meta_data, so we pass variation data.
             'meta_data' => $variation['meta_data'] ?? [],
             'attributes' => $variation['attributes'] ?? [], // Add attributes sync for variations
+            'categories' => $parent['categories'] ?? [], // Inherit categories from parent
         ];
     }
 }

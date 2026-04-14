@@ -25,7 +25,9 @@ class CategoryController extends Controller
     {
         // Buscar do banco de dados local
         // Ordenar por menu_order se desejar manter a ordem do WC
-        $categories = \App\Models\Category::orderBy('menu_order', 'asc')->get();
+        $categories = \App\Models\Category::where('parent', 0)
+            ->orderBy('menu_order', 'asc')
+            ->get();
 
         return response()->json([
             'success' => true,

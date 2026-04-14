@@ -53,5 +53,38 @@ class PlaywrightAuthSeeder extends Seeder
             ]
         );
         $this->command->info('Parceiro para Playwright garantido (marketing@soclima.com).');
+
+        // 3. Garantir que existem categorias e produtos para os testes de Dashboard
+        $category = \App\Models\Category::firstOrCreate(
+            ['id' => 999999], // ID alto para evitar colisões
+            [
+                'name' => 'Teste Playwright',
+                'slug' => 'teste-playwright',
+                'parent' => 0,
+                'count' => 1
+            ]
+        );
+
+        if (\App\Models\Product::count() === 0) {
+            $product = \App\Models\Product::create([
+                'name' => 'Produto de Teste Playwright',
+                'sku' => 'PW-TEST-001',
+                'slug' => 'produto-teste-playwright',
+                'status' => 'publish',
+                'price' => 1000.00,
+                'stock_status' => 'instock',
+                'description' => 'Produto gerado para testes automatizados'
+            ]);
+
+            $product->categories()->attach($category->id);
+
+            \App\Models\ProductPrice::create([
+                'product_sku' => 'PW-TEST-001',
+                'price_b2b' => 900.00,
+                'stock_quantity' => 50
+            ]);
+            
+            $this->command->info('Produtos e categorias de teste criados.');
+        }
     }
 }

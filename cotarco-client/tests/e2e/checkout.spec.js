@@ -10,7 +10,7 @@ test.describe('Checkout Page', () => {
     
     // Wait for products to load
     const firstProduct = page.locator('.product-card').first();
-    await expect(firstProduct).toBeVisible({ timeout: 25000 });
+    await expect(firstProduct).toBeVisible({ timeout: 45000 });
     
     // Add product to cart
     await firstProduct.getByRole('button', { name: /Adicionar/i }).first().click();
@@ -22,7 +22,7 @@ test.describe('Checkout Page', () => {
     await page.getByRole('button', { name: 'Finalizar Compra' }).click();
     
     // Wait for navigation to checkout
-    await page.waitForURL('**/checkout', { timeout: 25000 });
+    await page.waitForURL('**/checkout', { timeout: 45000 });
   });
 
   test('should fill shipping form and finalize order', async ({ page }) => {

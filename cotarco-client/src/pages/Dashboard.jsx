@@ -68,13 +68,24 @@ const Dashboard = () => {
 
   // Carregar produtos quando selectedCategory ou paginationInfo.currentPage mudar
   useEffect(() => {
-    if (selectedCategory === null) return;
+    // Se não há categoria selecionada mas temos categorias, selecionar a primeira
+    if (selectedCategory === null && categories.length > 0) {
+      console.log('[Dashboard] Nenhuma categoria selecionada, tentando selecionar a primeira de:', categories.length);
+      setSelectedCategory(categories[0].id);
+      return;
+    }
+
+    if (selectedCategory === null) {
+      console.log('[Dashboard] Aguardando seleção de categoria ou categorias carregarem...');
+      return;
+    }
 
     const loadProducts = async () => {
       setLoadingProducts(true);
       try {
         setProductsError(null);
         setNoProducts(false);
+        console.log(`[Dashboard] Carregando produtos para categoria: ${selectedCategory}, página: ${paginationInfo.currentPage}`);
         const response = await productService.getProducts(
           selectedCategory,
           paginationInfo.currentPage,
@@ -101,7 +112,7 @@ const Dashboard = () => {
     };
 
     loadProducts();
-  }, [selectedCategory, paginationInfo.currentPage]);
+  }, [selectedCategory, categories, paginationInfo.currentPage]);
 
   const handleStockMapClick = () => {
     setShowStockMap(true);
@@ -206,16 +217,17 @@ const Dashboard = () => {
                     </div>
                   </div>
                 ) : (
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-2" data-testid="categories-list">
                     {categories.map((category) => (
                       <button
                         key={category.id}
                         onClick={() => handleCategorySelect(category.id)}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors category-button ${
                           selectedCategory === category.id
                             ? 'my-bg-red text-white'
                             : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                         }`}
+                        data-category-id={category.id}
                       >
                         {category.name}
                       </button>

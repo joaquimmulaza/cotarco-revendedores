@@ -44,9 +44,13 @@ class ProductController extends Controller
 
         // Filters
         if ($categoryId) {
-            $query->whereHas('categories', function ($q) use ($categoryId) {
-                $q->where('categories.id', $categoryId);
-            });
+            $category = \App\Models\Category::find($categoryId);
+            if ($category) {
+                $categoryIds = $category->getAllDescendantIds();
+                $query->whereHas('categories', function ($q) use ($categoryIds) {
+                    $q->whereIn('categories.id', $categoryIds);
+                });
+            }
         }
         
         if ($search) {
@@ -182,9 +186,13 @@ class ProductController extends Controller
 
         // Filter by Category
         if ($categoryId) {
-             $query->whereHas('categories', function ($q) use ($categoryId) {
-                 $q->where('categories.id', $categoryId);
-             });
+            $category = \App\Models\Category::find($categoryId);
+            if ($category) {
+                $categoryIds = $category->getAllDescendantIds();
+                $query->whereHas('categories', function ($q) use ($categoryIds) {
+                    $q->whereIn('categories.id', $categoryIds);
+                });
+            }
         }
 
         // Filter by Search
