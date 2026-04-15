@@ -32,7 +32,7 @@ const seeded = {
  * Uses multipart/form-data to match the RegisterController validation rules.
  */
 async function seedPartner(apiCtx, { name, email }, initial_status) {
-  const response = await apiCtx.post('http://127.0.0.1:8000/api/testing/seed-partner', {
+  const response = await apiCtx.post('http://127.0.0.1:8001/api/testing/seed-partner', {
     data: {
       name,
       email,
@@ -56,7 +56,7 @@ async function seedPartner(apiCtx, { name, email }, initial_status) {
  */
 async function setPartnerStatus(apiCtx, adminToken, userId, status, extra = {}) {
   const response = await apiCtx.put(
-    `http://127.0.0.1:8000/api/admin/partners/${userId}/status`,
+    `http://127.0.0.1:8001/api/admin/partners/${userId}/status`,
     {
       headers: { Authorization: `Bearer ${adminToken}` },
       data: { status, ...extra },
@@ -137,7 +137,7 @@ test.describe('Admin Partner Actions', () => {
     for (const userId of cleanupIds) {
       if (!userId) continue;
       try {
-        const res = await apiCtx.delete(`http://127.0.0.1:8000/api/testing/seed-partner/${userId}`);
+        const res = await apiCtx.delete(`http://127.0.0.1:8001/api/testing/seed-partner/${userId}`);
         if (res.status() !== 204 && res.status() !== 404) {
           console.warn(`[afterAll] Cleanup failed for userId=${userId}: status ${res.status()}`);
         }

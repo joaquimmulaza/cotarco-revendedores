@@ -228,6 +228,7 @@ const Dashboard = () => {
                             : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                         }`}
                         data-category-id={category.id}
+                        data-active={selectedCategory === category.id}
                       >
                         {category.name}
                       </button>

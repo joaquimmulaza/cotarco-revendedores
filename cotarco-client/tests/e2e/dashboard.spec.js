@@ -23,13 +23,13 @@ test.describe('Partner Dashboard', () => {
     
     // The category buttons are now explicitly tagged
     const categoriesList = page.getByTestId('categories-list');
-    await expect(categoriesList).toBeVisible({ timeout: 15000 });
+    await expect(categoriesList).toBeVisible({ timeout: 30000 });
     
-    const categoryButtons = categoriesList.locator('.category-button');
-    await expect(categoryButtons.first()).toBeVisible({ timeout: 20000 });
-    
-    // Click a category and check for products
-    await categoryButtons.first().click();
+    const categoryButton = categoriesList.locator('button[data-category-id="999999"]');
+    await expect(categoryButton).toBeVisible({ timeout: 15000 });
+    await categoryButton.click();
+    console.log('Category "Teste Playwright" clicked for generic product test');
+    console.log('Category clicked');
 
     const productCards = page.locator('.product-card');
     await expect(productCards.first()).toBeVisible({ timeout: 30000 });
@@ -39,15 +39,32 @@ test.describe('Partner Dashboard', () => {
   });
 
   test('should add product to cart', async ({ page }) => {
-    // Wait for products
-    const productCard = page.locator('.product-card').first();
-    await expect(productCard).toBeVisible({ timeout: 30000 });
+    // 1. Select the "Teste Playwright" category
+    const categoriesList = page.getByTestId('categories-list');
+    await expect(categoriesList).toBeVisible({ timeout: 30000 });
+    const categoryButton = categoriesList.locator('button[data-category-id="999999"]');
+    await expect(categoryButton).toBeVisible({ timeout: 15000 });
+    await categoryButton.click();
+    // Wait for the button to reflect the active state (CSS class or data attribute)
+    await expect(categoryButton).toHaveAttribute('data-active', 'true', { timeout: 10000 });
+    console.log('Category "Teste Playwright" selected and active in dashboard');
+
+    // 2. Wait explicitly for the specific test product to become visible
+    const testProduct = page.locator('.product-card', { hasText: 'Produto de Teste Playwright' }).first();
+    await expect(testProduct).toBeVisible({ timeout: 45000 });
+    console.log('Test product visible in dashboard');
 
     // Click "Adicionar"
-    await productCard.getByRole('button', { name: /Adicionar/i }).click();
+    await testProduct.getByRole('button', { name: /Adicionar/i }).click();
+    console.log('Clicked Adicionar in dashboard');
+
+    // Wait for cart to update
+    const cartButton = page.getByRole('button', { name: 'Abrir carrinho' });
+    await expect(cartButton).toContainText(/[1-9]/, { timeout: 15000 });
+    console.log('Cart updated in dashboard');
 
     // Open cart
-    await page.getByRole('button', { name: 'Abrir carrinho' }).click();
+    await cartButton.click();
 
     // Verify
     await expect(page.getByText('Meu Carrinho de Compras')).toBeVisible();

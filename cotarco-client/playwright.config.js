@@ -20,8 +20,8 @@ export default defineConfig({
 
   webServer: [
     {
-      command: 'npx cross-env APP_ENV=testing DB_DATABASE=cotarco_revendedores_test php artisan serve --port=8000',
-      reuseExistingServer: true,
+      command: 'npx cross-env APP_ENV=testing DB_DATABASE=cotarco_revendedores_test php artisan serve --port=8001',
+      reuseExistingServer: false,
       cwd: 'c:/cotarco-revendedores/cotarco-api',
       env: {
         APP_ENV: 'testing',
@@ -29,8 +29,8 @@ export default defineConfig({
       }
     },
     {
-      command: 'npx cross-env VITE_API_URL=http://127.0.0.1:8000/api npm run dev -- --host 127.0.0.1 --port 5173',
-      reuseExistingServer: true,
+      command: 'npx cross-env VITE_API_URL=http://127.0.0.1:8001/api VITE_API_PORT=8001 npm run dev -- --host 127.0.0.1 --port 5173',
+      reuseExistingServer: false,
       cwd: 'c:/cotarco-revendedores/cotarco-client'
     },
   ],

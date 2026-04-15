@@ -55,7 +55,7 @@ class PlaywrightAuthSeeder extends Seeder
         $this->command->info('Parceiro para Playwright garantido (marketing@soclima.com).');
 
         // 3. Garantir que existem categorias e produtos para os testes de Dashboard
-        $category = \App\Models\Category::firstOrCreate(
+        $category = \App\Models\Category::updateOrCreate(
             ['id' => 999999], // ID alto para evitar colisões
             [
                 'name' => 'Teste Playwright',
@@ -65,26 +65,30 @@ class PlaywrightAuthSeeder extends Seeder
             ]
         );
 
-        if (\App\Models\Product::count() === 0) {
-            $product = \App\Models\Product::create([
+        $product = \App\Models\Product::updateOrCreate(
+            ['sku' => 'PW-TEST-001'],
+            [
+                'id' => 999999,
                 'name' => 'Produto de Teste Playwright',
-                'sku' => 'PW-TEST-001',
                 'slug' => 'produto-teste-playwright',
+                'permalink' => '/produto-teste-playwright',
                 'status' => 'publish',
                 'price' => 1000.00,
                 'stock_status' => 'instock',
                 'description' => 'Produto gerado para testes automatizados'
-            ]);
+            ]
+        );
 
-            $product->categories()->attach($category->id);
+        $product->categories()->syncWithoutDetaching([$category->id]);
 
-            \App\Models\ProductPrice::create([
-                'product_sku' => 'PW-TEST-001',
+        \App\Models\ProductPrice::updateOrCreate(
+            ['product_sku' => 'PW-TEST-001'],
+            [
                 'price_b2b' => 900.00,
                 'stock_quantity' => 50
-            ]);
-            
-            $this->command->info('Produtos e categorias de teste criados.');
-        }
+            ]
+        );
+        
+        $this->command->info('Produtos e categorias de teste garantidos.');
     }
 }

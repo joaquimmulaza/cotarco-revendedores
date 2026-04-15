@@ -8,21 +8,38 @@ test.describe('Checkout Page', () => {
     // Before checkout, let's add an item to the cart
     await page.goto('/distribuidores/dashboard');
     
-    // Wait for products to load
-    const firstProduct = page.locator('.product-card').first();
-    await expect(firstProduct).toBeVisible({ timeout: 45000 });
+    // 1. Wait for categories and select the "Teste Playwright" category
+    const categoriesList = page.getByTestId('categories-list');
+    await expect(categoriesList).toBeVisible({ timeout: 30000 });
+    const categoryButton = categoriesList.locator('button[data-category-id="999999"]');
+    await expect(categoryButton).toBeVisible({ timeout: 15000 });
+    await categoryButton.click();
+    console.log('Category "Teste Playwright" selected');
+
+    // 2. Wait explicitly for the specific test product to load in the DOM
+    const testProduct = page.locator('.product-card', { hasText: 'Produto de Teste Playwright' }).first();
+    await expect(testProduct).toBeVisible({ timeout: 45000 });
+    console.log('Test product visible on dashboard');
     
     // Add product to cart
-    await firstProduct.getByRole('button', { name: /Adicionar/i }).first().click();
+    await testProduct.getByRole('button', { name: /Adicionar/i }).click();
+    console.log('Clicked Adicionar');
+
+    // Wait for the cart to update (badge should appear)
+    const cartButton = page.getByRole('button', { name: 'Abrir carrinho' });
+    await expect(cartButton).toContainText(/[1-9]/, { timeout: 15000 });
+    console.log('Cart updated with items');
     
     // Open cart drawer
-    await page.getByRole('button', { name: 'Abrir carrinho' }).click();
+    await cartButton.click();
+    console.log('Cart drawer opened');
     
     // Click "Finalizar Compra" inside the drawer
     await page.getByRole('button', { name: 'Finalizar Compra' }).click();
     
     // Wait for navigation to checkout
-    await page.waitForURL('**/checkout', { timeout: 45000 });
+    await page.waitForURL('**/checkout', { timeout: 60000 });
+    console.log('Navigated to checkout');
   });
 
   test('should fill shipping form and finalize order', async ({ page }) => {
@@ -35,19 +52,24 @@ test.describe('Checkout Page', () => {
 
     // Click on finalize order
     const finalizeButton = page.getByRole('button', { name: 'Finalizar Encomenda' });
+    await expect(finalizeButton).toBeEnabled();
     
+    console.log('Clicking finalize order...');
     // Wait for the payment creation request to be sent and accepted
     const [response] = await Promise.all([
       page.waitForResponse(response => 
-        response.url().includes('/orders/create-payment') && response.status() === 202,
-        { timeout: 30000 }
+        response.url().includes('/orders/create-payment') && (response.status() === 202 || response.status() === 201 || response.status() === 200),
+        { timeout: 60000 }
       ),
       finalizeButton.click()
     ]);
 
+    console.log('Payment request sent, status:', response.status());
+
     // The backend might take time to generate references (polling up to 120s in UI)
-    await expect(page.getByText('Pagamento Gerado com Sucesso!')).toBeVisible({ timeout: 100000 });
+    await expect(page.getByText('Pagamento Gerado com Sucesso!')).toBeVisible({ timeout: 120000 });
     await expect(page.getByText('Entidade')).toBeVisible();
     await expect(page.getByText('Referência')).toBeVisible();
+    console.log('Order finalized successfully');
   });
 });

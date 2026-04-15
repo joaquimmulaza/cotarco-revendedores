@@ -49,7 +49,7 @@ test.describe('Fluxo (d): Notificação de Pagamento Confirmado (AppyPay)', () =
     const emailBlock = await waitForEmailInLog(testEmail, 20000);
     const verificationUrlMatch = emailBlock.match(/https?:\/\/\S*\/api\/email\/verify\/[^\s"<>]+/);
     if (!verificationUrlMatch) throw new Error('URL de verificação não encontrado no log');
-    let verificationUrl = verificationUrlMatch[0].replace(':8001', ':8000');
+    let verificationUrl = verificationUrlMatch[0];
 
     await page.goto(verificationUrl);
     await expect(page).toHaveURL(/.*\/email-validated/);
@@ -124,7 +124,7 @@ test.describe('Fluxo (d): Notificação de Pagamento Confirmado (AppyPay)', () =
 
     // Passo 3: Criar Encomenda usando contexto ISOLADO para evitar conflito de cookies (Sanctum Stateful)
     const apiContext = await request.newContext({
-      baseURL: 'http://127.0.0.1:8000',
+      baseURL: 'http://127.0.0.1:8001',
       extraHTTPHeaders: {
         'Authorization': `Bearer ${token}`,
         'Accept': 'application/json',
@@ -166,7 +166,7 @@ test.describe('Fluxo (d): Notificação de Pagamento Confirmado (AppyPay)', () =
     const apiContext = await request.newContext();
 
     // O WebhookController espera merchantTransactionId e responseStatus.status === 'success'
-    const webhookResponse = await apiContext.post('http://127.0.0.1:8000/api/webhooks/appypay', {
+    const webhookResponse = await apiContext.post('http://127.0.0.1:8001/api/webhooks/appypay', {
       data: {
         merchantTransactionId: merchantTransactionId,
         responseStatus: {
