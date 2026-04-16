@@ -88,7 +88,42 @@ class PlaywrightAuthSeeder extends Seeder
                 'stock_quantity' => 50
             ]
         );
+
+        // 4. Garantir que existe um produto ESPECÍFICO para o fluxo de encomendas (Golden Flow)
+        $orderCategory = \App\Models\Category::updateOrCreate(
+            ['id' => 999998],
+            [
+                'name' => 'Testes Automatizados',
+                'slug' => 'testes-automatizados',
+                'parent' => 0,
+                'count' => 1
+            ]
+        );
+
+        $orderProduct = \App\Models\Product::updateOrCreate(
+            ['sku' => 'E2E-ORDER-PROD-01'],
+            [
+                'id' => 999998,
+                'name' => 'Produto Teste Fluxo',
+                'slug' => 'produto-teste-fluxo',
+                'permalink' => '/produto-teste-fluxo',
+                'status' => 'publish',
+                'price' => 1000.00,
+                'stock_status' => 'instock',
+                'description' => 'Produto dedicado para o teste 360 de encomendas'
+            ]
+        );
+
+        $orderProduct->categories()->syncWithoutDetaching([$orderCategory->id]);
+
+        \App\Models\ProductPrice::updateOrCreate(
+            ['product_sku' => 'E2E-ORDER-PROD-01'],
+            [
+                'price_b2b' => 1000.00,
+                'stock_quantity' => 10
+            ]
+        );
         
-        $this->command->info('Produtos e categorias de teste garantidos.');
+        $this->command->info('Produtos e categorias de teste (incluindo Order Flow) garantidos.');
     }
 }
