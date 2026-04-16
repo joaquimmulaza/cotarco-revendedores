@@ -384,7 +384,11 @@ export default function ProductListViewer() {
             <tbody className="bg-white divide-y divide-gray-100">
               {rows.map((row) => (
                 <Fragment key={row.id}>
-                  <tr className="hover:bg-gray-50">
+                  <tr 
+                    className="hover:bg-gray-50"
+                    data-testid="product-row"
+                    data-sku={row.original.sku}
+                  >
                     {row.getVisibleCells().map((cell) => (
                       <td
                         key={cell.id}

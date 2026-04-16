@@ -47,6 +47,86 @@ class AdminE2ETestSeeder extends Seeder
 
         // 6. Seed Products from the Excel file to allow price imports
         $this->seedProductsFromExcel();
+
+        // 7. Seed specific products for Product Management E2E tests
+        $this->seedProductManagementTestData();
+    }
+
+    private function seedProductManagementTestData()
+    {
+        $cat1 = Category::updateOrCreate(
+            ['id' => 888888],
+            ['name' => 'Categoria de Teste 1', 'slug' => 'categoria-teste-1', 'parent' => 0]
+        );
+
+        Category::updateOrCreate(
+            ['id' => 888889],
+            ['name' => 'Categoria de Teste 2', 'slug' => 'categoria-teste-2', 'parent' => 0]
+        );
+
+        // 1. Variable Product with Variations
+        $parent = Product::updateOrCreate(
+            ['sku' => 'PARENT-001'],
+            [
+                'id' => 888888,
+                'name' => 'Produto Pai Teste',
+                'slug' => 'produto-pai-teste',
+                'permalink' => '/produto-pai-teste',
+                'status' => 'publish',
+                'type' => 'variable',
+                'parent_id' => 0
+            ]
+        );
+        $parent->categories()->syncWithoutDetaching([$cat1->id]);
+
+        Product::updateOrCreate(
+            ['sku' => 'CHILD-001'],
+            [
+                'id' => 888889,
+                'name' => 'Variação Teste 1',
+                'slug' => 'variacao-teste-1',
+                'permalink' => '/variacao-teste-1',
+                'status' => 'publish',
+                'type' => 'variation',
+                'parent_id' => $parent->id
+            ]
+        );
+
+        Product::updateOrCreate(
+            ['sku' => 'CHILD-002'],
+            [
+                'id' => 888890,
+                'name' => 'Variação Teste 2',
+                'slug' => 'variacao-teste-2',
+                'permalink' => '/variacao-teste-2',
+                'status' => 'publish',
+                'type' => 'variation',
+                'parent_id' => $parent->id
+            ]
+        );
+
+        // Ensure variations have prices
+        ProductPrice::updateOrCreate(['product_sku' => 'CHILD-001'], ['price_b2b' => 100, 'price_b2c' => 120, 'stock_quantity' => 5]);
+        ProductPrice::updateOrCreate(['product_sku' => 'CHILD-002'], ['price_b2b' => 200, 'price_b2c' => 240, 'stock_quantity' => 10]);
+
+        // 2. Simple Products for Pagination (Total 12 in Cat 1)
+        for ($i = 1; $i <= 11; $i++) {
+            $sku = "PROD-CAT1-" . str_pad($i, 3, '0', STR_PAD_LEFT);
+            $prod = Product::updateOrCreate(
+                ['sku' => $sku],
+                [
+                    'id' => 888900 + $i,
+                    'name' => "Produto Simples $i",
+                    'slug' => "produto-simples-$i",
+                    'permalink' => "/produto-simples-$i",
+                    'status' => 'publish',
+                    'type' => 'simple',
+                    'parent_id' => 0
+                ]
+            );
+            $prod->categories()->syncWithoutDetaching([$cat1->id]);
+            ProductPrice::updateOrCreate(['product_sku' => $sku], ['price_b2b' => 50 + $i, 'price_b2c' => 60 + $i, 'stock_quantity' => $i]);
+        }
     }
 
     private function seedStockFile($businessModel)

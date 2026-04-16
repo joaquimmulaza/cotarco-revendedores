@@ -2,7 +2,8 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Admin Login Page', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/distribuidores/admin/login', { waitUntil: 'networkidle' });
+    await page.goto('/distribuidores/admin/login', { waitUntil: 'domcontentloaded' });
+    await page.waitForSelector('input[name="email"]');
   });
 
   test('should login successfully with admin credentials and redirect', async ({ page }) => {

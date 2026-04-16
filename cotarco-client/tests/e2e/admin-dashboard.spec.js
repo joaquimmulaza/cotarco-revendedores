@@ -25,7 +25,7 @@ test.describe('Admin Dashboard Access', () => {
   test.use({ storageState: { cookies: [], origins: [] } });
 
   test('should redirect non-admin users from admin dashboard', async ({ page }) => {
-    await page.goto('/distribuidores/admin/dashboard/partners', { waitUntil: 'networkidle' });
+    await page.goto('/distribuidores/admin/dashboard/partners', { waitUntil: 'domcontentloaded' });
     
     // Deve ser redirecionado para a página de login do admin
     await expect(page).toHaveURL(/.*\/admin\/login/);

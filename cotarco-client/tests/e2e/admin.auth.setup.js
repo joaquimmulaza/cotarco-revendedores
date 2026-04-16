@@ -6,7 +6,8 @@ import { test as setup, expect } from '@playwright/test';
 const adminFile = 'playwright/.auth/admin.json';
 
 setup('authenticate as admin', async ({ page }) => {
-  await page.goto('/distribuidores/admin/login', { waitUntil: 'networkidle' });
+  await page.goto('/distribuidores/admin/login', { waitUntil: 'domcontentloaded' });
+  await page.waitForSelector('input[name="email"]');
 
   // Usar seletores por name (mais robustos com animações Framer Motion)
   await page.fill('input[name="email"]', 'joaquimmulazadev@gmail.com');
