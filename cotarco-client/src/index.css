@@ -3,6 +3,34 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@font-face {
+    font-family: 'Liberation Sans';
+    src: url('./assets/fonts/LiberationSans-Regular.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Liberation Sans';
+    src: url('./assets/fonts/LiberationSans-Bold.woff') format('woff');
+    font-weight: bold;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Liberation Sans';
+    src: url('./assets/fonts/LiberationSans-Italic.woff') format('woff');
+    font-weight: normal;
+    font-style: italic;
+}
+
+@font-face {
+    font-family: 'Liberation Sans';
+    src: url('./assets/fonts/LiberationSans-BoldItalic.woff') format('woff');
+    font-weight: bold;
+    font-style: italic;
+}
+
 /* estilos globais adicionais aqui, se necessário */
 
 .my-text-red{
@@ -63,6 +91,7 @@
   }
 
   @theme inline {
+    --font-sans: "Liberation Sans", ui-sans-serif, system-ui, sans-serif;
     --radius-sm: calc(var(--radius) - 4px);
     --radius-md: calc(var(--radius) - 2px);
     --radius-lg: var(--radius);

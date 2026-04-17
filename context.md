@@ -1,7 +1,7 @@
 # Contexto do Projeto: Cotarco Revendedores
 
 ## 📌 Descrição do Projeto
-O **Cotarco Revendedores** é um sistema B2B (Business to Business) construído para gerenciar o registro, aprovação e as operações de revendedores/parceiros (partners) da Cotarco. O sistema é composto por uma arquitetura separada com um **Frontend (Client)** em React (Vite) e um **Backend (API)** em Laravel. Através dessa plataforma, revendedores podem se registrar, submeter documentações (ex: alvarás), fazer login, visualizar produtos (com suporte a descrições customizadas originárias do WooCommerce) e realizar pedidos (com pagamentos integrados via API do gateway AppyPay usando referências Multicaixa). Administradores podem gerir aprovações de revendedores pendentes.
+**Cotarco Distribuidores** é um marketplace B2B e B2C (Business to Business e Business to Consumer) que oferece uma vasta gama de eletrodomésticos, telemóveis, e acessórios da marca Samsung construído para gerenciar o registro, aprovação e as operações de distribuidores da Cotarco. O sistema é composto por uma arquitetura separada com um **Frontend (Client)** em React (Vite) e um **Backend (API)** em Laravel. Através dessa plataforma, distribuidores podem se registrar, e no registo submeter a documentação (ex: alvarás) para validar a empresa, fazer login, visualizar produtos (com suporte a descrições customizadas originárias do WooCommerce) e realizar pedidos (com pagamentos integrados via API do gateway AppyPay usando referências Multicaixa). Administradores podem gerir aprovações de distribuidores pendentes.
 
 ---
 
@@ -64,14 +64,14 @@ A estrutura raiz principal (`c:\cotarco-revendedores`) está dividida em duas ap
 
 *   **Autenticação e Autorização:**
     *   Sistema base utilizando Laravel Sanctum (Tokens JWT).
-    *   Registro de novos revendedores (fluxo de onboarding de parceiros).
-    *   Páginas de Login separadas (Login de Revendedor e Login de Admin).
+    *   Registro de novos distribuidores (fluxo de onboarding de distribuidores).
+    *   Páginas de Login separadas (Login de distribuidores e Login de Admin).
     *   Recuperação e redefinição de senha (`ForgotPassword`, `ResetPassword`).
     *   Validação de e-mail implementada.
 
-*   **Gestão de Revendedores (Admin):**
-    *   Lista de revendedores pendentes.
-    *   Aprovação e rejeição de solicitações de revenda de parceiros.
+*   **Gestão de distribuidores (Admin):**
+    *   Lista de distribuidores pendentes.
+    *   Aprovação e rejeição de registro de distribuidores.
     *   Envio automatizado de e-mails de notificação (RevendedorApproved, RevendedorRejected).
     *   Criação automática do `PartnerProfile` ligado ao `User`.
     *   Armazenamento de documentação (`alvaras`) no file system privado com gestão de permissões.
@@ -82,7 +82,7 @@ A estrutura raiz principal (`c:\cotarco-revendedores`) está dividida em duas ap
 
 *   **Pedidos e Checkout:**
     *   Funcionalidade de Checkout (`CheckoutPage`) com visualização de tela de sucesso/detalhes dos pedidos (`OrderDetailPage`).
-    *   Integração com Gateway de Pagamento (AppyPay): Geração de referências Multicaixa para pagamentos utilizando chamadas OAuth2 à API AppyPay (veja a [Documentação Oficial da API AppyPay](https://appypay.stoplight.io/docs/appypay-payment-gateway/e36aeb2e2fb52-intro)). A processamento ocorre de forma assíncrona (`CreateAppyPayChargeJob`) disparando e-mails para o parceiro contendo a entidade e referência para pagamento local.
+    *   Integração com Gateway de Pagamento (AppyPay): Geração de referências Multicaixa para pagamentos utilizando chamadas OAuth2 à API AppyPay (veja a [Documentação Oficial da API AppyPay](https://appypay.stoplight.io/docs/appypay-payment-gateway/e36aeb2e2fb52-intro)). O processamento ocorre de forma assíncrona (`CreateAppyPayChargeJob`) disparando e-mails para o distribuidor contendo a entidade e referência para pagamento local.
     *   APIs para recebimento de webhooks (incluindo atualizações de pagamento em `WebhookController`) e gestão de estoque (`StockFileController`).
 
 *   **Interface (Frontend):**
@@ -118,7 +118,7 @@ A estrutura raiz principal (`c:\cotarco-revendedores`) está dividida em duas ap
 * **Workflow de Alta Precisão (Passo-a-passo):**
   1. **TDD:** Escrever e correr os testes unitários do componente de antemão.
   2. **Enhance Prompt:** Utilizar skills dedicas como a `enhance_prompt` combinando os requisitos da UI em conjunto com o contexto imutável do projeto.
-  3. **Geração:** Enviar as requisições geradas para processamento pelo Stitch via MCP (`generate_screen_from_text` ou `edit_screens`), visando sempre mobile-first e estruturado em Tailwind CSS.
+  3. **Geração:** Enviar as requisições geradas para processamento pelo Stitch via MCP (`generate_screen_from_text` ou `edit_screens`), visando sempre em duas versões desktop e mobile estruturado em Tailwind CSS.
   4. **Integração:** Trazer os retornos do Stitch traduzindo para componentes React via a skill `react_components`.
   5. **Validação:** Refinar e polir os dados no código gerado garantindo que atende à passagem total dos testes definidos (Passo 1).
 

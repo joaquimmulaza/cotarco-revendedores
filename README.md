@@ -1,6 +1,6 @@
-# Cotarco Revendedores
+# Cotarco Distribuidores
 
-> Plataforma B2B para gestão de revendedores e distribuidores da Cotarco, com catálogo de produtos, checkout integrado ao gateway de pagamento AppyPay (referências Multicaixa) e painel administrativo de aprovação.
+>**Cotarco Distribuidores** é um marketplace B2B e B2C (Business to Business e Business to Consumer) que oferece uma vasta gama de eletrodomésticos, telemóveis, e acessórios da marca Samsung construído para gerenciar o registro, aprovação e as operações de distribuidores da Cotarco. O sistema é composto por uma arquitetura separada com um **Frontend (Client)** em React (Vite) e um **Backend (API)** em Laravel. Através dessa plataforma, distribuidores podem se registrar, e no registo submeter a documentação (ex: alvarás) para validar a empresa, fazer login, visualizar produtos (com suporte a descrições customizadas originárias do WooCommerce) e realizar pedidos (com pagamentos integrados via API do gateway AppyPay usando referências Multicaixa). Administradores podem gerir aprovações de distribuidores pendentes.
 
 ---
 
@@ -24,7 +24,7 @@
 
 ## Visão Geral
 
-O **Cotarco Revendedores** é um sistema B2B que permite à Cotarco gerir toda a operação com os seus parceiros comerciais (revendedores e distribuidores). A plataforma cobre o ciclo completo: desde o **registo e onboarding** de novos revendedores (com envio de documentação como alvarás), passando pela **aprovação administrativa**, até ao **catálogo de produtos** com preços diferenciados B2B/B2C e **checkout com pagamento via referência Multicaixa**.
+O **Cotarco Distribuidores** é um marketplace B2B e B2C que permite à Cotarco gerir toda a operação com os seus parceiros comerciais. A plataforma cobre o ciclo completo: desde o **registo e onboarding** de novos distribuidores (com envio de documentação como alvarás), passando pela **aprovação administrativa**, até ao **catálogo de produtos** com preços diferenciados B2B/B2C e **checkout com pagamento via referência Multicaixa**.
 
 ### Papéis de Utilizador
 
