@@ -1,4 +1,4 @@
-import { createBrowserRouter, RouterProvider, Routes, Route } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 
 // Import pages
 import Login from './pages/Login';
@@ -13,6 +13,10 @@ import ApiTestPage from './pages/ApiTestPage';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import CheckoutPage from './pages/CheckoutPage';
+
+// Import Layouts
+import AdminLayout from './components/layouts/AdminLayout';
+import PartnerLayout from './components/layouts/PartnerLayout';
 
 // Import components
 import ProtectedRoute from './components/ProtectedRoute';
@@ -56,41 +60,45 @@ function AppContent() {
       path: "/reset-password",
       element: <ResetPassword />
     },
-    // 🔥 ADICIONADA: Rota para verificação de email
     {
       path: "/email/verify/:id/:hash",
       element: <EmailValidated />
     },
     {
-      path: "/dashboard",
       element: (
         <ProtectedRoute>
-          <Dashboard />
+          <PartnerLayout />
         </ProtectedRoute>
-      )
-    },
-    {
-      path: "/checkout",
-      element: (
-        <ProtectedRoute>
-          <CheckoutPage />
-        </ProtectedRoute>
-      )
+      ),
+      children: [
+        {
+          path: "/dashboard",
+          element: <Dashboard />
+        },
+        {
+          path: "/checkout",
+          element: <CheckoutPage />
+        }
+      ]
     },
     {
       path: "/admin/login",
       element: <AdminLogin />
     },
     {
-      path: "/admin/dashboard/*",
       element: (
         <ProtectedRoute adminOnly={true}>
-          <AdminDashboard />
+          <AdminLayout />
         </ProtectedRoute>
-      )
+      ),
+      children: [
+        {
+          path: "/admin/dashboard/*",
+          element: <AdminDashboard />
+        }
+      ]
     }
   ], {
-    // 🔥 CORRIGIDO: Usar basename fixo em vez de variável de ambiente
     basename: '/distribuidores'
   });
 
@@ -102,4 +110,4 @@ function AppContent() {
   );
 }
 
-export default AppContent
+export default AppContent;
