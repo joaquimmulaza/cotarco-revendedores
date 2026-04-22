@@ -167,9 +167,9 @@ const OrderList = () => {
   }
 
   return (
-    <div className="w-full">
+    <div className="w-full px-6 py-4">
       <div className="mb-4">
-        <h2 className="text-xl font-semibold">Encomendas</h2>
+        {/* <h2 className="text-xl font-semibold">Encomendas</h2> */}
         <div className="flex justify-between items-center mt-2">
           <div className="flex space-x-2">
             <button

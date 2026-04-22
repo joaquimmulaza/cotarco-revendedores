@@ -1,6 +1,6 @@
 import { NavLink, useLocation } from "react-router-dom";
 import { 
-  BarChart, 
+  Home, 
   Package, 
   Users, 
   Box,
@@ -29,7 +29,7 @@ export function AdminSidebar() {
   const location = useLocation();
 
   const items = [
-    { title: "Home", url: "/admin/dashboard", icon: BarChart },
+    { title: "Home", url: "/admin/dashboard", icon: Home },
     { title: "Parceiros", url: "/admin/dashboard/partners", icon: Users },
     { title: "Catálogo", url: "/admin/dashboard/product-list", icon: Box },
     { title: "Stocks", url: "/admin/dashboard/stock-files", icon: Database },

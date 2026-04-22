@@ -308,12 +308,12 @@ const PartnerManager = () => {
   console.log(`[PartnerManager] Rendering with ${partners.length} partners for status '${currentStatus}'`);
 
   return (
-    <div className="bg-white shadow rounded-lg">
-      <div className="px-6 py-4 border-b border-gray-200">
+    <div className="bg-white  rounded-lg">
+      <div className="px-6 py-4">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
-          <h3 className="text-lg font-medium text-gray-700">
+          {/* <h3 className="text-lg font-medium text-gray-700">
             Gestão de Parceiros
-          </h3>
+          </h3> */}
           
           <div className="relative w-full md:w-96">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">

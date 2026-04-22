@@ -234,9 +234,9 @@ export default function ProductListViewer() {
   const rows = table.getRowModel().rows;
 
   return (
-    <div className="w-full">
+    <div className="w-full px-6 py-4">
       <div className="mb-4">
-        <h2 className="text-xl font-semibold">Produtos</h2>
+        {/* <h2 className="text-xl font-semibold">Produtos</h2> */}
         {error && <p className="text-sm text-red-600">{error.message || String(error)}</p>}
         {categoriesError && <p className="text-sm text-red-600">Erro ao carregar categorias</p>}
       </div>
