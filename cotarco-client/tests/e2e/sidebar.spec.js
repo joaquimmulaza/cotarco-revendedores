@@ -17,7 +17,7 @@ test.describe('Sidebar Component (Partner Context)', () => {
     await expect(logo).toBeVisible();
 
     // Specific Partner Items
-    const expectedItems = ["Início", "Comprar", "Checkout", "Histórico", "O Meu Perfil"];
+    const expectedItems = ["Início", "Histórico", "O Meu Perfil"];
     for (const item of expectedItems) {
       await expect(sidebar.locator('a', { hasText: item })).toBeVisible();
     }
@@ -65,6 +65,6 @@ test.describe('Sidebar Component (Partner Context)', () => {
     
     // It should be either Início or Comprar (both point to /catalog)
     const text = await activeLink.textContent();
-    expect(["Início", "Comprar"]).toContain(text?.trim());
+    expect(["Início"]).toContain(text?.trim());
   });
 });

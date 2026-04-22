@@ -28,7 +28,6 @@ export function PartnerSidebar() {
 
   const items = [
     { title: "Início", url: "/catalog", icon: Home },
-    { title: "Comprar", url: "/catalog", icon: ShoppingCart },
     { title: "Histórico", url: "/orders", icon: History },
     { title: "O Meu Perfil", url: "/profile", icon: User },
   ];

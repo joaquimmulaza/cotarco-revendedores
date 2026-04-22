@@ -1,6 +1,6 @@
 # Test Credentials context
 
-Este documento serve para fornecer contexto aos agentes de IA sobre as credenciais de teste válidas neste repositório.
+Este documento serve para fornecer contexto aos agentes de IA sobre as credenciais de acesso válidas neste repositório.
 
 ## Admin Dashboard
 - **URL**: `/distribuidores/admin/login`
