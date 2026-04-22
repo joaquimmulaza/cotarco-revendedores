@@ -13,7 +13,7 @@ class ClearWooCommerceCache extends Command
      *
      * @var string
      */
-    protected $signature = 'wc:cache:clear';
+    protected $signature = 'woocommerce:clear-cache';
 
     /**
      * The console command description.

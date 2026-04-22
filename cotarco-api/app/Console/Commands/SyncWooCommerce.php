@@ -12,7 +12,7 @@ class SyncWooCommerce extends Command
      *
      * @var string
      */
-    protected $signature = 'sync:woocommerce';
+    protected $signature = 'woocommerce:sync';
 
     /**
      * The console command description.

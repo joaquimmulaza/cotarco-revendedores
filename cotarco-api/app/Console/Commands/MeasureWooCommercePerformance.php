@@ -14,7 +14,7 @@ class MeasureWooCommercePerformance extends Command
      *
      * @var string
      */
-    protected $signature = 'benchmark:woocommerce';
+    protected $signature = 'woocommerce:benchmark';
 
     /**
      * The console command description.
