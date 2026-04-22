@@ -34,33 +34,32 @@ const Header = ({ user, onLogout, isAdmin = false, showStockMap = false, onStock
         <div className="flex justify-between items-center py-4">
           {/* Logo e Botão Mapa de Stock (apenas para revendedores) */}
           <div className="flex items-center space-x-4">
-            <div 
+            <div
               onClick={handleLogoClick}
               className="header-logo cursor-pointer"
             >
-              <img 
-                src={logoCotarco} 
-                alt="Cotarco - Tecnologias e Comércio Geral" 
+              <img
+                src={logoCotarco}
+                alt="Cotarco - Tecnologias e Comércio Geral"
                 className="h-12 w-auto object-contain"
               />
             </div>
-            
+
             {/* Botão Mapa de Stock - apenas para revendedores */}
             {!isAdmin && (
               <div className="relative ml-6">
                 <button
                   onClick={handleStockMapClick}
-                  className={`cursor-pointer px-6 py-2 text-sm font-medium rounded-lg transition-all duration-200 focus:outline-none relative z-10 ${
-                    showStockMap
+                  className={`cursor-pointer px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 focus:outline-none relative z-10 ${showStockMap
                       ? 'bg-[#F23C13] text-white hover:bg-[#E0350F]'
                       : 'bg-[#F23C13] text-white hover:bg-[#E0350F]'
-                  }`}
+                    }`}
                 >
                   Mapa de Stock
                 </button>
                 {/* Efeito sonar pulsante */}
-                <div 
-                  className="absolute inset-x-1 -inset-y-1 rounded-lg bg-[#F23C13] opacity-25" 
+                <div
+                  className="absolute inset-x-1 -inset-y-1 rounded-lg bg-[#F23C13] opacity-25"
                   style={{
                     animation: 'customPing 1s cubic-bezier(0, 0, 0.2, 1) infinite',
                     transformOrigin: 'center'
@@ -85,7 +84,7 @@ const Header = ({ user, onLogout, isAdmin = false, showStockMap = false, onStock
           {/* Title in Center */}
           {title && (
             <div className="flex flex-1 justify-center">
-              <h1 
+              <h1
                 className="text-lg md:text-xl font-bold text-gray-800 tracking-tight text-center"
                 data-testid="header-title"
               >
@@ -130,7 +129,7 @@ const Header = ({ user, onLogout, isAdmin = false, showStockMap = false, onStock
                 </>
               )}
             </div>
-            <button 
+            <button
               onClick={onLogout}
               className="cursor-pointer logout-button my-stroke-red bg-white my-text-gray px-4 py-2 rounded-lg hover: hover-color transition-colors duration-200 font-medium text-sm my-text-red focus:outline-none "
             >

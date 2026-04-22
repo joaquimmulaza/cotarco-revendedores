@@ -39,11 +39,11 @@ export default defineConfig({
     // Setup projects
     {
       name: 'setup', 
-      testMatch: /auth\.setup\.js/ 
+      testMatch: 'auth.setup.js' 
     },
     {
       name: 'admin-setup',
-      testMatch: /admin\.auth\.setup\.js/
+      testMatch: 'admin.auth.setup.js'
     },
 
     // Test projects

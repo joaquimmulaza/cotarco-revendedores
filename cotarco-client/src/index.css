@@ -214,3 +214,15 @@
   border: none !important;
   outline: none !important;
 }
+
+/* Elegant Truncation with fade-out effect */
+.elegant-truncate {
+  @apply truncate block w-full;
+  mask-image: linear-gradient(to right, black 85%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, black 85%, transparent 100%);
+}
+
+.dark .elegant-truncate {
+  mask-image: linear-gradient(to right, white 85%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, white 85%, transparent 100%);
+}

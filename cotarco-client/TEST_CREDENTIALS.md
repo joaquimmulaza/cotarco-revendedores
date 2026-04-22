@@ -10,7 +10,7 @@ Este documento serve para fornecer contexto aos agentes de IA sobre as credencia
 ## Partner Dashboard
 - **URL**: `/distribuidores/login`
 - **Email**: `marketing@soclima.com`
-- **Senha**: `Senha@123` (Assumida conforme o seeder `PlaywrightAuthSeeder.php`)
+- **Senha**: `cotarco.2025`
 
 > [!IMPORTANT]
 > Use sempre `joaquimmulazadev@gmail.com` para login de administrador. O email `admin@cotarco.com` não existe na base de dados de teste atual.

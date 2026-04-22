@@ -1,7 +1,9 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import { 
   Home,
-  Clock,
+  ShoppingCart,
+  ClipboardList,
+  History,
   User
 } from "lucide-react";
 import {
@@ -13,59 +15,72 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
+  SidebarFooter,
   useSidebar
 } from "@/components/ui/sidebar";
+import { NavUser } from "./NavUser";
+import logo from "@/assets/logo-cotarco.png";
+import logoIcon from "@/assets/COTARCO_icon.png";
 
 export function PartnerSidebar() {
   const { isMobile, setOpenMobile } = useSidebar();
+  const location = useLocation();
 
   const items = [
-    { title: "Início", url: "/dashboard", icon: Home },
-    { title: "Histórico", url: "/orders", icon: Clock },
-    { title: "Perfil", url: "/profile", icon: User },
+    { title: "Início", url: "/catalog", icon: Home },
+    { title: "Comprar", url: "/catalog", icon: ShoppingCart },
+    { title: "Checkout", url: "/checkout", icon: ClipboardList },
+    { title: "Histórico", url: "/orders", icon: History },
+    { title: "O Meu Perfil", url: "/profile", icon: User },
   ];
 
   return (
-    <Sidebar className="border-none shadow-[4px_0_24px_rgba(28,28,22,0.02)] bg-[#f3f4f5]">
-      <SidebarHeader className="p-4 pt-6">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-[#ae2b00] flex items-center justify-center text-[#ffffff] font-medium text-lg shadow-sm">
-            P
-          </div>
-          <span className="font-sans text-[#191c1d] text-xl font-medium tracking-tight truncate">
-            Painel Parceiro
-          </span>
+    <Sidebar collapsible="icon" className="border-none shadow-[2px_0_12px_rgba(0,0,0,0.05)] bg-[#fcfcfc]">
+      <SidebarHeader className="h-16 px-6 flex items-center justify-center border-b border-transparent transition-all duration-300 group-data-[state=collapsed]:h-16 group-data-[state=collapsed]:px-0">
+        <div className="flex items-center justify-center w-full">
+          <img src={logo} alt="Cotarco" className="h-8 w-auto object-contain transition-all group-data-[state=collapsed]:hidden" />
+          <img src={logoIcon} alt="Cotarco" className="h-8 w-8 object-contain hidden group-data-[state=collapsed]:block animate-in fade-in zoom-in duration-300" />
         </div>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupContent>
-            <SidebarMenu className="gap-2 px-2 mt-4">
-              {items.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton 
-                    asChild 
-                    tooltip={item.title} 
-                    className="data-[active=true]:bg-[#ae2b00] data-[active=true]:text-white hover:bg-[#edeeef] text-[#5c4039] transition-colors rounded-lg py-6"
-                  >
-                    <NavLink
-                      to={item.url}
-                      onClick={() => isMobile && setOpenMobile(false)}
-                      className={({ isActive }) => 
-                        isActive ? "is-active text-white bg-[#ae2b00]" : ""
-                      }
-                      data-active={window.location.pathname === item.url || undefined}
+            <SidebarMenu className="gap-1 px-3 mt-2 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:items-center">
+              {items.map((item) => {
+                // Check if active: exact match or starts with (for nested routes)
+                const isActive = location.pathname === item.url;
+                
+                return (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton 
+                      asChild 
+                      tooltip={item.title} 
+                      isActive={isActive}
+                      className={`
+                        transition-all duration-200 rounded-lg py-6
+                        ${isActive 
+                          ? "bg-[#f22f1d] text-white shadow-md hover:bg-[#c32517] hover:text-white" 
+                          : "text-gray-600 hover:bg-[#f22f1d0c] hover:text-[#f22f1d]"}
+                      `}
                     >
-                      <item.icon className="w-[1.5em] h-[1.5em]" strokeWidth={1.5} />
-                      <span className="font-sans font-medium text-base ml-2">{item.title}</span>
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+                      <NavLink
+                        to={item.url}
+                        onClick={() => isMobile && setOpenMobile(false)}
+                      >
+                        <item.icon className="w-5 h-5 shrink-0" strokeWidth={isActive ? 2.5 : 2} />
+                        <span className="font-sans font-medium text-sm ml-3 group-data-[state=collapsed]:hidden elegant-truncate">{item.title}</span>
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+      <SidebarFooter>
+        <NavUser />
+      </SidebarFooter>
     </Sidebar>
   );
 }

@@ -105,13 +105,8 @@ export default function CheckoutPage() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
-      <div className="mb-6">
-        <Link to="/dashboard" aria-label="Voltar para a página inicial de parceiros">
-          <img src={CotarcoLogo} alt="COTARCO" className="h-10 w-auto cursor-pointer" />
-        </Link>
-      </div>
-      <h1 className="text-2xl font-semibold mb-6">Checkout</h1>
+    <div className="w-full max-w-6xl mx-auto py-4">
+      <h1 className="text-2xl font-bold tracking-tight text-gray-900 mb-6">Checkout</h1>
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
         <div className="md:col-span-7 lg:col-span-8">
           <AnimatePresence mode="wait">

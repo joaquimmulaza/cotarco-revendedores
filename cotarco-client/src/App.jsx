@@ -13,6 +13,7 @@ import ApiTestPage from './pages/ApiTestPage';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import CheckoutPage from './pages/CheckoutPage';
+import UnderConstruction from './pages/UnderConstruction';
 
 // Import Layouts
 import AdminLayout from './components/layouts/AdminLayout';
@@ -66,7 +67,7 @@ function AppContent() {
     },
     {
       element: (
-        <ProtectedRoute>
+        <ProtectedRoute allowedRoles={['partner', 'distribuidor', 'revendedor']}>
           <PartnerLayout />
         </ProtectedRoute>
       ),
@@ -74,6 +75,18 @@ function AppContent() {
         {
           path: "/dashboard",
           element: <Dashboard />
+        },
+        {
+          path: "/catalog",
+          element: <Dashboard />
+        },
+        {
+          path: "/orders",
+          element: <UnderConstruction title="Encomendas" />
+        },
+        {
+          path: "/profile",
+          element: <UnderConstruction title="Perfil" />
         },
         {
           path: "/checkout",
@@ -87,7 +100,7 @@ function AppContent() {
     },
     {
       element: (
-        <ProtectedRoute adminOnly={true}>
+        <ProtectedRoute allowedRoles={['admin']}>
           <AdminLayout />
         </ProtectedRoute>
       ),

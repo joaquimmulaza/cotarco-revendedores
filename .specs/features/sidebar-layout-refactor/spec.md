@@ -24,9 +24,8 @@ Implement a premium, unified Sidebar navigation system for both Administative an
 #### Admin Roles (Internal area)
 | Item | Icon | Destination | Context |
 | :--- | :--- | :--- | :--- |
-| **Visão Geral** | `LayoutDashboard` | `/admin/dashboard` | Task 6 (Metrics) |
-| **Aprovações** | `UserCheck` | `/admin/dashboard/approvals` | Task 9 (Rejection Feedback) |
-| **Parceiros** | `Users` | `/admin/dashboard/partners` | Partner Management |
+| **Home** | `Home` | `/admin/dashboard` | Task 6 (Metrics) |
+| **Parceiros** | `Users` | `/admin/dashboard/partners` | Partner Management & Approvals |
 | **Catálogo** | `Package` | `/admin/dashboard/products` | Task 7 (Product Editing) |
 | **Stocks** | `FileUp` | `/admin/dashboard/stock` | Task 10 (Routing) |
 | **Encomendas** | `ShoppingCart` | `/admin/dashboard/orders` | Sales overview |
@@ -35,7 +34,7 @@ Implement a premium, unified Sidebar navigation system for both Administative an
 #### Partner/Distributor Roles (Dashboard area)
 | Item | Icon | Destination | Context |
 | :--- | :--- | :--- | :--- |
-| **Dashboard** | `Home` | `/dashboard` | Partner Overview |
+| **Home** | `Home` | `/catalog` | Portal Product Catalog |
 | **Comprar** | `ShoppingBag` | `/catalog` | Product Listing |
 | **Checkout** | `ShoppingCart` | `/checkout` | Task 4 (Order Attributes) |
 | **Histórico** | `ClipboardList` | `/orders` | Task 3 (Purchase History) |
