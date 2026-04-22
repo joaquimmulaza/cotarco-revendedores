@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { useCart } from '../contexts/CartContext.jsx';
@@ -12,13 +12,20 @@ import { Clipboard, Landmark, LoaderCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../services/api';
 import CotarcoLogo from '../assets/logo-cotarco.png';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 export default function CheckoutPage() {
   const { user } = useAuth();
   const { items, subtotal, clearCart } = useCart();
   const [isLoading, setIsLoading] = useState(false);
   const [paymentData, setPaymentData] = useState(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (items.length === 0 && !paymentData) {
+      navigate('/catalog');
+    }
+  }, [items.length, paymentData, navigate]);
 
   const formatCurrency = (value) => (Number(value) || 0).toLocaleString('pt-AO', { style: 'currency', currency: 'AOA' });
 

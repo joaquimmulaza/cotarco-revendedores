@@ -51,7 +51,12 @@ export default function CartDrawer({ open, onOpenChange }) {
         <SheetFooter>
           <div className="w-full flex items-center justify-between">
             <div className="text-sm text-gray-600">Subtotal: {formatCurrency(subtotal)}</div>
-            <Button onClick={() => { onOpenChange?.(false); navigate('/checkout'); }}>Finalizar Compra</Button>
+            <Button 
+              disabled={items.length === 0}
+              onClick={() => { onOpenChange?.(false); navigate('/checkout'); }}
+            >
+              Finalizar Compra
+            </Button>
           </div>
         </SheetFooter>
       </SheetContent>

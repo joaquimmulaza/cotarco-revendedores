@@ -7,7 +7,7 @@ Este documento serve para fornecer contexto aos agentes de IA sobre as credencia
 - **Email**: `joaquimmulazadev@gmail.com`
 - **Senha**: `cotarco.2025`
 
-## Partner Dashboard
+## Partner Dashboard / Senha Parceiro Cotarco
 - **URL**: `/distribuidores/login`
 - **Email**: `marketing@soclima.com`
 - **Senha**: `cotarco.2025`
