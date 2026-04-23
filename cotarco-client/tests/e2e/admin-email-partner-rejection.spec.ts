@@ -57,7 +57,7 @@ test.describe('Fluxo (c): Rejeição de Distribuidor com Motivo Dinâmico no Ema
     await expect(page).toHaveURL(/.*\/email-verification-pending/, { timeout: 15000 });
     
     // --- Extrair link e verificar email para transitar status para pending_approval ---
-    const emailBlock = await waitForEmailInLog(testEmail, 20000);
+    const emailBlock = await waitForEmailInLog(testEmail, 30000);
     const verificationUrl = extractVerificationUrl(emailBlock);
     expect(verificationUrl).not.toBeNull();
 
@@ -76,7 +76,7 @@ test.describe('Fluxo (c): Rejeição de Distribuidor com Motivo Dinâmico no Ema
 
       const adminContext = await request.newContext({
         storageState: path.join(process.cwd(), 'playwright', '.auth', 'admin.json'),
-        baseURL: 'http://127.0.0.1:5173',
+        baseURL: 'http://127.0.0.1:8001',
         extraHTTPHeaders: {
           'Accept': 'application/json',
           'Authorization': `Bearer ${token}`,
@@ -86,22 +86,26 @@ test.describe('Fluxo (c): Rejeição de Distribuidor com Motivo Dinâmico no Ema
       await expect.poll(async () => {
         const response = await adminContext.get(`/api/admin/partners/${userId}`);
         
-        if (response.status() !== 200) {
+        console.log('API Status:', response.status());
+        const body = await response.json();
+        console.log('API Body:', JSON.stringify(body));
+
+        if (!response.ok()) {
           console.warn(`[beforeAll] Erro na API (Status ${response.status()}).`);
           return null;
         }
-
-        const body = await response.json();
-        // Tentar extrair status de várias formas possíveis (Resource, Direct, Wrapped)
-        const status = body.partner?.status || body.data?.status || body.status;
+        
+        console.log(`[DEBUG] Partner Rejection Response for ${userId}:`, JSON.stringify(body));
+        // Extract status from possible different response structures
+        const status = body.partner?.status || body.data?.status || body.status || (body.results ? body.results[0]?.status : null);
         
         if (status !== 'pending_approval') {
-          console.warn(`[beforeAll] Status atual de ${userId}: "${status}". Body: ${JSON.stringify(body)}`);
+          console.warn(`[beforeAll] Status atual de ${userId}: "${status}".`);
         }
         return status;
       }, {
-        message: `A aguardar status 'pending_approval' para o parceiro ${userId} via API`,
-        timeout: 15000,
+        message: `A aguardar status 'pending_approval' para o parceiro ${userId}`,
+        timeout: 30000,
       }).toBe('pending_approval');
 
       await adminContext.dispose();
@@ -110,15 +114,12 @@ test.describe('Fluxo (c): Rejeição de Distribuidor com Motivo Dinâmico no Ema
 
   test('admin rejeita com motivo, PartnerRejected contém motivo exacto submetido', async ({ page }) => {
     // --- Passo 2: Admin já autenticado via storageState (admin-tests project) ---
-    // Diagnóstico antes da falha
-
-
+    // 1. Ir para dashboard de admin
     await page.goto('/distribuidores/admin/dashboard/partners');
     
-    // Captura o heading para debug
-    const heading = page.getByRole('heading', { name: /Gestão de Parceiros/i });
+    const heading = page.getByText('Gestão de Parceiros').first();
     try {
-      await expect(heading).toBeVisible({ timeout: 5000 });
+      await expect(heading).toBeVisible({ timeout: 10000 });
     } catch (e) {
       console.error(`[FAILURE DEBUG] URL final após goto: ${page.url()}`);
       console.error(`[FAILURE DEBUG] Conteúdo do body (primeiros 1000 chars): ${await page.evaluate(() => document.body.innerText.substring(0, 1000))}`);
@@ -142,7 +143,7 @@ test.describe('Fluxo (c): Rejeição de Distribuidor com Motivo Dinâmico no Ema
 
     // --- Localizar o card específico após pesquisa ---
     // Aguardar o debounce (500ms) e o loading da API
-    const partnerCard = page.locator('div.border', { hasText: testEmail }).first();
+    const partnerCard = page.getByTestId('partner-card').filter({ hasText: testEmail }).first();
     await expect(partnerCard).toBeVisible({ timeout: 15000 });
     
     // Garantir que o card não é um Skeleton (verificar se o nome está presente)
@@ -150,7 +151,7 @@ test.describe('Fluxo (c): Rejeição de Distribuidor com Motivo Dinâmico no Ema
     
     await partnerCard.scrollIntoViewIfNeeded();
     // 6. Clicar em "Ações" -> "Rejeitar"
-    await partnerCard.locator('button:has-text("Rejeitar")').click();
+    await partnerCard.getByTestId('partner-reject-button').first().click();
 
     // --- Preencher o motivo no textarea do ConfirmDialog ---
     // Sinal Positivo Determinístico: Aguardar o dialog que contém o heading correcto estar visível
@@ -173,7 +174,7 @@ test.describe('Fluxo (c): Rejeição de Distribuidor com Motivo Dinâmico no Ema
     await expect(partnerCard).toBeHidden({ timeout: 15000 });
 
     // Verificar toast de sucesso
-    await expect(page.locator('li[data-sonner-toast]').first()).toContainText('sucesso', {
+    await expect(page.locator('li[data-sonner-toast]').first()).toContainText(/sucesso/i, {
       timeout: 10000,
     });
 

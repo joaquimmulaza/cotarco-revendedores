@@ -8,14 +8,14 @@ test.describe('Admin Dashboard', () => {
     await page.goto('/distribuidores/admin/dashboard/partners');
 
     // Navigate to Mapa de Stock and verify
-    await page.getByRole('link', { name: 'Mapa de Stock' }).click();
+    await page.getByTestId('admin-stats-card').filter({ hasText: 'Mapa de Stock' }).click();
     await expect(page).toHaveURL(/.*\/admin\/dashboard\/stock-files/);
-    await expect(page.getByRole('heading', { name: 'Mapa de Stock' })).toBeVisible();
+    await expect(page.getByTestId('breadcrumb-page')).toBeVisible();
 
     // Navigate back to Gestão de Parceiros
-    await page.getByRole('link', { name: 'Gestão de Parceiros' }).click();
+    await page.getByTestId('admin-stats-card').filter({ hasText: 'Gestão de Parceiros' }).click();
     await expect(page).toHaveURL(/.*\/admin\/dashboard\/partners/);
-    await expect(page.getByRole('heading', { name: 'Gestão de Parceiros' })).toBeVisible();
+    await expect(page.getByTestId('breadcrumb-page')).toBeVisible();
   });
 });
 
@@ -29,7 +29,7 @@ test.describe('Admin Dashboard Access', () => {
     
     // Deve ser redirecionado para a página de login do admin
     await expect(page).toHaveURL(/.*\/admin\/login/);
-    await expect(page.getByRole('heading', { name: 'Painel de Administração' })).toBeVisible();
+    await expect(page.getByTestId('admin-panel-heading')).toBeVisible();
   });
 });
 

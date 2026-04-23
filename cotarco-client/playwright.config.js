@@ -29,7 +29,7 @@ export default defineConfig({
       }
     },
     {
-      command: 'npx cross-env VITE_API_URL=http://127.0.0.1:8001/api VITE_API_PORT=8001 npm run dev -- --host 127.0.0.1 --port 5173',
+      command: 'npm run dev -- --mode e2e --host 127.0.0.1 --port 5173',
       reuseExistingServer: false,
       cwd: 'c:/cotarco-revendedores/cotarco-client'
     },

@@ -1,0 +1,6 @@
+- [ ] Fix `admin-dashboard.spec.js` navigation link labels
+- [ ] Fix `admin-login.spec.js` verification heading
+- [ ] Fix `admin-product-management.spec.js` filter buttons/selects
+- [ ] Fix `dashboard.spec.js` add to cart flow
+- [ ] Fix `checkout.spec.js` navigation steps
+- [ ] Run full test suite for validation

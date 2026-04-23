@@ -11,6 +11,8 @@ test.describe('Partner Dashboard', () => {
       if (resp.url().includes('/api/')) console.log('FETCH API:', resp.url(), resp.status());
     });
     await page.goto('/distribuidores/dashboard');
+    // Wait for skeletons to disappear
+    await page.locator('.react-loading-skeleton').waitFor({ state: 'detached', timeout: 30000 }).catch(() => {});
   });
 
   test('should display logged in user data', async ({ page }) => {
@@ -31,9 +33,18 @@ test.describe('Partner Dashboard', () => {
     console.log('Category "Teste Playwright" clicked for generic product test');
     console.log('Category clicked');
 
-    const productCards = page.locator('.product-card');
+    const productCards = page.getByTestId('product-card');
     await expect(productCards.first()).toBeVisible({ timeout: 30000 });
     
+    // Guardrail: Ensure specific test product is NOT "Sob consulta"
+    const testProduct = page.getByTestId('product-card').filter({ hasText: 'Produto de Teste Playwright' }).first();
+    if (await testProduct.isVisible()) {
+      const sobConsultaBadge = testProduct.locator('span:has-text("Sob consulta")');
+      await expect(sobConsultaBadge).not.toBeVisible({
+        message: "Erro: O Produto de Teste Playwright está 'Sob consulta'. Verifique o stock no backend."
+      });
+    }
+
     const count = await productCards.count();
     expect(count).toBeGreaterThan(0);
   });
@@ -50,16 +61,22 @@ test.describe('Partner Dashboard', () => {
     console.log('Category "Teste Playwright" selected and active in dashboard');
 
     // 2. Wait explicitly for the specific test product to become visible
-    const testProduct = page.locator('.product-card', { hasText: 'Produto de Teste Playwright' }).first();
+    const testProduct = page.getByTestId('product-card').filter({ hasText: 'Produto de Teste Playwright' }).first();
     await expect(testProduct).toBeVisible({ timeout: 45000 });
-    console.log('Test product visible in dashboard');
+    
+    // Explicit Guardrail before interaction
+    await expect(testProduct.locator('span:has-text("Sob consulta")')).not.toBeVisible({
+      message: "Impedimento: Não é possível testar o carrinho com produto 'Sob consulta'."
+    });
+    
+    console.log('Test product visible and available in dashboard');
 
     // Click "Adicionar"
-    await testProduct.getByRole('button', { name: /Adicionar/i }).click();
+    await testProduct.getByTestId('add-to-cart-button').click();
     console.log('Clicked Adicionar in dashboard');
 
     // Wait for cart to update
-    const cartButton = page.getByRole('button', { name: 'Abrir carrinho' });
+    const cartButton = page.getByTestId('cart-button');
     await expect(cartButton).toContainText(/[1-9]/, { timeout: 15000 });
     console.log('Cart updated in dashboard');
 
@@ -72,12 +89,12 @@ test.describe('Partner Dashboard', () => {
   });
 
   test('should navigate through pages', async ({ page }) => {
-    await expect(page.locator('.product-card').first()).toBeVisible({ timeout: 30000 });
+    await expect(page.getByTestId('product-card').first()).toBeVisible({ timeout: 30000 });
     
     const nextButton = page.getByRole('button', { name: 'Próximo' });
     if (await nextButton.isVisible()) {
       await nextButton.click();
-      await expect(page.locator('.product-card').first()).toBeVisible();
+      await expect(page.getByTestId('product-card').first()).toBeVisible();
     }
   });
 });

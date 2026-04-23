@@ -6,6 +6,7 @@ import PartnerManager from '../components/admin/PartnerManager';
 import { UserGroupIcon, DocumentDuplicateIcon, CubeIcon, ShoppingCartIcon } from '@heroicons/react/24/outline';
 import ProductListViewer from '../components/admin/ProductListViewer';
 import OrderList from '../components/admin/OrderList';
+import MetricsGrid from '../components/admin/MetricsGrid';
 import { OrderDetailPage } from './OrderDetailPage';
 import UnderConstruction from './UnderConstruction';
 
@@ -33,11 +34,14 @@ const AdminDashboard = () => {
 
   return (
     <div className="w-full">
+      <MetricsGrid />
+      
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {navigationTabs.map((tab) => (
           <NavLink
             key={tab.name}
             to={tab.href}
+            data-testid="admin-stats-card"
             className={
               classNames(
                 'bg-white overflow-hidden shadow-sm border border-gray-100 rounded-xl transition-all duration-200 ease-in-out transform focus:outline-none',

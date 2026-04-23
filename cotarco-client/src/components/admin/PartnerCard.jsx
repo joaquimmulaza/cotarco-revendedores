@@ -48,6 +48,7 @@ const RenderActionButtons = ({
           <button
             onClick={() => onUpdateStatus(partner, 'active')}
             disabled={actionLoading[partner.id]}
+            data-testid="partner-approve-button"
             className="cursor-pointer bg-green-600 text-white px-3 py-1.5 rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-xs font-medium flex items-center justify-center"
           >
             {actionLoading[partner.id] === 'updating-active' ? (
@@ -68,6 +69,7 @@ const RenderActionButtons = ({
           <button
             onClick={() => onUpdateStatus(partner, 'rejected')}
             disabled={actionLoading[partner.id]}
+            data-testid="partner-reject-button"
             className="bg-red-600 text-white px-3 py-1.5 rounded-md hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-xs font-medium flex items-center justify-center"
           >
             {actionLoading[partner.id] === 'updating-rejected' ? (
@@ -91,6 +93,7 @@ const RenderActionButtons = ({
         <button
           onClick={() => onUpdateStatus(partner, 'inactive')}
           disabled={actionLoading[partner.id]}
+          data-testid="partner-deactivate-button"
           className="cursor-pointer my-stroke-red my-text-red px-3 py-1.5 rounded-md hover-color disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-xs font-medium flex items-center justify-center"
         >
           {actionLoading[partner.id] === 'updating-inactive' ? (
@@ -113,6 +116,7 @@ const RenderActionButtons = ({
         <button
           onClick={() => onUpdateStatus(partner, 'active')}
           disabled={actionLoading[partner.id]}
+          data-testid="partner-approve-button"
           className="bg-green-600 text-white px-3 py-1.5 rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-xs font-medium flex items-center justify-center"
         >
           {actionLoading[partner.id] === 'updating-active' ? (
@@ -192,7 +196,7 @@ const PartnerCard = ({
   };
 
   return (
-    <div className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
+    <div className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow" data-testid="partner-card">
       <div className="flex flex-col">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center space-x-3">

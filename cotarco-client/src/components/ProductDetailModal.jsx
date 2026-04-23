@@ -146,6 +146,7 @@ const ProductDetailModal = ({ isOpen, onClose, product }) => {
                 exit="exit"
                 variants={modal}
                 transition={{ type: 'spring', stiffness: 260, damping: 20 }}
+                data-testid="product-detail-modal"
                 className="relative w-full max-w-5xl rounded-xl bg-white p-6 shadow-xl"
               >
                 {/* Botão fechar no canto superior direito */}
@@ -255,6 +256,7 @@ const ProductDetailModal = ({ isOpen, onClose, product }) => {
                                 <Button
                                   type="button"
                                   size="lg"
+                                  data-testid="modal-add-to-cart-button"
                                   disabled={displayProduct.stock_status !== 'instock'}
                                   onClick={handleAddToCart}
                                   className="cursor-pointer my-bg-red"
@@ -388,6 +390,7 @@ const ProductDetailModal = ({ isOpen, onClose, product }) => {
                               <Button
                                 type="button"
                                 size="lg"
+                                data-testid="modal-add-to-cart-button"
                                 disabled={displayProduct.stock_status !== 'instock'}
                                 onClick={handleAddToCart}
                                 className="cursor-pointer my-bg-red"

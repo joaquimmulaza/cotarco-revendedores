@@ -326,6 +326,7 @@ const PartnerManager = () => {
               placeholder="Pesquisar por nome, email ou empresa..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              data-testid="partner-search-input"
               className="block w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-red-500 focus:border-red-500 sm:text-sm transition-all"
             />
           </div>
@@ -335,6 +336,7 @@ const PartnerManager = () => {
         <TabGroup selectedIndex={selectedTabIndex} onChange={handleTabChange}>
           <TabList className="flex space-x-1 bg-gray-100 rounded-lg p-2">
             <Tab
+              data-testid="partner-tab-pending_approval"
               className={({ selected }) =>
                 `px-3 py-2 text-sm font-medium rounded-md transition-colors focus:outline-none  focus:ring-offset-2 ${
                   selected
@@ -346,6 +348,7 @@ const PartnerManager = () => {
               {statsLoading ? <Skeleton width={100} height={20} /> : `Pendentes (${stats.parceiros?.pending_approval || 0})`}
             </Tab>
             <Tab
+              data-testid="partner-tab-active"
               className={({ selected }) =>
                 `px-3 py-2 text-sm font-medium rounded-md transition-colors focus:outline-none focus:ring-offset-2 ${
                   selected
@@ -356,28 +359,30 @@ const PartnerManager = () => {
             >
               {statsLoading ? <Skeleton width={80} height={20} /> : `Ativos (${stats.parceiros?.active || 0})`}
             </Tab>
-            <Tab
-              className={({ selected }) =>
-                `px-3 py-2 text-sm font-medium rounded-md transition-colors focus:outline-none focus:ring-offset-2 ${
-                  selected
-                    ? 'my-stroke-red bg-white text-gray-700 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                }`
-              }
-            >
-              {statsLoading ? <Skeleton width={110} height={20} /> : `Rejeitados (${stats.parceiros?.rejected || 0})`}
-            </Tab>
-            <Tab
-              className={({ selected }) =>
-                `px-3 py-2 text-sm font-medium rounded-md transition-colors focus:outline-none focus:ring-offset-2 ${
-                  selected
-                    ? 'my-stroke-red bg-white text-gray-700 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                }`
-              }
-            >
-              {statsLoading ? <Skeleton width={120} height={20} /> : `Desativados (${stats.parceiros?.inactive || 0})`}
-            </Tab>
+             <Tab
+               data-testid="partner-tab-rejected"
+               className={({ selected }) =>
+                 `px-3 py-2 text-sm font-medium rounded-md transition-colors focus:outline-none focus:ring-offset-2 ${
+                   selected
+                     ? 'my-stroke-red bg-white text-gray-700 shadow-sm'
+                     : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                 }`
+               }
+             >
+               {statsLoading ? <Skeleton width={110} height={20} /> : `Rejeitados (${stats.parceiros?.rejected || 0})`}
+             </Tab>
+             <Tab
+               data-testid="partner-tab-inactive"
+               className={({ selected }) =>
+                 `px-3 py-2 text-sm font-medium rounded-md transition-colors focus:outline-none focus:ring-offset-2 ${
+                   selected
+                     ? 'my-stroke-red bg-white text-gray-700 shadow-sm'
+                     : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                 }`
+               }
+             >
+               {statsLoading ? <Skeleton width={120} height={20} /> : `Desativados (${stats.parceiros?.inactive || 0})`}
+             </Tab>
           </TabList>
           
           <TabPanels>

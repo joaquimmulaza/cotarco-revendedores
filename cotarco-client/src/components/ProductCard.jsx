@@ -110,7 +110,7 @@ const ProductCard = ({ product, onViewDetails }) => {
   };
 
   return (
-    <div className="product-card group bg-white border border-gray-200 rounded-lg shadow-md hover:shadow-xl hover:transform hover:-translate-y-1 transition-all duration-300 overflow-hidden flex flex-col h-full">
+    <div data-testid="product-card" className="product-card group bg-white border border-gray-200 rounded-lg shadow-md hover:shadow-xl hover:transform hover:-translate-y-1 transition-all duration-300 overflow-hidden flex flex-col h-full">
       {/* Área da Imagem */}
       <div className="relative aspect-square bg-gray-50 p-4 flex items-center justify-center overflow-hidden">
         {displayImage ? (
@@ -241,6 +241,7 @@ const ProductCard = ({ product, onViewDetails }) => {
             {displayStockStatus === 'instock' && displayPrice !== 'Sob consulta' && (
               <button
                 type="button"
+                data-testid="add-to-cart-button"
                 onClick={(e) => {
                   e.stopPropagation();
                   const priceNumber = Number(displayProduct.price || displayProduct.regular_price || 0);

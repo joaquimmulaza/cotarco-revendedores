@@ -27,9 +27,9 @@ export function PartnerSidebar() {
   const location = useLocation();
 
   const items = [
-    { title: "Início", url: "/catalog", icon: Home },
-    { title: "Histórico", url: "/orders", icon: History },
-    { title: "O Meu Perfil", url: "/profile", icon: User },
+    { title: "Início", url: "/catalog", icon: Home, testId: "home" },
+    { title: "Histórico", url: "/orders", icon: History, testId: "history" },
+    { title: "O Meu Perfil", url: "/profile", icon: User, testId: "profile" },
   ];
 
   return (
@@ -64,6 +64,7 @@ export function PartnerSidebar() {
                       <NavLink
                         to={item.url}
                         onClick={() => isMobile && setOpenMobile(false)}
+                        data-testid={`sidebar-nav-${item.testId}`}
                       >
                         <item.icon className="w-5 h-5 shrink-0" strokeWidth={isActive ? 2.5 : 2} />
                         <span className="font-sans font-medium text-sm ml-3 group-data-[state=collapsed]:hidden elegant-truncate">{item.title}</span>

@@ -193,9 +193,19 @@ class AdminController extends Controller
                 ->where('status', '!=', 'pending_email_validation')
                 ->count();
 
-            // Estatísticas adicionais (placeholder para futuras funcionalidades)
-            $totalSalesThisMonth = 0; // Placeholder
-            $activeOrdersCount = 0;   // Placeholder
+            // Estatísticas reais de vendas e encomendas
+            $totalSales = \App\Models\Order::whereIn('status', ['paid', 'completed', 'processing'])->sum('total_amount');
+            $ordersCount = \App\Models\Order::whereIn('status', ['paid', 'completed', 'processing'])->count();
+            $aov = $ordersCount > 0 ? $totalSales / $ordersCount : 0;
+
+            // Vendas este mês
+            $totalSalesThisMonth = \App\Models\Order::whereIn('status', ['paid', 'completed', 'processing'])
+                ->whereMonth('created_at', now()->month)
+                ->whereYear('created_at', now()->year)
+                ->sum('total_amount');
+
+            // Encomendas ativas (pendentes de pagamento ou processamento)
+            $activeOrdersCount = \App\Models\Order::whereIn('status', ['pending', 'processing'])->count();
 
             return response()->json([
                 'message' => 'Estatísticas obtidas com sucesso.',
@@ -212,9 +222,12 @@ class AdminController extends Controller
                         'distribuidores' => $distribuidoresCount,
                     ],
                     'sales' => [
-                        'total_this_month' => $totalSalesThisMonth,
+                        'total_revenue' => (float) $totalSales,
+                        'total_this_month' => (float) $totalSalesThisMonth,
+                        'average_order_value' => (float) $aov,
                     ],
                     'orders' => [
+                        'total_count' => $ordersCount,
                         'active_count' => $activeOrdersCount,
                     ],
                 ],

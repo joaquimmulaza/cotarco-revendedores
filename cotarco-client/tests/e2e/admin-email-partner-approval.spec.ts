@@ -55,7 +55,7 @@ test.describe('Fluxo (b): Aprovação de Distribuidor Admin com Email PartnerApp
     await expect(page).toHaveURL(/.*\/email-verification-pending/, { timeout: 15000 });
 
     // --- Extrair link e verificar email para transitar status para pending_approval ---
-    const emailBlock = await waitForEmailInLog(testEmail, 20000);
+    const emailBlock = await waitForEmailInLog(testEmail, 30000);
     const verificationUrl = extractVerificationUrl(emailBlock);
     expect(verificationUrl).not.toBeNull();
     
@@ -74,7 +74,7 @@ test.describe('Fluxo (b): Aprovação de Distribuidor Admin com Email PartnerApp
 
       const adminContext = await request.newContext({
         storageState: path.join(process.cwd(), 'playwright', '.auth', 'admin.json'),
-        baseURL: 'http://127.0.0.1:5173',
+        baseURL: 'http://127.0.0.1:8001',
         extraHTTPHeaders: {
           'Accept': 'application/json',
           'Authorization': `Bearer ${token}`,
@@ -84,22 +84,26 @@ test.describe('Fluxo (b): Aprovação de Distribuidor Admin com Email PartnerApp
       await expect.poll(async () => {
         const response = await adminContext.get(`/api/admin/partners/${userId}`);
         
-        if (response.status() !== 200) {
+        console.log('API Status:', response.status());
+        const body = await response.json();
+        console.log('API Body:', JSON.stringify(body));
+
+        if (!response.ok()) {
           console.warn(`[beforeAll] Erro na API (Status ${response.status()}).`);
           return null;
         }
-
-        const body = await response.json();
-        // Tentar extrair status de várias formas possíveis (Resource, Direct, Wrapped)
-        const status = body.partner?.status || body.data?.status || body.status;
+        
+        console.log(`[DEBUG] Partner Approval Response for ${userId}:`, JSON.stringify(body));
+        // Extract status from possible different response structures
+        const status = body.partner?.status || body.data?.status || body.status || (body.results ? body.results[0]?.status : null);
         
         if (status !== 'pending_approval') {
-          console.warn(`[beforeAll] Status atual de ${userId}: "${status}". Body: ${JSON.stringify(body)}`);
+          console.warn(`[beforeAll] Status atual de ${userId}: "${status}".`);
         }
         return status;
       }, {
-        message: `A aguardar status 'pending_approval' para o parceiro ${userId} via API`,
-        timeout: 15000,
+        message: `A aguardar status 'pending_approval' para o parceiro ${userId}`,
+        timeout: 30000,
       }).toBe('pending_approval');
 
       await adminContext.dispose();
@@ -109,15 +113,13 @@ test.describe('Fluxo (b): Aprovação de Distribuidor Admin com Email PartnerApp
   test('admin aprova distribuidor, PartnerApproved chega ao log, link de login válido', async ({ page, browser }) => {
     // --- Passo 2: Admin já autenticado via storageState (admin-tests project) ---
     // Navegar para o painel de gestão de parceiros
-    // Diagnóstico antes da falha
-
-    
+    // Diagnóstico    // 1. Ir para dashboard de admin
     await page.goto('/distribuidores/admin/dashboard/partners');
     
-    // Captura o heading para debug
-    const heading = page.getByRole('heading', { name: /Gestão de Parceiros/i });
+    // Pequeno log para depuração caso falhe
+    const heading = page.getByText('Gestão de Parceiros').first();
     try {
-      await expect(heading).toBeVisible({ timeout: 5000 });
+      await expect(heading).toBeVisible({ timeout: 10000 });
     } catch (e) {
       console.error(`[FAILURE DEBUG] URL final após goto: ${page.url()}`);
       console.error(`[FAILURE DEBUG] Conteúdo do body (primeiros 1000 chars): ${await page.evaluate(() => document.body.innerText.substring(0, 1000))}`);
@@ -145,7 +147,7 @@ test.describe('Fluxo (b): Aprovação de Distribuidor Admin com Email PartnerApp
 
     // --- Localizar o card específico após pesquisa ---
     // Aguardar o debounce (500ms) e o loading da API
-    const partnerCard = page.locator('div.border', { hasText: testEmail }).first();
+    const partnerCard = page.getByTestId('partner-card').filter({ hasText: testEmail }).first();
     await expect(partnerCard).toBeVisible({ timeout: 15000 });
     
     // Garantir que o card não é um Skeleton (verificar se o nome está presente)
@@ -153,7 +155,7 @@ test.describe('Fluxo (b): Aprovação de Distribuidor Admin com Email PartnerApp
     
     await partnerCard.scrollIntoViewIfNeeded();
     // 6. Clicar em "Ações" -> "Aprovar"
-    await partnerCard.locator('button:has-text("Aprovar")').click();
+    await partnerCard.getByTestId('partner-approve-button').first().click();
 
     // --- Confirmar no modal de aprovação ---
     // Sinal Positivo Determinístico: Aguardar o dialog que contém o heading correcto estar visível

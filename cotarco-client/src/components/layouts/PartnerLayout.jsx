@@ -68,7 +68,7 @@ export default function PartnerLayout() {
                       <React.Fragment key={to}>
                         <BreadcrumbItem className={last ? "" : "hidden md:block"}>
                           {last ? (
-                            <BreadcrumbPage className="font-semibold text-[#f22f1d]">{title}</BreadcrumbPage>
+                            <BreadcrumbPage data-testid="breadcrumb-page" className="font-semibold text-[#f22f1d]">{title}</BreadcrumbPage>
                           ) : isClickable ? (
                             <BreadcrumbLink asChild>
                               <Link to={to} className="text-gray-500 hover:text-[#f22f1d] transition-colors">{title}</Link>
@@ -90,6 +90,7 @@ export default function PartnerLayout() {
                 <div className="relative hidden sm:block">
                   <button
                     onClick={toggleStockMap}
+                    data-testid="nav-stock-map"
                     className={`cursor-pointer px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 focus:outline-none relative z-10 ${
                       showStockMap
                         ? 'bg-gray-100 text-gray-900 border border-gray-200'
@@ -109,6 +110,7 @@ export default function PartnerLayout() {
                 {/* Carrinho */}
                 <button
                   onClick={() => setIsCartOpen(true)}
+                  data-testid="cart-button"
                   className="relative p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-600 group"
                   aria-label="Carrinho"
                 >

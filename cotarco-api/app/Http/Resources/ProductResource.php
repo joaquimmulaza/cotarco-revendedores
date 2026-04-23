@@ -31,6 +31,10 @@ class ProductResource extends JsonResource
             'attributes' => $this['attributes'] ?? [],
             'variations' => ProductResource::collection($this->whenLoaded('variations')),
             'images' => $this['images'] ?? [],
+            // Admin specific fields (attached in controller)
+            'price_b2b' => $this->resource->price_b2b ?? null,
+            'price_b2c' => $this->resource->price_b2c ?? null,
+            'stock_quantity' => $this->resource->stock_quantity ?? null,
         ];
     }
 

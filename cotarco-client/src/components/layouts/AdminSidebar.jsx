@@ -29,12 +29,12 @@ export function AdminSidebar() {
   const location = useLocation();
 
   const items = [
-    { title: "Home", url: "/admin/dashboard", icon: Home },
-    { title: "Parceiros", url: "/admin/dashboard/partners", icon: Users },
-    { title: "Catálogo", url: "/admin/dashboard/product-list", icon: Box },
-    { title: "Stocks", url: "/admin/dashboard/stock-files", icon: Database },
-    { title: "Encomendas", url: "/admin/dashboard/orders", icon: ShoppingCart },
-    { title: "Definições", url: "/admin/dashboard/settings", icon: Settings },
+    { title: "Home", url: "/admin/dashboard", icon: Home, testId: "home" },
+    { title: "Parceiros", url: "/admin/dashboard/partners", icon: Users, testId: "partners" },
+    { title: "Catálogo", url: "/admin/dashboard/product-list", icon: Box, testId: "catalog" },
+    { title: "Stocks", url: "/admin/dashboard/stock-files", icon: Database, testId: "stocks" },
+    { title: "Encomendas", url: "/admin/dashboard/orders", icon: ShoppingCart, testId: "orders" },
+    { title: "Definições", url: "/admin/dashboard/settings", icon: Settings, testId: "settings" },
   ];
 
   return (
@@ -69,6 +69,7 @@ export function AdminSidebar() {
                       <NavLink
                         to={item.url}
                         onClick={() => isMobile && setOpenMobile(false)}
+                        data-testid={`sidebar-nav-${item.testId}`}
                       >
                         <item.icon className="w-5 h-5 shrink-0" strokeWidth={isActive ? 2.5 : 2} />
                         <span className="font-sans font-medium text-sm ml-3 group-data-[state=collapsed]:hidden elegant-truncate">{item.title}</span>

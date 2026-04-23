@@ -23,6 +23,7 @@ const columns = [
             onClick: row.getToggleExpandedHandler(),
             style: { cursor: 'pointer' },
           }}
+          data-testid={`product-expander-${row.original.id}`}
           className="p-1 text-gray-500 hover:text-gray-700"
         >
           {row.getIsExpanded() ? (
@@ -236,7 +237,7 @@ export default function ProductListViewer() {
   return (
     <div className="w-full px-6 py-4">
       <div className="mb-4">
-        {/* <h2 className="text-xl font-semibold">Produtos</h2> */}
+        <h2 className="text-xl font-semibold" data-testid="admin-products-heading">Produtos</h2>
         {error && <p className="text-sm text-red-600">{error.message || String(error)}</p>}
         {categoriesError && <p className="text-sm text-red-600">Erro ao carregar categorias</p>}
       </div>
@@ -255,6 +256,7 @@ export default function ProductListViewer() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Pesquisar produtos por nome ou referência..."
+              data-testid="product-search-input"
               className="w-full rounded border bg-white py-2 pl-10 pr-10 text-sm shadow-sm outline-none transition focus:"
             />
             {searchQuery && (
@@ -277,7 +279,10 @@ export default function ProductListViewer() {
             onChange={(val) => setSelectedCategory(val === '' ? null : val)}
           >
             <div className="relative">
-              <ListboxButton className="relative w-full cursor-default rounded border bg-white py-2 pl-3 pr-10 text-left sm:text-sm">
+              <ListboxButton 
+                data-testid="category-filter-button"
+                className="relative w-full cursor-default rounded border bg-white py-2 pl-3 pr-10 text-left sm:text-sm"
+              >
                 <span className="block truncate">
                   {(selectedCategory === null || selectedCategory === '')
                     ? 'Todas as Categorias'
@@ -425,7 +430,7 @@ export default function ProductListViewer() {
                                   return Number.isNaN(num) ? 'N/D' : num.toLocaleString('pt-AO', { style: 'currency', currency: 'AOA' });
                                 };
                                 return (
-                                  <tr key={variant.id}>
+                                  <tr key={variant.id} data-testid="variation-row" data-sku={variant.sku}>
                                     <td className="px-4 py-2 text-gray-700">{variant.sku || '-'}</td>
                                     <td className="px-4 py-2 text-gray-700">{variant.name}</td>
                                     <td className="px-4 py-2 text-gray-700">{formatMoney(variant.price_b2c)}</td>
@@ -467,6 +472,7 @@ export default function ProductListViewer() {
             className="px-3 py-2 rounded border text-sm disabled:opacity-50"
             onClick={() => table.previousPage()}
             disabled={!table.getCanPreviousPage()}
+            data-testid="pagination-prev"
           >
             Anterior
           </button>
@@ -474,6 +480,7 @@ export default function ProductListViewer() {
             className="px-3 py-2 rounded border text-sm disabled:opacity-50"
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}
+            data-testid="pagination-next"
           >
             Próxima
           </button>

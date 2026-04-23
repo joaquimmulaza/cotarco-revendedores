@@ -102,6 +102,7 @@ const Header = ({ user, onLogout, isAdmin = false, showStockMap = false, onStock
                   onClick={onCartClick}
                   className="relative inline-flex items-center justify-center p-2 rounded-md hover:bg-gray-100"
                   aria-label="Abrir carrinho"
+                  data-testid="open-cart-button"
                 >
                   <ShoppingCart className="h-6 w-6" />
                   {totalItems > 0 && (

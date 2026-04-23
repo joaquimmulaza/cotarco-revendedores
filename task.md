@@ -1,22 +1,22 @@
 # Task List: Unified Sidebar & UI Refactor
 
 ## Phase 0: Foundations (Sidebar & Layouts) [TDD + Stitch]
-- [ ] **Infrastructure Setup**
-  - [ ] Add `sidebar` component via `npx shadcn@latest add sidebar`
-  - [ ] Verify dependencies: `lucide-react`, `collapsible`, `next-themes`
-- [ ] **TDD Baseline**
-  - [ ] Create `tests/e2e/sidebar.spec.js` (Role-based assertions)
-  - [ ] Create `tests/e2e/admin-sidebar.spec.js` (Admin-specific items)
-  - [ ] Run tests (Expect Failure)
-- [ ] **UI Generation (Google Stitch)**
-  - [ ] Generate `AdminSidebar` (Desktop + Mobile Sheet)
-  - [ ] Generate `PartnerSidebar` (Desktop + Mobile Sheet)
-  - [ ] Implement `Layout` wrappers (Admin & Partner)
-- [ ] **Integration & Persistence**
-  - [ ] Wrap routes in `App.jsx`
-  - [ ] Implement `localStorage` state persistence for `isCollapsed`
-  - [ ] Implement Logo fallback (Initials/Skeleton) in Sidebar Header (Task 2)
-  - [ ] Run Baseline tests (Goal: **GREEN**)
+- [x] **Infrastructure Setup**
+  - [x] Add `sidebar` component via `npx shadcn@latest add sidebar`
+  - [x] Verify dependencies: `lucide-react`, `collapsible`, `next-themes`
+- [x] **TDD Baseline**
+  - [x] Create `tests/e2e/sidebar.spec.js` (Role-based assertions)
+  - [x] Create `tests/e2e/admin-sidebar.spec.js` (Admin-specific items)
+  - [x] Run tests (Expect Failure)
+- [x] **UI Generation (Google Stitch)**
+  - [x] Generate `AdminSidebar` (Desktop + Mobile Sheet)
+  - [x] Generate `PartnerSidebar` (Desktop + Mobile Sheet)
+  - [x] Implement `Layout` wrappers (Admin & Partner)
+- [x] **Integration & Persistence**
+  - [x] Wrap routes in `App.jsx`
+  - [x] Implement `localStorage` state persistence for `isCollapsed`
+  - [x] Implement Logo fallback (Initials/Skeleton) in Sidebar Header (Task 2)
+  - [x] Run Baseline tests (Goal: **GREEN**)
 
 ## Phase 1: Feature Integration (Admin Dashboard)
 - [ ] Implement Task 6: Revenue/Orders/AOV Metrics (Admin Dashboard)

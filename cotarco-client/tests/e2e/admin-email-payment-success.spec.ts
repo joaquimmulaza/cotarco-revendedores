@@ -46,7 +46,7 @@ test.describe('Fluxo (d): Notificação de Pagamento Confirmado (AppyPay)', () =
     await expect(page).toHaveURL(/.*\/email-verification-pending/, { timeout: 15000 });
 
     // --- Passo 1.5: Extrair e Verificar Email (Obrigatório) ---
-    const emailBlock = await waitForEmailInLog(testEmail, 20000);
+    const emailBlock = await waitForEmailInLog(testEmail, 30000);
     const verificationUrlMatch = emailBlock.match(/https?:\/\/\S*\/api\/email\/verify\/[^\s"<>]+/);
     if (!verificationUrlMatch) throw new Error('URL de verificação não encontrado no log');
     let verificationUrl = verificationUrlMatch[0];
@@ -66,11 +66,11 @@ test.describe('Fluxo (d): Notificação de Pagamento Confirmado (AppyPay)', () =
     await searchInput.fill(testEmail);
 
     // Aguardar debounce e loading
-    const partnerCard = adminPage.locator('div.border', { hasText: testEmail }).first();
+    const partnerCard = adminPage.getByTestId('partner-card').filter({ hasText: testEmail }).first();
     // Garantir que o card não é um Skeleton (verificar se o nome está presente)
     await expect(partnerCard.getByRole('heading', { name: partnerName })).toBeVisible({ timeout: 15000 });
 
-    await partnerCard.locator('button:has-text("Aprovar")').click();
+    await partnerCard.getByTestId('partner-approve-button').first().click();
 
     // Confirmar no modal (Sinal Positivo Determinístico)
     const dialog = adminPage.getByRole('dialog').filter({
@@ -80,7 +80,7 @@ test.describe('Fluxo (d): Notificação de Pagamento Confirmado (AppyPay)', () =
     // Aguardar o heading estar visível (Sinal Positivo v3)
     await dialog.getByRole('heading').waitFor({ state: 'visible', timeout: 5000 });
 
-    const confirmButton = dialog.getByRole('button', { name: /Aprovar|Reativar/ });
+    const confirmButton = dialog.getByRole('button', { name: /Aprovar|Reativar/ }).first();
     await confirmButton.click();
 
     // Verificar sucesso da aprovação na UI

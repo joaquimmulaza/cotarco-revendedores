@@ -54,7 +54,7 @@ const ConfirmDialog = ({
       <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
       
       <div className="fixed inset-0 flex w-screen items-center justify-center p-4">
-        <DialogPanel className="mx-auto max-w-sm rounded bg-white p-6 shadow-lg">
+        <DialogPanel data-testid="modal-container" className="mx-auto max-w-sm rounded bg-white p-6 shadow-lg">
           <div className="flex items-center gap-4">
             <div className={`flex h-12 w-12 items-center justify-center rounded-full ${iconBg}`}>
               <Icon className={`h-6 w-6 ${iconColor}`} />
@@ -85,6 +85,7 @@ const ConfirmDialog = ({
             </button>
             <button
               type="button"
+              data-testid="modal-confirm-btn"
               onClick={handleConfirm}
               className={`flex-1 rounded-md px-3 py-2 text-sm cursor-pointer font-semibold ${confirmTextColor} shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 ${confirmButton}`}
             >

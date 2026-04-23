@@ -53,6 +53,7 @@ export default function CartDrawer({ open, onOpenChange }) {
             <div className="text-sm text-gray-600">Subtotal: {formatCurrency(subtotal)}</div>
             <Button 
               disabled={items.length === 0}
+              data-testid="cart-checkout-button"
               onClick={() => { onOpenChange?.(false); navigate('/checkout'); }}
             >
               Finalizar Compra

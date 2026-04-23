@@ -57,7 +57,7 @@ export default function AdminLayout() {
                       <React.Fragment key={to}>
                         <BreadcrumbItem className={last ? "" : "hidden md:block"}>
                           {last ? (
-                            <BreadcrumbPage className="font-semibold text-[#f22f1d]">{title}</BreadcrumbPage>
+                            <BreadcrumbPage data-testid="breadcrumb-page" className="font-semibold text-[#f22f1d]">{title}</BreadcrumbPage>
                           ) : isClickable ? (
                             <BreadcrumbLink asChild>
                               <Link to={to} className="text-gray-500 hover:text-[#f22f1d] transition-colors">{title}</Link>

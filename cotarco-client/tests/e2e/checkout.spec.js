@@ -17,25 +17,31 @@ test.describe('Checkout Page', () => {
     console.log('Category "Teste Playwright" selected');
 
     // 2. Wait explicitly for the specific test product to load in the DOM
-    const testProduct = page.locator('.product-card', { hasText: 'Produto de Teste Playwright' }).first();
+    const testProduct = page.getByTestId('product-card').filter({ hasText: 'Produto de Teste Playwright' }).first();
     await expect(testProduct).toBeVisible({ timeout: 45000 });
-    console.log('Test product visible on dashboard');
+    
+    // Guardrail: Ensure price is loaded
+    await expect(testProduct.locator('span:has-text("Sob consulta")')).not.toBeVisible({
+      message: "Erro: Não é possível prosseguir para checkout com produto 'Sob consulta'."
+    });
+    
+    console.log('Test product visible and valid on dashboard');
     
     // Add product to cart
-    await testProduct.getByRole('button', { name: /Adicionar/i }).click();
+    await testProduct.getByTestId('add-to-cart-button').first().click();
     console.log('Clicked Adicionar');
 
     // Wait for the cart to update (badge should appear)
-    const cartButton = page.getByRole('button', { name: 'Abrir carrinho' });
+    const cartButton = page.getByTestId('cart-button');
     await expect(cartButton).toContainText(/[1-9]/, { timeout: 15000 });
     console.log('Cart updated with items');
     
     // Open cart drawer
-    await cartButton.click();
+    await page.getByTestId('cart-button').click();
     console.log('Cart drawer opened');
     
     // Click "Finalizar Compra" inside the drawer
-    await page.getByRole('button', { name: 'Finalizar Compra' }).click();
+    await page.getByTestId('cart-checkout-button').click();
     
     // Wait for navigation to checkout
     await page.waitForURL('**/checkout', { timeout: 60000 });

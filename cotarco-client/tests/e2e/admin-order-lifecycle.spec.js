@@ -33,15 +33,15 @@ test.describe('Order Lifecycle 360 (Golden Flow)', () => {
     await categoryButton.click();
 
     // Adicionar produto ao carrinho
-    const testProduct = partnerPage.locator('.product-card', { hasText: PRODUCT_NAME }).first();
+    const testProduct = partnerPage.getByTestId('product-card').filter({ hasText: PRODUCT_NAME }).first();
     await expect(testProduct).toBeVisible({ timeout: 30000 });
-    await testProduct.getByRole('button', { name: /Adicionar/i }).click();
+    await testProduct.getByTestId('add-to-cart-button').click();
 
     // Abrir carrinho e ir para checkout
-    const cartButton = partnerPage.getByRole('button', { name: 'Abrir carrinho' });
+    const cartButton = partnerPage.getByTestId('cart-button');
     await expect(cartButton).toContainText(/[1-9]/, { timeout: 15000 });
     await cartButton.click();
-    await partnerPage.getByRole('button', { name: 'Finalizar Compra' }).click();
+    await partnerPage.getByTestId('cart-checkout-button').click();
     await partnerPage.waitForURL('**/checkout');
 
     // Preencher checkout

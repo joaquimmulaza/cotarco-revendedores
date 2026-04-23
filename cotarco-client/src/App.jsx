@@ -117,7 +117,7 @@ function AppContent() {
 
   return (
     <div className="App">
-      <Toaster richColors position="top-right" closeButton />
+      <Toaster data-testid="toast-container" richColors position="top-right" closeButton />
       <RouterProvider router={router} />
     </div>
   );

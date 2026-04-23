@@ -264,7 +264,7 @@ class ProductController extends Controller
             }
         }
 
-        // Return pagination object directly as it transforms to standard JSON structure
-        return response()->json($paginator);
+        // Return paginated resource collection
+        return ProductResource::collection($paginator)->response();
     }
 }
