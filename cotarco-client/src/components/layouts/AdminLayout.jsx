@@ -12,26 +12,88 @@ import {
 } from "@/components/ui/breadcrumb";
 import { Separator } from "@/components/ui/separator";
 
+/**
+ * UX-first breadcrumb map.
+ *
+ * Each key is a pathname (or prefix for dynamic routes).
+ * Each value is an array of breadcrumb segments:
+ *   { label: string, to?: string }
+ * The last item is always the current page (no link).
+ * Segments without `to` are non-clickable labels.
+ */
+const BREADCRUMB_MAP = [
+  // ── Dashboard ──────────────────────────────────────────────
+  {
+    match: /^\/admin\/dashboard\/?$/,
+    crumbs: [{ label: "Overview" }],
+  },
+  {
+    match: /^\/admin\/dashboard\/overview\/?$/,
+    crumbs: [{ label: "Overview" }],
+  },
+  // ── Parceiros ──────────────────────────────────────────────
+  {
+    match: /^\/admin\/dashboard\/partners\/?$/,
+    crumbs: [{ label: "Parceiros" }],
+  },
+  {
+    match: /^\/admin\/dashboard\/partners\/(.+)$/,
+    crumbs: [
+      { label: "Parceiros", to: "/admin/dashboard/partners" },
+      { label: "Detalhe do Parceiro" },
+    ],
+  },
+  // ── Catálogo ───────────────────────────────────────────────
+  {
+    match: /^\/admin\/dashboard\/product-list\/?$/,
+    crumbs: [{ label: "Catálogo" }],
+  },
+  {
+    match: /^\/admin\/dashboard\/product-list\/(.+)$/,
+    crumbs: [
+      { label: "Catálogo", to: "/admin/dashboard/product-list" },
+      { label: "Detalhe do Produto" },
+    ],
+  },
+  // ── Stocks ─────────────────────────────────────────────────
+  {
+    match: /^\/admin\/dashboard\/stock-files\/?$/,
+    crumbs: [{ label: "Stocks" }],
+  },
+  // ── Encomendas ─────────────────────────────────────────────
+  {
+    match: /^\/admin\/dashboard\/orders\/?$/,
+    crumbs: [{ label: "Encomendas" }],
+  },
+  {
+    match: /^\/admin\/dashboard\/orders\/(.+)$/,
+    crumbs: [
+      { label: "Encomendas", to: "/admin/dashboard/orders" },
+      { label: "Detalhe da Encomenda" },
+    ],
+  },
+  // ── Definições ─────────────────────────────────────────────
+  {
+    match: /^\/admin\/dashboard\/settings\/?$/,
+    crumbs: [{ label: "Definições" }],
+  },
+];
+
+/** Resolve the breadcrumb trail for the current pathname. */
+function resolveBreadcrumbs(pathname) {
+  for (const entry of BREADCRUMB_MAP) {
+    if (entry.match.test(pathname)) {
+      return entry.crumbs;
+    }
+  }
+  // Fallback: show just the last meaningful segment capitalised
+  const last = pathname.split("/").filter(Boolean).at(-1) ?? "Admin";
+  return [{ label: last.charAt(0).toUpperCase() + last.slice(1) }];
+}
+
 export default function AdminLayout() {
   const location = useLocation();
-  const pathnames = location.pathname.split("/").filter((x) => x);
-
-  const routeMap = {
-    admin: "Administração",
-    dashboard: "Dashboard",
-    partners: "Parceiros",
-    "product-list": "Catálogo",
-    "stock-files": "Stock",
-    orders: "Encomendas",
-    settings: "Definições",
-  };
-
-  const nonClickableSegments = ["admin", "distribuidores", "distribuidor"];
-
-  const getBreadcrumbLabel = () => {
-    const lastPath = pathnames[pathnames.length - 1];
-    return routeMap[lastPath] || lastPath?.charAt(0).toUpperCase() + lastPath?.slice(1) || "Admin";
-  };
+  const crumbs = resolveBreadcrumbs(location.pathname);
 
   return (
     <SidebarProvider>
@@ -43,36 +105,41 @@ export default function AdminLayout() {
               <SidebarTrigger className="transition-transform duration-300 hover:scale-110 active:scale-95 shrink-0" />
               <Separator orientation="vertical" className="h-4 shrink-0" />
             </div>
-            
+
             <div className="flex-1 flex items-center justify-between min-w-0">
               <Breadcrumb>
                 <BreadcrumbList>
-                  {pathnames.map((value, index) => {
-                    const last = index === pathnames.length - 1;
-                    const to = `/${pathnames.slice(0, index + 1).join("/")}`;
-                    const title = routeMap[value] || value.charAt(0).toUpperCase() + value.slice(1);
-                    const isClickable = !last && !nonClickableSegments.includes(value);
+                  {crumbs.map((crumb, index) => {
+                    const isLast = index === crumbs.length - 1;
 
                     return (
-                      <React.Fragment key={to}>
-                        <BreadcrumbItem className={last ? "" : "hidden md:block"}>
-                          {last ? (
-                            <BreadcrumbPage data-testid="breadcrumb-page" className="font-semibold text-[#f22f1d]">{title}</BreadcrumbPage>
-                          ) : isClickable ? (
-                            <BreadcrumbLink asChild>
-                              <Link to={to} className="text-gray-500 hover:text-[#f22f1d] transition-colors">{title}</Link>
-                            </BreadcrumbLink>
+                      <React.Fragment key={crumb.label + index}>
+                        <BreadcrumbItem className={isLast ? "" : "hidden md:block"}>
+                          {isLast ? (
+                            <BreadcrumbPage
+                              data-testid="breadcrumb-page"
+                              className="font-semibold text-[#f22f1d]"
+                            >
+                              {crumb.label}
+                            </BreadcrumbPage>
                           ) : (
-                            <span className="text-gray-500 cursor-default">{title}</span>
+                            <BreadcrumbLink asChild>
+                              <Link
+                                to={crumb.to}
+                                className="text-gray-500 hover:text-[#f22f1d] transition-colors"
+                              >
+                                {crumb.label}
+                              </Link>
+                            </BreadcrumbLink>
                           )}
                         </BreadcrumbItem>
-                        {!last && <BreadcrumbSeparator className="hidden md:block" />}
+                        {!isLast && <BreadcrumbSeparator className="hidden md:block" />}
                       </React.Fragment>
                     );
                   })}
                 </BreadcrumbList>
               </Breadcrumb>
-              
+
               <div className="flex items-center gap-4 shrink-0">
                 {/* Ações de header futuras */}
               </div>
