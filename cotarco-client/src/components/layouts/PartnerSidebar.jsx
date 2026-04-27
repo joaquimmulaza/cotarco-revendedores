@@ -57,7 +57,7 @@ export function PartnerSidebar() {
                       className={`
                         transition-all duration-200 rounded-lg py-6
                         ${isActive 
-                          ? "bg-[#f22f1d] text-white shadow-md hover:bg-[#c32517] hover:text-white" 
+                          ? "bg-[#f22f1d0c] text-[#f22f1d]" 
                           : "text-gray-600 hover:bg-[#f22f1d0c] hover:text-[#f22f1d]"}
                       `}
                     >
