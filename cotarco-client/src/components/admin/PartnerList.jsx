@@ -87,10 +87,10 @@ const PartnerList = ({
           {currentStatus === 'inactive' && 'Nenhum parceiro desativado'}
         </h3>
         <p className="text-gray-600 max-w-md mx-auto">
-          {currentStatus === 'pending_approval' && 'No momento não há revendedores ou distribuidores aguardando aprovação.'}
-          {currentStatus === 'active' && 'No momento não há revendedores ou distribuidores ativos no sistema.'}
-          {currentStatus === 'rejected' && 'No momento não há revendedores ou distribuidores rejeitados.'}
-          {currentStatus === 'inactive' && 'No momento não há revendedores ou distribuidores que foram desativados temporariamente.'}
+          {currentStatus === 'pending_approval' && 'No momento não há distribuidores aguardando aprovação.'}
+          {currentStatus === 'active' && 'No momento não há distribuidores ativos no sistema.'}
+          {currentStatus === 'rejected' && 'No momento não há distribuidores rejeitados.'}
+          {currentStatus === 'inactive' && 'No momento não há distribuidores que foram desativados temporariamente.'}
         </p>
       </div>
     );

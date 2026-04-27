@@ -27,7 +27,7 @@ class StockFileController extends Controller
         ]);
         
         // Nota: Os middlewares para parceiros são aplicados nas rotas da API
-        // para permitir flexibilidade entre revendedores e distribuidores
+        // para permitir flexibilidade para distribuidores
     }
 
     /**
@@ -313,7 +313,7 @@ class StockFileController extends Controller
     }
 
     /**
-     * Download de ficheiro específico para revendedor
+     * Download de ficheiro específico para parceiro
      */
     public function downloadSpecificFile(StockFile $file): BinaryFileResponse|JsonResponse
     {

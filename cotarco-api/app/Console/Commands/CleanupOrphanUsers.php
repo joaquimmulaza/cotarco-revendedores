@@ -4,7 +4,7 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use App\Models\User;
-use App\Models\RevendedorProfile;
+
 use Illuminate\Support\Facades\DB;
 
 class CleanupOrphanUsers extends Command
@@ -30,9 +30,9 @@ class CleanupOrphanUsers extends Command
     {
         $this->info('Iniciando limpeza de usuários órfãos...');
 
-        // Encontrar usuários que não têm perfil de revendedor
-        $orphanUsers = User::where('role', 'revendedor')
-            ->whereDoesntHave('revendedorProfile')
+        // Encontrar usuários que não têm perfil de parceiro
+        $orphanUsers = User::where('role', 'distribuidor')
+            ->whereDoesntHave('partnerProfile')
             ->get();
 
         if ($orphanUsers->isEmpty()) {
@@ -54,8 +54,8 @@ class CleanupOrphanUsers extends Command
                 
                 foreach ($orphanUsers as $user) {
                     // Remover arquivos de alvará se existirem
-                    if ($user->revendedorProfile && $user->revendedorProfile->alvara_path) {
-                        \Storage::disk('local')->delete($user->revendedorProfile->alvara_path);
+                    if ($user->partnerProfile && $user->partnerProfile->alvara_path) {
+                        \Storage::disk('local')->delete($user->partnerProfile->alvara_path);
                     }
                     
                     // Remover o usuário (cascade irá remover o perfil)

@@ -36,7 +36,7 @@ class PlaywrightAuthSeeder extends Seeder
             [
                 'name' => 'Parceiro Playwright',
                 'password' => Hash::make('cotarco.2025'),
-                'role' => 'revendedor',
+                'role' => 'distribuidor',
                 'status' => 'active',
                 'email_verified_at' => now(),
             ]

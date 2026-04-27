@@ -117,9 +117,9 @@ test.describe('Fluxo (c): Rejeição de Distribuidor com Motivo Dinâmico no Ema
     // 1. Ir para dashboard de admin
     await page.goto('/distribuidores/admin/dashboard/partners');
     
-    const heading = page.getByText('Gestão de Parceiros').first();
+    const pageLoadedIndicator = page.getByTestId('partner-search-input');
     try {
-      await expect(heading).toBeVisible({ timeout: 10000 });
+      await expect(pageLoadedIndicator).toBeVisible({ timeout: 10000 });
     } catch (e) {
       console.error(`[FAILURE DEBUG] URL final após goto: ${page.url()}`);
       console.error(`[FAILURE DEBUG] Conteúdo do body (primeiros 1000 chars): ${await page.evaluate(() => document.body.innerText.substring(0, 1000))}`);

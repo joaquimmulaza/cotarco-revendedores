@@ -34,7 +34,7 @@ class TestEmailCommand extends Command
         $testUser = new User([
             'name' => 'Teste Parceiro',
             'email' => 'teste@exemplo.com',
-            'role' => 'revendedor',
+            'role' => 'distribuidor',
             'status' => 'pending_approval',
             'created_at' => now(),
             'updated_at' => now()

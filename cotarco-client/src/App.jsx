@@ -67,7 +67,7 @@ function AppContent() {
     },
     {
       element: (
-        <ProtectedRoute allowedRoles={['partner', 'distribuidor', 'revendedor']}>
+        <ProtectedRoute allowedRoles={['partner', 'distribuidor']}>
           <PartnerLayout />
         </ProtectedRoute>
       ),

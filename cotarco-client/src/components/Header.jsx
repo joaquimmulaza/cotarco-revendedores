@@ -32,7 +32,7 @@ const Header = ({ user, onLogout, isAdmin = false, showStockMap = false, onStock
     <header className="header-container bg-white shadow-sm border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center py-4">
-          {/* Logo e Botão Mapa de Stock (apenas para revendedores) */}
+          {/* Logo e Botão Mapa de Stock (apenas para parceiros) */}
           <div className="flex items-center space-x-4">
             <div
               onClick={handleLogoClick}
@@ -45,7 +45,7 @@ const Header = ({ user, onLogout, isAdmin = false, showStockMap = false, onStock
               />
             </div>
 
-            {/* Botão Mapa de Stock - apenas para revendedores */}
+            {/* Botão Mapa de Stock - apenas para parceiros */}
             {!isAdmin && (
               <div className="relative ml-6">
                 <button
@@ -95,7 +95,7 @@ const Header = ({ user, onLogout, isAdmin = false, showStockMap = false, onStock
 
           {/* Carrinho (apenas parceiros), informações do usuário e logout */}
           <div className="flex items-center space-x-4">
-            {!isAdmin && (user?.role === 'distribuidor' || user?.role === 'revendedor') && (
+            {!isAdmin && user?.role === 'distribuidor' && (
               <div className="relative">
                 <button
                   type="button"

@@ -25,8 +25,8 @@ class ParceiroMiddleware
 
         $user = $request->user('sanctum');
 
-        // Verificar se o usuário tem role de parceiro (revendedor ou distribuidor) e está ativo
-        if (!in_array($user->role, ['revendedor', 'distribuidor'])) {
+        // Verificar se o usuário tem role de parceiro (distribuidor) e está ativo
+        if ($user->role !== 'distribuidor') {
             return response()->json([
                 'message' => 'Acesso negado. Apenas parceiros podem acessar esta funcionalidade.',
             ], 403);

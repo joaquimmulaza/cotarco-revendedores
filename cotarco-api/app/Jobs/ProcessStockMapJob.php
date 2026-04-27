@@ -67,19 +67,19 @@ class ProcessStockMapJob implements ShouldQueue
                     }
 
                     $sku = trim($row['SKU']);
-                    $priceRevendedor = isset($row['Preco_Revendedor']) && !empty($row['Preco_Revendedor']) 
-                        ? (float) str_replace(',', '.', $row['Preco_Revendedor']) 
+                    $priceB2c = isset($row['Preco_B2C']) && !empty($row['Preco_B2C']) 
+                        ? (float) str_replace(',', '.', $row['Preco_B2C']) 
                         : null;
-                    $priceDistribuidor = isset($row['Preco_Distribuidor']) && !empty($row['Preco_Distribuidor']) 
-                        ? (float) str_replace(',', '.', $row['Preco_Distribuidor']) 
+                    $priceB2b = isset($row['Preco_B2B']) && !empty($row['Preco_B2B']) 
+                        ? (float) str_replace(',', '.', $row['Preco_B2B']) 
                         : null;
 
                     // Usar updateOrCreate para atualizar ou criar o registro
                     ProductPrice::updateOrCreate(
                         ['product_sku' => $sku],
                         [
-                            'price_revendedor' => $priceRevendedor,
-                            'price_distribuidor' => $priceDistribuidor,
+                            'price_b2c' => $priceB2c,
+                            'price_b2b' => $priceB2b,
                         ]
                     );
 

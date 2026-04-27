@@ -8,12 +8,12 @@ test.describe('Admin Dashboard', () => {
     await page.goto('/distribuidores/admin/dashboard/partners');
 
     // Navigate to Mapa de Stock and verify
-    await page.getByTestId('admin-stats-card').filter({ hasText: 'Mapa de Stock' }).click();
+    await page.getByTestId('sidebar-nav-stocks').click();
     await expect(page).toHaveURL(/.*\/admin\/dashboard\/stock-files/);
     await expect(page.getByTestId('breadcrumb-page')).toBeVisible();
 
     // Navigate back to Gestão de Parceiros
-    await page.getByTestId('admin-stats-card').filter({ hasText: 'Gestão de Parceiros' }).click();
+    await page.getByTestId('sidebar-nav-partners').click();
     await expect(page).toHaveURL(/.*\/admin\/dashboard\/partners/);
     await expect(page.getByTestId('breadcrumb-page')).toBeVisible();
   });

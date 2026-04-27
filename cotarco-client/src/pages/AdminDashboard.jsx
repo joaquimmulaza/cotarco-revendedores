@@ -1,12 +1,14 @@
-import React from 'react';
-import { NavLink, useLocation, Routes, Route } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { NavLink, useLocation, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { adminService } from '../services/api';
 import StockFileManager from '../components/StockFileManager';
 import PartnerManager from '../components/admin/PartnerManager';
-import { UserGroupIcon, DocumentDuplicateIcon, CubeIcon, ShoppingCartIcon } from '@heroicons/react/24/outline';
+import { UserGroupIcon, DocumentDuplicateIcon, CubeIcon, ShoppingCartIcon, ChartBarIcon } from '@heroicons/react/24/outline';
 import ProductListViewer from '../components/admin/ProductListViewer';
 import OrderList from '../components/admin/OrderList';
 import MetricsGrid from '../components/admin/MetricsGrid';
+import DashboardOverview from '../components/admin/DashboardOverview';
 import { OrderDetailPage } from './OrderDetailPage';
 import UnderConstruction from './UnderConstruction';
 
@@ -17,8 +19,31 @@ function classNames(...classes) {
 const AdminDashboard = () => {
   const { user, authLoading } = useAuth();
   const location = useLocation();
+  const [stats, setStats] = useState(null);
+  const [topProducts, setTopProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const [statsResponse, productsResponse] = await Promise.all([
+          adminService.getDashboardStats(),
+          adminService.getTopProducts(5)
+        ]);
+        setStats(statsResponse.data);
+        setTopProducts(productsResponse.data);
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
 
   const navigationTabs = [
+    { name: 'Visão Geral', href: '/admin/dashboard/overview', icon: ChartBarIcon, path: '/admin/dashboard/overview' },
     { name: 'Gestão de Parceiros', href: '/admin/dashboard/partners', icon: UserGroupIcon, path: '/admin/dashboard/partners' },
     { name: 'Mapa de Stock', href: '/admin/dashboard/stock-files', icon: DocumentDuplicateIcon, path: '/admin/dashboard/stock-files' },
     { name: 'Gestão de Produtos', href: '/admin/dashboard/product-list', icon: CubeIcon, path: '/admin/dashboard/product-list' },
@@ -34,9 +59,9 @@ const AdminDashboard = () => {
 
   return (
     <div className="w-full">
-      <MetricsGrid />
+      <MetricsGrid stats={stats} loading={loading} />
       
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div className="hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
         {navigationTabs.map((tab) => (
           <NavLink
             key={tab.name}
@@ -70,7 +95,8 @@ const AdminDashboard = () => {
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-1">
         <Routes>
-          <Route index element={<PartnerManager />} />
+          <Route index element={<Navigate to="overview" replace />} />
+          <Route path="overview" element={<DashboardOverview stats={stats} topProducts={topProducts} loading={loading} />} />
           <Route path="partners" element={<PartnerManager />} />
           <Route path="stock-files" element={<StockFileManager />} />
           <Route path="product-list" element={<ProductListViewer />} />

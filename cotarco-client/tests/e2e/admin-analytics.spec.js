@@ -16,7 +16,7 @@ test.describe('Admin Dashboard Analytics', () => {
     // Check for specific labels
     await expect(metricsGrid.locator('text=Receita Total')).toBeVisible();
     await expect(metricsGrid.locator('text=Total de Encomendas')).toBeVisible();
-    await expect(metricsGrid.locator('text=Ticket Médio (AOV)')).toBeVisible();
+    await expect(metricsGrid.locator('text=Valor médio das Encomendas')).toBeVisible();
 
     // Check for currency symbols in at least one of the metrics
     await expect(metricsGrid.locator('text=Kz').first()).toBeVisible();

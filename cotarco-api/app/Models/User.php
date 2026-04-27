@@ -61,6 +61,14 @@ class User extends Authenticatable implements MustVerifyEmail, CanResetPassword
     }
 
     /**
+     * Get the orders for the user.
+     */
+    public function orders()
+    {
+        return $this->hasMany(Order::class);
+    }
+
+    /**
      * Send the email verification notification.
      *
      * @return void

@@ -46,8 +46,8 @@ class AdminDashboardStatsTest extends TestCase
                              'total'
                          ],
                          'por_tipo' => [
-                             'revendedores',
-                             'distribuidores'
+                             'b2b',
+                             'b2c'
                          ],
                          'sales',
                          'orders'
@@ -65,18 +65,18 @@ class AdminDashboardStatsTest extends TestCase
 
         // Criar parceiros com diferentes estados e tipos
         // Ativos
-        User::factory()->count(3)->create(['role' => 'revendedor', 'status' => 'active']);
-        User::factory()->count(2)->create(['role' => 'distribuidor', 'status' => 'active']);
+        User::factory()->count(3)->has(\App\Models\PartnerProfile::factory()->state(['business_model' => 'B2C']))->create(['role' => 'distribuidor', 'status' => 'active']);
+        User::factory()->count(2)->has(\App\Models\PartnerProfile::factory()->state(['business_model' => 'B2B']))->create(['role' => 'distribuidor', 'status' => 'active']);
         
         // Pendentes
-        User::factory()->count(4)->create(['role' => 'revendedor', 'status' => 'pending_approval']);
-        User::factory()->count(1)->create(['role' => 'distribuidor', 'status' => 'pending_approval']);
+        User::factory()->count(4)->has(\App\Models\PartnerProfile::factory()->state(['business_model' => 'B2C']))->create(['role' => 'distribuidor', 'status' => 'pending_approval']);
+        User::factory()->count(1)->has(\App\Models\PartnerProfile::factory()->state(['business_model' => 'B2B']))->create(['role' => 'distribuidor', 'status' => 'pending_approval']);
         
         // Rejeitados
-        User::factory()->count(2)->create(['role' => 'revendedor', 'status' => 'rejected']);
+        User::factory()->count(2)->has(\App\Models\PartnerProfile::factory()->state(['business_model' => 'B2C']))->create(['role' => 'distribuidor', 'status' => 'rejected']);
         
         // Inativos
-        User::factory()->count(1)->create(['role' => 'distribuidor', 'status' => 'inactive']);
+        User::factory()->count(1)->has(\App\Models\PartnerProfile::factory()->state(['business_model' => 'B2B']))->create(['role' => 'distribuidor', 'status' => 'inactive']);
 
         $response = $this->getJson('/api/admin/dashboard-stats');
 
@@ -91,8 +91,8 @@ class AdminDashboardStatsTest extends TestCase
         $this->assertEquals(13, $data['parceiros']['total']);
 
         // Verificar contagens por tipo
-        $this->assertEquals(9, $data['por_tipo']['revendedores']); // 3 active + 4 pending + 2 rejected
-        $this->assertEquals(4, $data['por_tipo']['distribuidores']); // 2 active + 1 pending + 1 inactive
+        $this->assertEquals(9, $data['por_tipo']['b2c']); // 3 active + 4 pending + 2 rejected
+        $this->assertEquals(4, $data['por_tipo']['b2b']); // 2 active + 1 pending + 1 inactive
     }
 
     /**
@@ -104,11 +104,11 @@ class AdminDashboardStatsTest extends TestCase
         Sanctum::actingAs($this->admin);
 
         // Criar utilizadores com pending_email_validation
-        User::factory()->create(['role' => 'revendedor', 'status' => 'pending_email_validation']);
-        User::factory()->create(['role' => 'distribuidor', 'status' => 'pending_email_validation']);
+        User::factory()->has(\App\Models\PartnerProfile::factory()->state(['business_model' => 'B2B']))->create(['role' => 'distribuidor', 'status' => 'pending_email_validation']);
+        User::factory()->has(\App\Models\PartnerProfile::factory()->state(['business_model' => 'B2B']))->create(['role' => 'distribuidor', 'status' => 'pending_email_validation']);
         
         // Criar um ativo para comparação
-        User::factory()->create(['role' => 'revendedor', 'status' => 'active']);
+        User::factory()->has(\App\Models\PartnerProfile::factory()->state(['business_model' => 'B2C']))->create(['role' => 'distribuidor', 'status' => 'active']);
 
         $response = $this->getJson('/api/admin/dashboard-stats');
 
@@ -116,8 +116,8 @@ class AdminDashboardStatsTest extends TestCase
         $data = $response->json('data');
 
         // As contagens por tipo não devem incluir os pending_email_validation
-        $this->assertEquals(1, $data['por_tipo']['revendedores']);
-        $this->assertEquals(0, $data['por_tipo']['distribuidores']);
+        $this->assertEquals(1, $data['por_tipo']['b2c']);
+        $this->assertEquals(0, $data['por_tipo']['b2b']);
         
         // No total de parceiros por status também não devem aparecer
         $this->assertEquals(1, $data['parceiros']['total']);
@@ -129,7 +129,7 @@ class AdminDashboardStatsTest extends TestCase
     #[Test]
     public function test_non_admin_users_cannot_access_dashboard_stats(): void
     {
-        $user = User::factory()->create(['role' => 'revendedor', 'status' => 'active']);
+        $user = User::factory()->create(['role' => 'distribuidor', 'status' => 'active']);
         Sanctum::actingAs($user);
 
         $response = $this->getJson('/api/admin/dashboard-stats');

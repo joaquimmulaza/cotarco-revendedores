@@ -250,37 +250,16 @@ export const adminService = {
     }
   },
 
-  // === FUNÇÕES ANTIGAS MANTIDAS PARA COMPATIBILIDADE ===
-  
-  // @deprecated Use getPartners('pending_approval') instead
-  async getPendingPartners() {
+  // Obter top products
+  async getTopProducts(limit = 6) {
     try {
-      const response = await api.get('/admin/revendedores/pending');
+      const response = await api.get(`/admin/top-products?limit=${limit}`);
       return response.data;
     } catch (error) {
-      throw error.response?.data || { message: 'Erro ao obter parceiros pendentes' };
+      throw error.response?.data || { message: 'Erro ao obter top produtos' };
     }
   },
 
-  // @deprecated Use updatePartnerStatus(userId, 'active') instead
-  async approvePartner(userId) {
-    try {
-      const response = await api.post(`/admin/revendedores/${userId}/approve`);
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || { message: 'Erro ao aprovar parceiro' };
-    }
-  },
-
-  // @deprecated Use updatePartnerStatus(userId, 'rejected') instead
-  async rejectPartner(userId) {
-    try {
-      const response = await api.post(`/admin/revendedores/${userId}/reject`);
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || { message: 'Erro ao rejeitar parceiro' };
-    }
-  },
 
   // Download do alvará de um parceiro usando autenticação via header
   // A autenticação é feita via middleware auth:sanctum no backend
@@ -408,7 +387,7 @@ export const adminService = {
   }
 };
 
-// Serviços para parceiros (revendedores e distribuidores)
+// Serviços para distribuidores
 export const parceiroService = {
   // Obter informações do ficheiro de stock disponível
   async getStockFileInfo() {
@@ -477,8 +456,7 @@ export const parceiroService = {
   }
 };
 
-// Serviços para revendedores (mantido para compatibilidade)
-export const revendedorService = parceiroService;
+
 
 // Serviços de produtos e categorias
 export const productService = {

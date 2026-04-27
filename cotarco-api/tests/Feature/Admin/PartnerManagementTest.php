@@ -218,7 +218,7 @@ class PartnerManagementTest extends TestCase
     {
         // Limpar parceiros criados no setUp que são ativos
         // Ou simplesmente criar um pendente e verificar se ele é o único na lista por defeito
-        $pendingUser = User::factory()->create(['role' => 'revendedor', 'status' => 'pending_approval']);
+        $pendingUser = User::factory()->create(['role' => 'distribuidor', 'status' => 'pending_approval']);
         PartnerProfile::factory()->create(['user_id' => $pendingUser->id]);
         
         $response = $this->getJson('/api/admin/partners');
@@ -238,27 +238,27 @@ class PartnerManagementTest extends TestCase
     #[Test]
     public function test_admin_can_filter_by_combined_status_and_role(): void
     {
-        // Criar revendedor ativo
-        $revActive = User::factory()->create(['role' => 'revendedor', 'status' => 'active']);
+        // Criar distribuidor ativo
+        $revActive = User::factory()->create(['role' => 'distribuidor', 'status' => 'active']);
         PartnerProfile::factory()->create(['user_id' => $revActive->id]);
         
         // Criar distribuidor ativo
         $distActive = User::factory()->create(['role' => 'distribuidor', 'status' => 'active']);
         PartnerProfile::factory()->create(['user_id' => $distActive->id]);
         
-        // Criar revendedor pendente
-        $revPending = User::factory()->create(['role' => 'revendedor', 'status' => 'pending_approval']);
+        // Criar distribuidor pendente
+        $revPending = User::factory()->create(['role' => 'distribuidor', 'status' => 'pending_approval']);
         PartnerProfile::factory()->create(['user_id' => $revPending->id]);
 
-        // Filtrar por revendedor E ativo
-        $response = $this->getJson('/api/admin/partners?role=revendedor&status=active');
+        // Filtrar por distribuidor E ativo
+        $response = $this->getJson('/api/admin/partners?role=distribuidor&status=active');
         $response->assertStatus(200);
         
         $partners = $response->json('partners');
         
         $ids = collect($partners)->pluck('id')->toArray();
         $this->assertContains($revActive->id, $ids);
-        $this->assertNotContains($distActive->id, $ids);
+        $this->assertContains($distActive->id, $ids);
         $this->assertNotContains($revPending->id, $ids);
     }
 }

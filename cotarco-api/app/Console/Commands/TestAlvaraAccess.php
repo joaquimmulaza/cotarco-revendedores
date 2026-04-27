@@ -40,14 +40,14 @@ class TestAlvaraAccess extends Command
         // Use the route() helper if the route is named, or build it securely.
         // Assuming there isn't a named route for this specific raw URL construction or it's an API route.
         // Better to use config('app.url') . '/api/...' if specific.
-        $url = config('app.url') . "/api/admin/revendedores/{$userId}/alvara?token={$token}";
+        $url = config('app.url') . "/api/admin/distribuidores/{$userId}/alvara?token={$token}";
         
         $this->line("URL gerada: {$url}");
         $this->info("Copie esta URL e cole no navegador para testar.");
         
         // Verificar se o arquivo existe
-        if ($user->revendedorProfile && $user->revendedorProfile->alvara_path) {
-            $alvaraPath = $user->revendedorProfile->alvara_path;
+        if ($user->partnerProfile && $user->partnerProfile->alvara_path) {
+            $alvaraPath = $user->partnerProfile->alvara_path;
             $this->line("Caminho do alvará: {$alvaraPath}");
             
             if (\Storage::disk('local')->exists($alvaraPath)) {
@@ -58,7 +58,7 @@ class TestAlvaraAccess extends Command
                 $this->error("❌ Arquivo do alvará NÃO existe no servidor.");
             }
         } else {
-            $this->error("❌ Usuário não possui perfil de revendedor ou caminho do alvará.");
+            $this->error("❌ Usuário não possui perfil de parceiro ou caminho do alvará.");
         }
 
         return 0;

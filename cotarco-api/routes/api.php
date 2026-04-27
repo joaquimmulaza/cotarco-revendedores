@@ -221,8 +221,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/orders/{order}', [AdminOrderController::class, 'show']);
         Route::get('/orders/{order}/invoice', [AdminOrderController::class, 'downloadInvoice']);
 
-        // Rotas de Revendedores (estrutura antiga - mantida para compatibilidade)
-        Route::prefix('revendedores')->group(function () {
+        // Top Produtos
+        Route::get('/top-products', [AdminOrderController::class, 'topProducts']);
+
+        // Rotas de Distribuidores (estrutura antiga - mantida para compatibilidade)
+        Route::prefix('distribuidores')->group(function () {
             Route::get('/', [AdminController::class, 'index']);
             Route::get('/pending', [AdminController::class, 'getPendingPartners']); // Rota antiga
             // Rotas de aprovação/rejeição removidas - usar /admin/partners/{user}/status

@@ -51,4 +51,28 @@ class OrderController extends Controller
 
         return $pdf->download('fatura-' . $order->id . '.pdf');
     }
+
+    /**
+     * Obter os produtos mais vendidos.
+     */
+    public function topProducts(Request $request)
+    {
+        $limit = $request->query('limit', 6);
+        
+        $topProducts = \Illuminate\Support\Facades\DB::table('order_items')
+            ->join('orders', 'orders.id', '=', 'order_items.order_id')
+            ->selectRaw('order_items.product_sku as sku, order_items.name, SUM(order_items.quantity) as total_sold')
+            ->whereIn('orders.status', ['paid', 'success', 'completed'])
+            ->groupBy('order_items.product_sku', 'order_items.name')
+            ->orderBy('total_sold', 'desc')
+            ->limit($limit)
+            ->get();
+
+        $topProducts = $topProducts->map(function($item) {
+            $item->total_sold = (int)$item->total_sold;
+            return $item;
+        });
+
+        return response()->json(['data' => $topProducts]);
+    }
 }

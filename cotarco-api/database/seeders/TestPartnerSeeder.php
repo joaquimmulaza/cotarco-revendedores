@@ -21,7 +21,7 @@ class TestPartnerSeeder extends Seeder
                 'name' => 'João Teste',
                 'email' => 'teste@parceiro.com',
                 'password' => Hash::make('password123'),
-                'role' => 'revendedor',
+                'role' => 'distribuidor',
                 'status' => 'pending_approval',
                 'email_verified_at' => now(),
             ]);

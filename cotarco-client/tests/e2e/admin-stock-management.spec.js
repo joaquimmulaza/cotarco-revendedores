@@ -78,9 +78,9 @@ test.describe('Admin Stock Map Management', () => {
     
     const stockManagementHeading = page.getByRole('heading', { name: 'Gestão do Mapa de Stock' });
     
-    // Sidebar link is 'Mapa de Stock' according to subagent
+    // Sidebar link is 'Stocks' according to subagent
     if (!await stockManagementHeading.isVisible()) {
-        await page.click('text=Mapa de Stock');
+        await page.getByTestId('sidebar-nav-stocks').click();
     }
 
     await expect(stockManagementHeading).toBeVisible();
