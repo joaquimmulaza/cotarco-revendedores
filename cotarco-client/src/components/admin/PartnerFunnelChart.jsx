@@ -63,11 +63,11 @@ export function PartnerFunnelChart({ funnelData = {} }) {
     <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm flex flex-col h-full">
       <h3 className="text-lg font-semibold text-slate-800 mb-4">Funil de Parceiros</h3>
       <div className="flex-1 min-h-[300px]">
-        {Object.keys(funnelData).length > 0 ? (
+        {funnelData && Object.keys(funnelData).length > 0 ? (
           <Bar options={options} data={chartData} />
         ) : (
-           <div className="flex items-center justify-center h-full text-slate-500">
-             A carregar dados...
+           <div className="flex items-center justify-center h-full text-slate-400 italic">
+             Sem dados de funil para exibir
            </div>
         )}
       </div>

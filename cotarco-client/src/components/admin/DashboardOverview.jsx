@@ -33,7 +33,7 @@ const DashboardOverview = ({ stats, topProducts, loading }) => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <PartnerFunnelChart funnelData={stats?.partner_funnel || {}} />
-        <TopProductsChart data={topProducts || []} />
+        <TopProductsChart products={topProducts || []} />
       </div>
 
       <RecentTransactionsTable orders={stats?.recent_orders || []} />

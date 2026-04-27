@@ -20,20 +20,6 @@ ChartJS.register(
 );
 
 export function TopProductsChart({ products = [] }) {
-  const labels = products.map(p => p.name.length > 20 ? p.name.substring(0, 20) + '...' : p.name);
-  const data = products.map(p => p.total_sold);
-
-  const chartData = {
-    labels,
-    datasets: [
-      {
-        label: 'Quantidade Vendida',
-        data,
-        backgroundColor: 'rgba(245, 158, 11, 0.8)', // amber-500
-      },
-    ],
-  };
-
   const options = {
     responsive: true,
     maintainAspectRatio: false,
@@ -44,15 +30,28 @@ export function TopProductsChart({ products = [] }) {
     },
   };
 
+  const hasData = Array.isArray(products) && products.length > 0;
+
+  const chartData = hasData ? {
+    labels: products.map(p => p.name.length > 20 ? p.name.substring(0, 20) + '...' : p.name),
+    datasets: [
+      {
+        label: 'Quantidade Vendida',
+        data: products.map(p => p.total_sold),
+        backgroundColor: 'rgba(245, 158, 11, 0.8)', // amber-500
+      },
+    ],
+  } : null;
+
   return (
     <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm flex flex-col h-full">
       <h3 className="text-lg font-semibold text-slate-800 mb-4">Top Produtos mais vendidos</h3>
       <div className="flex-1 min-h-[300px]">
-        {products.length > 0 ? (
+        {hasData ? (
           <Bar options={options} data={chartData} />
         ) : (
-          <div className="flex items-center justify-center h-full text-slate-500">
-            A carregar dados...
+          <div className="flex items-center justify-center h-full text-slate-400 italic">
+            Sem dados de vendas para exibir
           </div>
         )}
       </div>
