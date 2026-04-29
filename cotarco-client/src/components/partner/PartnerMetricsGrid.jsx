@@ -83,7 +83,7 @@ const PartnerMetricsGrid = ({ stats, isLoading }) => {
             <p className="text-sm font-medium text-slate-500 mb-1">Modelo</p>
             <h3 className="text-2xl font-bold text-slate-900">{business_model || 'B2C'}</h3>
           </div>
-          <div className="p-3 bg-gray-50 text-gray-600 rounded-lg">
+          <div className="p-3 bg-gray-100 text-gray-600 rounded-lg">
             <Briefcase className="w-6 h-6" />
           </div>
         </div>

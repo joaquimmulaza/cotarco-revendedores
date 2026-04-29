@@ -26,7 +26,7 @@ const CategoryBreakdown = ({ stats, isLoading }) => {
   if (!top_categories || top_categories.length === 0) {
     return (
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 h-full">
-        <h3 className="text-lg font-semibold text-slate-800 mb-6">Categorias favoritas</h3>
+        <h3 className="text-lg font-semibold text-slate-800 mb-6">Categorias que mais compro</h3>
         <div className="flex items-center justify-center text-slate-500 py-10">
           Sem dados de categorias
         </div>
@@ -38,7 +38,7 @@ const CategoryBreakdown = ({ stats, isLoading }) => {
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 h-full">
-      <h3 className="text-lg font-semibold text-slate-800 mb-6">Categorias favoritas</h3>
+      <h3 className="text-lg font-semibold text-slate-800 mb-6">Categorias que mais compro</h3>
       <div className="space-y-5">
         {top_categories.map((cat, idx) => {
           const qty = parseInt(cat.total_qty);

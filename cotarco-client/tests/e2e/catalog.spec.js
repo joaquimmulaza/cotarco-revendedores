@@ -21,6 +21,7 @@ test.describe('Partner Catalog Page (/catalog)', () => {
     const categoryButton = categoriesList.locator('button[data-category-id="999999"]');
     await expect(categoryButton).toBeVisible({ timeout: 15000 });
     await categoryButton.click();
+    await page.locator('.react-loading-skeleton').waitFor({ state: 'detached', timeout: 30000 }).catch(() => {});
 
     const productCards = page.getByTestId('product-card');
     await expect(productCards.first()).toBeVisible({ timeout: 30000 });
@@ -42,6 +43,7 @@ test.describe('Partner Catalog Page (/catalog)', () => {
     const categoryButton = categoriesList.locator('button[data-category-id="999999"]');
     await expect(categoryButton).toBeVisible({ timeout: 15000 });
     await categoryButton.click();
+    await page.locator('.react-loading-skeleton').waitFor({ state: 'detached', timeout: 30000 }).catch(() => {});
     await expect(categoryButton).toHaveAttribute('data-active', 'true', { timeout: 10000 });
 
     const testProduct = page.getByTestId('product-card').filter({ hasText: 'Produto de Teste Playwright' }).first();

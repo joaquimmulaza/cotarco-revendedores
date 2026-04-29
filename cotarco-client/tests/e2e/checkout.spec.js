@@ -17,6 +17,9 @@ test.describe('Checkout Page', () => {
     await categoryButton.click();
     console.log('Category "Teste Playwright" selected');
 
+    // Wait for the loading skeleton to disappear to ensure the products are stable
+    await page.locator('.react-loading-skeleton').waitFor({ state: 'detached', timeout: 30000 }).catch(() => {});
+
     // 2. Wait explicitly for the specific test product to load in the DOM
     const testProduct = page.getByTestId('product-card').filter({ hasText: 'Produto de Teste Playwright' }).first();
     await expect(testProduct).toBeVisible({ timeout: 45000 });

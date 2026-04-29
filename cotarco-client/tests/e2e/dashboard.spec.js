@@ -38,4 +38,9 @@ test.describe('Partner Dashboard (Overview de Métricas)', () => {
     // Catálogo deve renderizar
     await expect(page.getByTestId('categories-list')).toBeVisible({ timeout: 30000 });
   });
+  test('should render the recent orders table at the bottom', async ({ page }) => {
+    const ordersTable = page.getByTestId('partner-orders-table');
+    await expect(ordersTable).toBeVisible({ timeout: 15000 });
+    await expect(ordersTable.getByText('Últimas Encomendas')).toBeVisible();
+  });
 });

@@ -20,7 +20,7 @@ const OrderStatusChart = ({ stats, isLoading }) => {
   if (orders_this_month.total === 0) {
     return (
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 h-full">
-        <h3 className="text-lg font-semibold text-slate-800 mb-6">Estado (Este mês)</h3>
+        <h3 className="text-lg font-semibold text-slate-800 mb-6">Estado das encomendas</h3>
         <div className="flex items-center justify-center h-[250px] text-slate-500">
           Sem encomendas este mês
         </div>
@@ -60,7 +60,7 @@ const OrderStatusChart = ({ stats, isLoading }) => {
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 h-full">
-      <h3 className="text-lg font-semibold text-slate-800 mb-6">Estado (Este mês)</h3>
+      <h3 className="text-lg font-semibold text-slate-800 mb-6">Estado das encomendas</h3>
       <div className="h-[250px] relative">
         <Doughnut data={data} options={options} />
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none mb-8">

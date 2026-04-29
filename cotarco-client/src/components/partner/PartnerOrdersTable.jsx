@@ -42,7 +42,7 @@ const PartnerOrdersTable = () => {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+    <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden" data-testid="partner-orders-table">
       <div className="p-6 border-b border-slate-200 flex justify-between items-center">
         <h3 className="text-lg font-semibold text-slate-800">Últimas Encomendas</h3>
         <button 

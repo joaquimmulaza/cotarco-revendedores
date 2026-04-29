@@ -34,19 +34,14 @@ const PartnerDashboardOverview = () => {
         </div>
       </div>
 
-      {/* Bottom Row: Status, Categories, Orders */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-1">
-          <OrderStatusChart stats={stats} isLoading={isLoading} />
-        </div>
-        <div className="lg:col-span-1">
-          <CategoryBreakdown stats={stats} isLoading={isLoading} />
-        </div>
-        <div className="lg:col-span-1">
-          {/* Note: PartnerOrdersTable uses its own hook, we just render it */}
-          <PartnerOrdersTable />
-        </div>
+      {/* Bottom Row: Status & Categories */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <OrderStatusChart stats={stats} isLoading={isLoading} />
+        <CategoryBreakdown stats={stats} isLoading={isLoading} />
       </div>
+
+      {/* Full Width Table at the bottom */}
+      <PartnerOrdersTable />
     </div>
   );
 };

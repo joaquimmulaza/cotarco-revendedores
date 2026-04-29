@@ -12,6 +12,7 @@ export default defineConfig({
     css: false,
     globals: true,
     setupFiles: './src/tests/setup.js',
+    exclude: ['**/tests/e2e/**', '**/node_modules/**'],
   },
   resolve: {
     alias: {
