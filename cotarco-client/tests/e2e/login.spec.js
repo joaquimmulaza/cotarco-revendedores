@@ -13,8 +13,10 @@ test.describe('Login Page', () => {
     await page.fill('input[name="password"]', 'cotarco.2025');
     await page.click('button[type="submit"]');
 
+    // Verifica apenas o redirect — o conteúdo do dashboard é testado em dashboard.spec.js
     await expect(page).toHaveURL(/.*\/dashboard/, { timeout: 30000 });
-    await expect(page.getByText('Categorias')).toBeVisible();
+    // Aguarda que a sidebar esteja visível como indicador de que a sessão autenticada carregou
+    await expect(page.locator('[data-sidebar="sidebar"]')).toBeVisible({ timeout: 15000 });
   });
 
   test('should show an error message with invalid credentials', async ({ page }) => {

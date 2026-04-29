@@ -12,6 +12,8 @@ use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\WebhookController;
+use App\Http\Controllers\PartnerStatsController;
+use App\Http\Controllers\PartnerOrderController;
 use Illuminate\Support\Facades\Http;
 
 /*
@@ -234,6 +236,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Grupo de Rotas para Parceiros (Revendedores e Distribuidores)
     Route::prefix('parceiro')->middleware('parceiro')->group(function () {
+        Route::get('/stats', [PartnerStatsController::class, 'stats']);
+        Route::get('/orders', [PartnerOrderController::class, 'myOrders']);
+        Route::get('/orders/{order}', [PartnerOrderController::class, 'show']);
+
         Route::prefix('stock-files')->group(function () {
             Route::get('/', [StockFileController::class, 'getForPartner']);
             Route::get('/download', [StockFileController::class, 'downloadForPartner']);

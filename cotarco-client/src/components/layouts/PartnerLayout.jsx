@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Outlet, useLocation, Link, useSearchParams } from "react-router-dom";
+import { Outlet, useLocation, Link, useNavigate } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
 import { PartnerSidebar } from "./PartnerSidebar";
 import {
@@ -18,12 +18,12 @@ import CartDrawer from "@/components/CartDrawer";
 
 export default function PartnerLayout() {
   const location = useLocation();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const { totalItems } = useCart();
   const [isCartOpen, setIsCartOpen] = useState(false);
   
   const pathnames = location.pathname.split("/").filter((x) => x);
-  const showStockMap = searchParams.get('view') === 'stock-map';
+  const isStockPage = location.pathname === "/stock";
 
   const routeMap = {
     dashboard: "Dashboard",
@@ -31,18 +31,10 @@ export default function PartnerLayout() {
     checkout: "Checkout",
     orders: "Histórico",
     profile: "O Meu Perfil",
+    stock: "Mapa de Stock"
   };
 
   const nonClickableSegments = ["distribuidores", "distribuidor"];
-
-  const toggleStockMap = () => {
-    if (showStockMap) {
-      searchParams.delete('view');
-    } else {
-      searchParams.set('view', 'stock-map');
-    }
-    setSearchParams(searchParams);
-  };
 
   return (
     <SidebarProvider>
@@ -89,17 +81,18 @@ export default function PartnerLayout() {
                 {/* Botão Mapa de Stock */}
                 <div className="relative hidden sm:block">
                   <button
-                    onClick={toggleStockMap}
+                    onClick={() => navigate('/stock')}
                     data-testid="nav-stock-map"
                     className={`cursor-pointer px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 focus:outline-none relative z-10 ${
-                      showStockMap
-                        ? 'bg-gray-100 text-gray-900 border border-gray-200'
+                      isStockPage
+                        ? 'bg-gray-100 text-gray-900 border border-gray-200 cursor-default'
                         : 'bg-[#F23C13] text-white hover:bg-[#E0350F]'
                     }`}
+                    disabled={isStockPage}
                   >
-                    {showStockMap ? 'Sair do Mapa' : 'Mapa de Stock'}
+                    Mapa de Stock
                   </button>
-                  {!showStockMap && (
+                  {!isStockPage && (
                     <div 
                       className="absolute inset-x-2 -inset-y-0 rounded-lg bg-[#f23c13] opacity-20 animate-ping -z-10"
                       style={{ animationDuration: '1.5s' }}

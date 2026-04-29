@@ -22,9 +22,10 @@ test.describe('Order Lifecycle 360 (Golden Flow)', () => {
     const partnerContext = await browser.newContext({ storageState: 'playwright/.auth/partner.json' });
     const partnerPage = await partnerContext.newPage();
 
-    await partnerPage.goto('/distribuidores/dashboard');
+    // O catálogo de produtos está agora em /catalog (separado do dashboard de métricas)
+    await partnerPage.goto('/distribuidores/catalog');
     console.log(`Current URL: ${partnerPage.url()}`);
-    
+
     // Selecionar categoria de teste 999998
     const categoriesList = partnerPage.getByTestId('categories-list');
     await expect(categoriesList).toBeVisible({ timeout: 45000 });

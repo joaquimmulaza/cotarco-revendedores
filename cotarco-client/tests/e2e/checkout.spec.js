@@ -6,7 +6,8 @@ test.describe('Checkout Page', () => {
   test.beforeEach(async ({ page }) => {
     test.setTimeout(120000);
     // Before checkout, let's add an item to the cart
-    await page.goto('/distribuidores/dashboard');
+    // O catálogo de produtos está agora em /catalog — navega diretamente
+    await page.goto('/distribuidores/catalog');
     
     // 1. Wait for categories and select the "Teste Playwright" category
     const categoriesList = page.getByTestId('categories-list');
@@ -25,7 +26,7 @@ test.describe('Checkout Page', () => {
       message: "Erro: Não é possível prosseguir para checkout com produto 'Sob consulta'."
     });
     
-    console.log('Test product visible and valid on dashboard');
+    console.log('Test product visible and valid on catalog page');
     
     // Add product to cart
     await testProduct.getByTestId('add-to-cart-button').first().click();

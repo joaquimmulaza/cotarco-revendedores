@@ -1,8 +1,8 @@
 import { NavLink, useLocation } from "react-router-dom";
 import { 
-  Home,
-  ShoppingCart,
-  ClipboardList,
+  LayoutDashboard,
+  LayoutGrid,
+  FileSpreadsheet,
   History,
   User
 } from "lucide-react";
@@ -27,9 +27,11 @@ export function PartnerSidebar() {
   const location = useLocation();
 
   const items = [
-    { title: "Início", url: "/catalog", icon: Home, testId: "home" },
-    { title: "Histórico", url: "/orders", icon: History, testId: "history" },
-    { title: "O Meu Perfil", url: "/profile", icon: User, testId: "profile" },
+    { title: "Início",         url: "/dashboard", icon: LayoutDashboard,  testId: "home" },
+    { title: "Catálogo",       url: "/catalog",   icon: LayoutGrid,        testId: "catalog" },
+    { title: "Mapa de Stock",  url: "/stock",     icon: FileSpreadsheet,   testId: "stock" },
+    { title: "Histórico",      url: "/orders",    icon: History,           testId: "history" },
+    { title: "O Meu Perfil",   url: "/profile",   icon: User,              testId: "profile" },
   ];
 
   return (

@@ -7,12 +7,14 @@ import EmailVerificationPending from './pages/EmailVerificationPending';
 import EmailValidated from './pages/EmailValidated';
 import EmailVerificationError from './pages/EmailVerificationError';
 import Dashboard from './pages/Dashboard';
+import CatalogPage from './pages/CatalogPage';
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
 import ApiTestPage from './pages/ApiTestPage';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import CheckoutPage from './pages/CheckoutPage';
+import StockPage from './pages/StockPage';
 import UnderConstruction from './pages/UnderConstruction';
 
 // Import Layouts
@@ -78,7 +80,7 @@ function AppContent() {
         },
         {
           path: "/catalog",
-          element: <Dashboard />
+          element: <CatalogPage />
         },
         {
           path: "/orders",
@@ -87,6 +89,10 @@ function AppContent() {
         {
           path: "/profile",
           element: <UnderConstruction title="Perfil" />
+        },
+        {
+          path: "/stock",
+          element: <StockPage />
         },
         {
           path: "/checkout",

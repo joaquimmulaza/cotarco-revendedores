@@ -389,6 +389,24 @@ export const adminService = {
 
 // Serviços para distribuidores
 export const parceiroService = {
+  async getStats() {
+    try {
+      const response = await api.get('/parceiro/stats');
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: 'Erro ao obter estatísticas' };
+    }
+  },
+
+  async getMyOrders(perPage = 5, page = 1) {
+    try {
+      const response = await api.get(`/parceiro/orders?per_page=${perPage}&page=${page}`);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: 'Erro ao obter encomendas' };
+    }
+  },
+
   // Obter informações do ficheiro de stock disponível
   async getStockFileInfo() {
     try {
