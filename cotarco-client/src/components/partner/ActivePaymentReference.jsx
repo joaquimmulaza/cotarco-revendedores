@@ -19,7 +19,7 @@ const ActivePaymentReference = ({ stats, isLoading }) => {
     return (
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 h-full">
         <div className="flex items-center space-x-2 mb-4 text-slate-800">
-          <CreditCard className="w-5 h-5 text-indigo-500" />
+          <CreditCard className="w-5 h-5 text-gray-500" />
           <h3 className="text-lg font-semibold">Pagamento Pendente</h3>
         </div>
         <div className="flex items-center justify-center text-slate-500 py-6">

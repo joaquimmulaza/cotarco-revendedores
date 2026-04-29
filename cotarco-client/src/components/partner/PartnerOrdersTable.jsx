@@ -47,7 +47,7 @@ const PartnerOrdersTable = () => {
         <h3 className="text-lg font-semibold text-slate-800">Últimas Encomendas</h3>
         <button 
           onClick={() => navigate('/orders')}
-          className="text-sm font-medium text-indigo-600 hover:text-indigo-700 flex items-center"
+          className="cursor-pointer text-sm font-medium text-indigo-500 hover:text-indigo-700 flex items-center"
         >
           Ver todas
           <ChevronRight className="w-4 h-4 ml-1" />

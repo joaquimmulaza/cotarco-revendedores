@@ -30,7 +30,7 @@ const PartnerMetricsGrid = ({ stats, isLoading }) => {
               {new Intl.NumberFormat('pt-AO', { style: 'currency', currency: 'AOA' }).format(spent_this_month)}
             </h3>
           </div>
-          <div className="p-3 bg-blue-50 text-blue-600 rounded-lg">
+          <div className="p-3 bg-gray-100 text-gray-600 rounded-lg">
             <DollarSign className="w-6 h-6" />
           </div>
         </div>
@@ -51,7 +51,7 @@ const PartnerMetricsGrid = ({ stats, isLoading }) => {
             <p className="text-sm font-medium text-slate-500 mb-1">Encomendas</p>
             <h3 className="text-2xl font-bold text-slate-900">{orders_this_month.total}</h3>
           </div>
-          <div className="p-3 bg-indigo-50 text-indigo-600 rounded-lg">
+          <div className="p-3 bg-gray-100 text-gray-600 rounded-lg">
             <ShoppingBag className="w-6 h-6" />
           </div>
         </div>
@@ -67,7 +67,7 @@ const PartnerMetricsGrid = ({ stats, isLoading }) => {
             <p className="text-sm font-medium text-slate-500 mb-1">Desconto</p>
             <h3 className="text-2xl font-bold text-slate-900">{discount_percentage}%</h3>
           </div>
-          <div className="p-3 bg-emerald-50 text-emerald-600 rounded-lg">
+          <div className="p-3 bg-gray-100 text-gray-600 rounded-lg">
             <Percent className="w-6 h-6" />
           </div>
         </div>
@@ -83,7 +83,7 @@ const PartnerMetricsGrid = ({ stats, isLoading }) => {
             <p className="text-sm font-medium text-slate-500 mb-1">Modelo</p>
             <h3 className="text-2xl font-bold text-slate-900">{business_model || 'B2C'}</h3>
           </div>
-          <div className="p-3 bg-purple-50 text-purple-600 rounded-lg">
+          <div className="p-3 bg-gray-50 text-gray-600 rounded-lg">
             <Briefcase className="w-6 h-6" />
           </div>
         </div>
