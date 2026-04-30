@@ -70,7 +70,7 @@ const SpendingChart = ({ stats, isLoading }) => {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 h-full">
       <h3 className="text-lg font-semibold text-slate-800 mb-6">Histórico de gastos mensais</h3>
       <div className="h-[250px]">
         <Bar data={data} options={options} />

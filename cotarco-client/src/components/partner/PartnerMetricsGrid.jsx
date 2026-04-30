@@ -25,7 +25,7 @@ const PartnerMetricsGrid = ({ stats, isLoading }) => {
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6" data-testid="partner-metric-card">
         <div className="flex justify-between items-start">
           <div>
-            <p className="text-sm font-medium text-slate-500 mb-1">Total gasto (este mês)</p>
+            <p className="text-sm font-medium text-slate-500 mb-1">Total gasto</p>
             <h3 className="text-2xl font-bold text-slate-900">
               {new Intl.NumberFormat('pt-AO', { style: 'currency', currency: 'AOA' }).format(spent_this_month)}
             </h3>
@@ -80,7 +80,7 @@ const PartnerMetricsGrid = ({ stats, isLoading }) => {
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6" data-testid="partner-metric-card">
         <div className="flex justify-between items-start">
           <div>
-            <p className="text-sm font-medium text-slate-500 mb-1">Modelo</p>
+            <p className="text-sm font-medium text-slate-500 mb-1">Modelo de Negócio</p>
             <h3 className="text-2xl font-bold text-slate-900">{business_model || 'B2C'}</h3>
           </div>
           <div className="p-3 bg-gray-100 text-gray-600 rounded-lg">

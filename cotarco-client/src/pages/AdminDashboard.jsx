@@ -11,6 +11,7 @@ import MetricsGrid from '../components/admin/MetricsGrid';
 import DashboardOverview from '../components/admin/DashboardOverview';
 import { OrderDetailPage } from './OrderDetailPage';
 import UnderConstruction from './UnderConstruction';
+import { DEMO_MODE, adminDashboardStats as mockStats, adminTopProducts as mockTopProducts } from '../mocks/demoData';
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(' ');
@@ -27,6 +28,11 @@ const AdminDashboard = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
+        if (DEMO_MODE) {
+          setStats(mockStats);
+          setTopProducts(mockTopProducts);
+          return;
+        }
         const [statsResponse, productsResponse] = await Promise.all([
           adminService.getDashboardStats(),
           adminService.getTopProducts(5)

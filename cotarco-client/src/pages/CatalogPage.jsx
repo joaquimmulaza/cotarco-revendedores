@@ -120,7 +120,6 @@ const CatalogPage = () => {
     <div className="w-full space-y-6">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <LayoutGrid className="w-6 h-6 text-indigo-600" />
         <div>
           <h1 className="text-xl font-bold text-slate-900">Catálogo de Produtos</h1>
           <p className="text-sm text-slate-500">Pesquise e adicione produtos ao carrinho</p>
