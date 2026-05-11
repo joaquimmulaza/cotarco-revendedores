@@ -11,6 +11,9 @@ Desktop.ini
 *.ntvs*
 *.njsproj
 *.sln
+.agents/rules
+context.md
+notebook
 
 # Logs
 *.log

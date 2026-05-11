@@ -1,4 +1,4 @@
-# Contexto do Projeto: Cotarco Revendedores
+# Contexto do Projeto: Cotarco Distribuidores
 
 ## 📌 Descrição do Projeto
 **Cotarco Distribuidores** é um marketplace B2B e B2C (Business to Business e Business to Consumer) que oferece uma vasta gama de eletrodomésticos, telemóveis, e acessórios da marca Samsung construído para gerenciar o registro, aprovação e as operações de distribuidores da Cotarco. O sistema é composto por uma arquitetura separada com um **Frontend (Client)** em React (Vite) e um **Backend (API)** em Laravel. Através dessa plataforma, distribuidores podem se registrar, e no registo submeter a documentação (ex: alvarás) para validar a empresa, fazer login, visualizar produtos (com suporte a descrições customizadas originárias do WooCommerce) e realizar pedidos (com pagamentos integrados via API do gateway AppyPay usando referências Multicaixa). Administradores podem gerir aprovações de distribuidores pendentes.
@@ -8,7 +8,7 @@
 ## 🏗 Infraestrutura, Base de Dados e Variáveis de Ambiente
 *   **SGBD:** MySQL (Gerido pelo PhpMyAdmin).
 *   **Bases de Dados Nativas:**
-    *   **Produção/Desenvolvimento (`.env` e `.env.example`):** Focadas na BD `cotarco_revendedores`. Utiliza `QUEUE_CONNECTION=database` e envio SMTP mapeado para `mail.cotarco.co.ao`.
+    *   **Produção/Desenvolvimento (`.env` e `.env.example`):** Focadas na BD `cotarco_revendedores`. Utiliza `QUEUE_CONNECTION=database` e envio SMTP mapeado para `mail.cotarco.com`.
     *   **Testes (`.env.testing`):** Direcionada exatamenta à BD isolada `cotarco_revendedores_test`. Comportamento sincrono e silencioso (`QUEUE_CONNECTION=sync` e `MAIL_MAILER=array`).
 *   **Configurações e Chaves (.env):** Toda a integração do projeto baseia-se num sistema *secret-driven*, com uma configuração local estrita obrigatória. O ambiente necessita imperativamente da parametrização real de chaves da API WooCommerce (para gestão e descrições customizadas de faturas) bem como das credenciais OAUTH completas do Gateway AppyPay. Eis um reflexo do bloco essencial a ser injetado pelos desenvolvedores:
     ```dotenv
@@ -42,8 +42,8 @@ A estrutura raiz principal (`c:\cotarco-revendedores`) está dividida em duas ap
 ### 1. `cotarco-api/` (Backend Laravel 12.x)
 - **`app/Http/Controllers/`**: Contém a lógica das rotas da API.
   - `Auth/`: Controladores de autenticação e registro.
-  - `Admin/`: Controladores para ações administrativas (ex: aprovar revendedores).
-  - `OrderController.php`, `StockFileController.php`, `WebhookController.php`: Controladores de domínio para pedidos, arquivos de estoque e webhooks.
+  - `Admin/`: Controladores para ações administrativas (ex: aprovar distribuidores).
+  - `OrderController.php`, `PartnerOrderController.php`, `PartnerStatsController.php`, `StockFileController.php`, `WebhookController.php`: Controladores de domínio para pedidos, métricas de parceiros, arquivos de estoque e webhooks.
 - **`app/Models/`**: Modelos Eloquent do banco de dados representativos do domínio.
   - `User.php`, `PartnerProfile.php`: Modelos principais para usuários e perfis de parceiros.
   - `Category.php`, `Product.php`, `ProductPrice.php`: Modelos de catálogo.
@@ -54,9 +54,10 @@ A estrutura raiz principal (`c:\cotarco-revendedores`) está dividida em duas ap
 ### 2. `cotarco-client/` (Frontend React 19 + Vite)
 - **`src/pages/`**: Páginas da aplicação.
   - **Auth/Onboarding**: `Login.jsx`, `Register.jsx`, `ForgotPassword.jsx`, `ResetPassword.jsx`, `EmailVerificationPending.jsx`, `EmailValidated.jsx`.
-  - **Revendedor**: `Dashboard.jsx`, `CheckoutPage.jsx`, `OrderDetailPage.jsx`.
+  - **Revendedor**: `Dashboard.jsx`, `CatalogPage.jsx`, `StockPage.jsx`, `CheckoutPage.jsx`, `OrderDetailPage.jsx`.
   - **Admin**: `AdminDashboard.jsx`, `AdminLogin.jsx`.
-- **`src/components/`, `src/hooks/`, `src/services/`, `src/contexts/`**: Arquitetura padrão React componentizada e modular para chamadas à API, estado global e reusabilidade de UI. Estrutura baseada em TailwindCSS, Radix UI e Framer Motion.
+- **`src/components/`, `src/hooks/`, `src/services/`, `src/contexts/`**: Arquitetura padrão React componentizada e modular para chamadas à API, estado global e reusabilidade de UI. Estrutura baseada em TailwindCSS, Radix UI e Framer Motion. Inclui subpastas especializadas (`admin/`, `partner/`) contendo dashboards, tabelas e gráficos modulares.
+- **`tests/e2e/`**: Configuração abrangente de testes End-to-End com Playwright cobrindo os fluxos principais (login, catálogo, dashboard, checkout).
 
 ---
 
@@ -75,12 +76,14 @@ A estrutura raiz principal (`c:\cotarco-revendedores`) está dividida em duas ap
     *   Envio automatizado de e-mails de notificação (RevendedorApproved, RevendedorRejected).
     *   Criação automática do `PartnerProfile` ligado ao `User`.
     *   Armazenamento de documentação (`alvaras`) no file system privado com gestão de permissões.
+    *   **Dashboard Administrativo:** Monitoramento via KPIs e Gráficos de Receita, Modelos de Negócio B2B/B2C (`BusinessModelChart`), e Produtos Mais Vendidos (`TopProductsChart`).
 
 *   **Catálogo e Produtos:**
     *   Exibição de produtos, categorias e integrações de preços.
     *   Integração Customizada de Descrições do Produto: Lógica avançada para buscar iframes (códigos extraídos do WooCommerce via metadados) usando priorização de renderização (HTML sanilizado injetado via front-end). Funcionalidade de fallback de descrições curta e longa.
 
-*   **Pedidos e Checkout:**
+*   **Pedidos, Checkout e Área de Parceiros:**
+    *   **Dashboard do Revendedor:** Funcionalidades avançadas com tabelas de pedidos, gráficos de gastos, status das encomendas e referência de pagamento ativa.
     *   Funcionalidade de Checkout (`CheckoutPage`) com visualização de tela de sucesso/detalhes dos pedidos (`OrderDetailPage`).
     *   Integração com Gateway de Pagamento (AppyPay): Geração de referências Multicaixa para pagamentos utilizando chamadas OAuth2 à API AppyPay (veja a [Documentação Oficial da API AppyPay](https://appypay.stoplight.io/docs/appypay-payment-gateway/e36aeb2e2fb52-intro)). O processamento ocorre de forma assíncrona (`CreateAppyPayChargeJob`) disparando e-mails para o distribuidor contendo a entidade e referência para pagamento local.
     *   APIs para recebimento de webhooks (incluindo atualizações de pagamento em `WebhookController`) e gestão de estoque (`StockFileController`).

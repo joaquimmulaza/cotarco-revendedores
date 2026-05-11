@@ -10,20 +10,22 @@ A suite de testes E2E (End-to-End) garante a integridade dos fluxos críticos de
 ### Stack Completa
 -   **Frontend:** Vite + React (Porta `5173`)
 -   **Backend:** Laravel API (Porta `8001`)
--   **Automação:** Playwright
+-   **Automação:** Playwright (Suporta `.js` e `.ts`)
 -   **Base de Dados:** MySQL (`cotarco_revendedores_test`)
 
 ### Estrutura de Projetos
 Os testes estão divididos em dois projetos principais no Playwright:
-1.  **partner-tests:** Testes focados na jornada do distribuidor (login, catálogo, carrinho, checkout). Ignora ficheiros que contenham `admin` no nome.
-2.  **admin-tests:** Testes focados na gestão (aprovação de parceiros, stock, encomendas). Executa apenas ficheiros que contenham `admin` no nome.
+1.  **partner-tests:** Testes focados na jornada do distribuidor (login, catálogo, carrinho, checkout). Ignora ficheiros que contenham `admin` no nome (`testIgnore: /.*admin.*\.spec\.[jt]s/`).
+2.  **admin-tests:** Testes focados na gestão (aprovação de parceiros, stock, encomendas). Executa apenas ficheiros que contenham `admin` no nome (`testMatch: /.*admin.*\.spec\.[jt]s/`).
 
 ### Fluxo de Execução
 1.  **Global Setup:** Antes de qualquer teste, o `global.setup.js` executa `migrate:fresh --seed` na API para garantir um estado limpo.
 2.  **WebServers:** O Playwright inicia dois servidores:
     -   API na porta `8001` com `APP_ENV=testing`.
-    -   Client na porta `5173`, apontando para a API na `8001`.
-3.  **Auth Setup:** Projetos de setup (`setup` e `admin-setup`) realizam login e guardam o estado da sessão em `playwright/.auth/` para reutilização em testes subsequentes, evitando logins repetitivos.
+    -   Client na porta `5173`, apontando para a API na `8001` (Injetado via `cross-env`).
+3.  **Auth Setup:** Projetos de setup (`setup` e `admin-setup`) realizam login e guardam o estado da sessão em `playwright/.auth/` para reutilização em testes subsequentes:
+    -   **Partner:** Autentica como `marketing@soclima.com` / `cotarco.2025`
+    -   **Admin:** Autentica como `joaquimmulazadev@gmail.com` / `cotarco.2025`
 
 ---
 
@@ -34,7 +36,11 @@ A porta `8001` é utilizada para evitar conflitos com instâncias de desenvolvim
 
 ### Variáveis de Ambiente
 -   **API (.env.testing):** Define `DB_DATABASE=cotarco_revendedores_test`.
--   **Playwright Config:** Injeta `VITE_API_URL=http://127.0.0.1:8001/api` para garantir que o frontend comunica com o ambiente de teste.
+-   **Playwright Config:** Injeta `VITE_API_URL=http://127.0.0.1:8001/api VITE_API_PORT=8001` via `cross-env` no comando `npm run dev` para garantir que o frontend comunica com o ambiente de teste.
+
+### Leitura de Logs para Testes de Email
+Para testes que envolvem notificações assíncronas (aprovação de conta, registo, reset de senha), a estratégia atual não interceta a rede HTTP. Em vez disso, **lê diretamente o ficheiro `laravel.log`**.
+-   Os testes utilizam o helper `helpers/emailHelper.js` ou `.ts` para extrair URLs e validar os emails disparados (com `MAIL_MAILER=log` na API).
 
 ### Global Setup e Base de Dados
 O ficheiro `tests/e2e/global.setup.js` é o guardião do estado:
@@ -57,6 +63,12 @@ O ficheiro `tests/e2e/global.setup.js` é o guardião do estado:
 ---
 
 ## 4. Estratégia dos Testes Existentes
+
+### Fluxos de Email Assíncronos (`email-registration-flow.spec.ts`, `admin-email-partner-approval.spec.ts`, etc.)
+-   **O que testa:** Os registos públicos e as aprovações/rejeições do lado do admin.
+-   **Dependências:** Utiliza o helper `emailHelper` que monitoriza o ficheiro `laravel.log`.
+-   **Fluxo:** Dispara uma ação no frontend -> API enfileira o email -> Helper faz polling ao log até detetar o bloco de email com o e-mail único do teste -> Extração do link assinado -> Validação final no navegador.
+-   **Waits Críticos:** `expect.poll` no helper de email (timeout entre 10s e 45s, dependendo do fluxo).
 
 ### Checkout (`checkout.spec.js`)
 -   **O que testa:** Fluxo completo desde o dashboard até à geração de pagamento.
@@ -85,7 +97,8 @@ O ficheiro `tests/e2e/global.setup.js` é o guardião do estado:
 3.  **NUNCA** reutilizes estado entre testes — cada teste deve ser auto-suficiente ou garantir o seu setup no `beforeEach/beforeAll`.
 4.  **SEMPRE** usa `updateOrCreate` nos seeders de teste para garantir idempotência.
 5.  **SEMPRE** aguarda a visibilidade explícita de elementos (`toBeVisible()`) antes de interagir. Nunca uses waits fixos (`waitForTimeout`) a menos que seja estritamente necessário para debouncing de UI.
-6.  **SEMPRE** verifica que o teste passa isolado correndo: `npx playwright test nome.spec.js`.
+6.  **SEMPRE** verifica que o teste passa isolado correndo: `npx playwright test nome.spec.[jt]s`.
+7.  **Isolamento de Email:** Para cada run de teste que dependa de emails, utiliza um endereço de email dinâmico (`Date.now()`) para garantir que o helper não lê logs antigos.
 
 ---
 
@@ -94,7 +107,7 @@ O ficheiro `tests/e2e/global.setup.js` é o guardião do estado:
 -   **Seeder Condicional:** Antigamente os seeders só criavam dados se a tabela estivesse vazia. Se um teste falhasse a meio e deixasse lixo, o run seguinte falhava. Corrigido para `updateOrCreate` ou `delete` agressivo no setup.
 -   **Conflito de Portas:** O uso de `replace(':8001', ':8000')` em scripts de deploy/teste causava falhas silenciosas onde o client tentava falar com a API de produção ou dev. A porta `8001` é agora sagrada para E2E.
 -   **`reuseExistingServer: true`:** Causava contaminação de estado porque a API não era reiniciada entre runs de teste locais. Deve ser sempre `false` em ambientes de CI/Final Testing.
--   **Testes de 0ms:** Causados por `APP_URL` errado no `.env.testing`. Se o Playwright não consegue chegar ao servidor, ele falha instantaneamente.
+-   **Testes de 0ms:** Causados por `APP_URL` errado no `.env.testing`, ou ficheiro de log vazio/inválido. Se o Playwright não consegue chegar ao servidor, ele falha instantaneamente.
 -   **ID 999999:** Foi investigado e confirmado como um "Reserved ID" para testes de fumaça rápida. Não deves apagá-lo, mas deves garantir que novos testes usam dados dinâmicos ou IDs fora deste range.
 
 ---
@@ -107,6 +120,7 @@ O ficheiro `tests/e2e/global.setup.js` é o guardião do estado:
 -   [ ] Estou a evitar IDs hardcoded e a usar locators estáveis (ex: `getByRole`, `getByTestId`, `getByPlaceholder`)?
 -   [ ] Adicionei waits explícitos para todas as transições assíncronas (transição de URL, modals, toasts)?
 -   [ ] Identifiquei qual projeto (`partner-tests` ou `admin-tests`) deve incluir este teste com base no nome do ficheiro?
+-   [ ] Se o teste for de e-mail, utilizei um email único (com timestamp) para não colidir com o `emailHelper`?
 -   [ ] Atualizei este documento ou os comentários do seeder se introduzi novos dados globais?
 
 ---

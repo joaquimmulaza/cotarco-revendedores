@@ -20,4 +20,5 @@ Allow administrators to update product information (name, description, category)
 
 ## Verification Plan
 - **TDD (PHPUnit)**: `AdminProductTest` covering successful update and validation errors.
+- **Test E2E (Playwright)**: `adminProduct.spec.ts` covering successful update and validation errors.
 - **Manual**: Edit a product and verify changes persist after page refresh.
